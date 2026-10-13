@@ -3,9 +3,13 @@
  * Khóa là tiền tố đường dẫn, giá trị là mảng các vai trò được phép truy cập.
  */
 export const ROUTE_PERMISSIONS: Record<string, string[]> = {
-  // 1. Hệ thống (Chỉ Administrator)
+  // 1. Hệ thống (Chỉ Administrator / AdminAccess)
   "/admin/danhMucChung": ["Administrator"],
   "/admin/danhMucChiTiet": ["Administrator"],
+  "/admin/quocGia": ["Administrator", "AdminAccess"],
+  "/admin/diaPhuongCapTinh": ["Administrator", "AdminAccess"],
+  "/admin/diaPhuongCapXa": ["Administrator", "AdminAccess"],
+  "/admin/diaDiem": ["Administrator", "AdminAccess"],
 
   // 2. Kinh doanh
   "/admin/customer": ["Administrator", "AdminAccess", "SaleAccess"],

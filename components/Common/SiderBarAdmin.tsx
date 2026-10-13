@@ -32,6 +32,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
+  Store,
+  Building2,
+  Compass,
+  Globe,
 } from "lucide-react";
 
 type MenuItem = {
@@ -76,6 +80,38 @@ const MENU_SECTIONS: MenuSection[] = [
             title: "Danh mục chi tiết",
             href: "/admin/danhMucChiTiet",
             icon: ListTree,
+            roles: ["Administrator"],
+          },
+        ],
+      },
+      {
+        title: "Địa bàn & Cơ sở",
+        href: "/admin/diaDiem",
+        icon: Store,
+        roles: ["Administrator"],
+        items: [
+          {
+            title: "Chi nhánh & Showroom",
+            href: "/admin/diaDiem",
+            icon: Store,
+            roles: ["Administrator"],
+          },
+          {
+            title: "Cấp Tỉnh & Thành phố",
+            href: "/admin/diaPhuongCapTinh",
+            icon: Building2,
+            roles: ["Administrator"],
+          },
+          {
+            title: "Cấp Xã & Phường",
+            href: "/admin/diaPhuongCapXa",
+            icon: Compass,
+            roles: ["Administrator"],
+          },
+          {
+            title: "Danh mục Quốc gia",
+            href: "/admin/quocGia",
+            icon: Globe,
             roles: ["Administrator"],
           },
         ],

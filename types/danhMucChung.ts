@@ -36,11 +36,3 @@ export interface UpdateDanhMucChungPayload {
   ThuTu: number;
   TrangThai: boolean;
 }
-
-export interface DanhMucChungListResponse {
-  items: DM_DanhMucChung[];
-  totalCount: number;
-  pageIndex: number;
-  pageSize: number;
-  totalPages?: number;
-}

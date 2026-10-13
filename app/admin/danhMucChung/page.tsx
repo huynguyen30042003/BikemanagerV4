@@ -1,27 +1,37 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Column, Table } from "@/components/ui/Table";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
-  Check,
   FolderTree,
   Plus,
   RefreshCw,
   Search,
   SquarePen,
-  Trash,
+  Trash2,
   FolderOpen,
   Filter,
+  CheckCircle2,
+  XCircle,
+  Layers,
+  ArrowRight,
+  ExternalLink,
+  ListTree,
+  AlertCircle,
+  FolderPlus,
 } from "lucide-react";
 import { useDanhMucChung } from "@/hooks/DanhMucChung/useDanhMucChung";
 import { DM_DanhMucChung } from "@/types/danhMucChung";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { CategoryNavTabs } from "@/components/Common/CategoryNavTabs";
 
 export default function DanhMucChungPageClient() {
   const {
@@ -87,16 +97,16 @@ export default function DanhMucChungPageClient() {
   const totalPages =
     hookTotalPages ?? dataDanhMucChung?.pagination?.totalPages ?? 1;
 
-  // Derived KPI metrics for Brandkit overview
-  const activeCount = React.useMemo(
+  // Derived KPI metrics
+  const activeCount = useMemo(
     () => items.filter((item: DM_DanhMucChung) => item.trangThai === true).length,
     [items]
   );
-  const inactiveCount = React.useMemo(
+  const inactiveCount = useMemo(
     () => items.filter((item: DM_DanhMucChung) => item.trangThai === false).length,
     [items]
   );
-  const totalSubCategories = React.useMemo(
+  const totalSubCategories = useMemo(
     () =>
       items.reduce(
         (acc: number, item: DM_DanhMucChung) => acc + (item.soLuongChiTiet || 0),
@@ -104,47 +114,75 @@ export default function DanhMucChungPageClient() {
       ),
     [items]
   );
-  
+
   // Table columns definition
   const danhMucChungColumns: Column<DM_DanhMucChung>[] = [
     {
+      key: "danhMucID",
+      title: "Mã",
+      classNameHeader: "w-18 text-center text-xs font-semibold text-muted-foreground",
+      classNameItem: "text-center",
+      render: (v) => (
+        <span className="font-mono text-xs text-muted-foreground font-medium px-2 py-0.5 rounded-md bg-muted/60 border border-border/50">
+          #{v}
+        </span>
+      ),
+    },
+    {
       key: "ten",
-      title: "Tên danh mục",
-      classNameHeader: "text-left text-muted-foreground",
+      title: "Tên danh mục dùng chung",
+      classNameHeader: "text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-1 py-0.5">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-foreground text-sm hover:text-blue-600 transition-colors">
               {row.ten}
             </span>
-            {row.soLuongChiTiet !== undefined && row.soLuongChiTiet > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium border border-blue-500/20">
-                {row.soLuongChiTiet} chi tiết
-              </span>
-            )}
+
+            {/* Interactive child category count badge */}
+            <Link
+              href={`/admin/danhMucChiTiet?danhMucId=${row.danhMucID}`}
+              title="Nhấn để xem danh sách mục chi tiết thuộc danh mục này"
+              className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all cursor-pointer group/sub"
+            >
+              <span>{row.soLuongChiTiet ?? 0} mục chi tiết</span>
+              <ArrowRight className="w-3 h-3 group-hover/sub:translate-x-0.5 transition-transform" />
+            </Link>
           </div>
+
           {row.moTa ? (
-            <p className="text-xs text-muted-foreground line-clamp-1">
+            <p className="text-xs text-muted-foreground line-clamp-1 max-w-xl">
               {row.moTa}
             </p>
           ) : (
             <span className="text-[11px] text-muted-foreground/50 italic">
-              Chưa có mô tả
+              Chưa có thông tin mô tả
             </span>
           )}
         </div>
       ),
     },
     {
+      key: "thuTu",
+      title: "Thứ tự",
+      classNameHeader: "text-center w-20 text-xs font-semibold text-muted-foreground",
+      classNameItem: "text-center",
+      render: (v) => (
+        <span className="inline-flex items-center justify-center min-w-6 px-1.5 py-0.5 rounded text-xs font-mono bg-muted/80 text-foreground border border-border/60">
+          {v ?? 0}
+        </span>
+      ),
+    },
+    {
       key: "trangThai",
       title: "Trạng thái",
-      classNameHeader: "text-center w-36 text-muted-foreground",
+      classNameHeader: "text-center w-36 text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) =>
         row.trangThai ? (
           <div className="flex justify-center">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Sử dụng
             </span>
@@ -161,93 +199,226 @@ export default function DanhMucChungPageClient() {
     {
       key: "function",
       title: "Thao tác",
-      classNameHeader: "text-center w-28 text-muted-foreground",
+      classNameHeader: "text-center w-36 text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex gap-1 justify-center items-center">
+          {/* Quick link to sub-categories */}
+          <Link
+            href={`/admin/danhMucChiTiet?danhMucId=${row.danhMucID}`}
+            title="Xem danh mục chi tiết con"
+            className="h-8 w-8 inline-flex items-center justify-center text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
+          >
+            <ListTree className="w-4 h-4" />
+          </Link>
+
           <Button
             variant="ghost"
             size="icon-sm"
             onClick={() => handleOpenEdit(row)}
             title="Chỉnh sửa danh mục"
-            className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors"
+            className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
           >
             <SquarePen className="w-4 h-4" />
           </Button>
+
           <Button
             variant="ghost"
             size="icon-sm"
             onClick={() => handleOpenDelete(row)}
             title="Xóa danh mục"
-            className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+            className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
           >
-            <Trash className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       ),
     },
   ];
 
+  const hasActiveFilters = Boolean(searchInput || statusFilter !== "all");
+
+  const handleResetFilters = () => {
+    handleSearch("");
+    setStatusFilter("all");
+    setPage(1);
+  };
+
   return (
     <div className="p-4 md:p-8 min-h-screen space-y-6">
-      {/* 1. Header & Breadcrumb */}
+      {/* 1. Header & Navigation Hub */}
       {isLoading ? (
         <div className="flex flex-col gap-3">
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-96" />
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-border/70">
-          <div>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
-              <span>Hệ thống</span>
-              <span className="text-muted-foreground/30">/</span>
-              <span className="text-foreground">Danh mục dùng chung</span>
+        <div className="flex flex-col gap-4 pb-4 border-b border-border/70">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
+                <span>Hệ thống</span>
+                <span className="text-muted-foreground/30">/</span>
+                <span className="text-foreground">Quản lý danh mục</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-xs ring-4 ring-blue-500/5">
+                  <FolderTree className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                    Danh mục dùng chung
+                  </h1>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Quản lý và định nghĩa các nhóm danh mục phân loại mẹ trong toàn hệ thống
+                  </p>
+                </div>
+              </div>
             </div>
+
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-xs">
-                <FolderTree className="w-5 h-5" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                  Danh mục dùng chung
-                </h1>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Quản lý và thiết lập các danh mục thuộc tính dùng chung trong toàn hệ thống
-                </p>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSync}
+                disabled={isSyncing}
+                className="h-9 px-3.5 flex items-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs"
+                title="Đồng bộ danh mục từ dữ liệu chuẩn"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-blue-500" : ""}`}
+                />
+                <span className="text-xs font-medium">Đồng bộ chuẩn</span>
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={handleModalAdd}
+                className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="text-xs font-medium">Thêm mới</span>
+              </Button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="h-9 px-3 flex items-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground"
-              title="Đồng bộ danh mục từ dữ liệu chuẩn"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-blue-500" : ""}`}
-              />
-              <span className="text-xs font-medium">Đồng bộ</span>
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={handleModalAdd}
-              className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-xs cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="text-xs font-medium">Thêm mới</span>
-            </Button>
+          {/* Quick Tab Switcher between DanhMucChung and DanhMucChiTiet */}
+          <div className="flex items-center justify-between pt-1">
+            <CategoryNavTabs activeTab="chung" totalChung={totalCount} />
           </div>
         </div>
       )}
 
-      {/* 3. Toolbar: Tìm kiếm và lọc */}
-      <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
+      {/* 2. Interactive KPI Overview Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        <Card
+          onClick={() => {
+            setStatusFilter("all");
+            setPage(1);
+          }}
+          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+            statusFilter === "all"
+              ? "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10"
+              : "border-border/80 bg-card hover:border-border hover:shadow-xs"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Tổng danh mục
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
+              <FolderTree className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-foreground">
+            {isLoading ? <Skeleton className="h-7 w-16" /> : totalCount}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Nhóm phân loại mẹ
+          </p>
+        </Card>
+
+        <Card
+          onClick={() => {
+            setStatusFilter("active");
+            setPage(1);
+          }}
+          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+            statusFilter === "active"
+              ? "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10"
+              : "border-border/80 bg-card hover:border-border hover:shadow-xs"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Đang sử dụng
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            {isLoading ? <Skeleton className="h-7 w-16" /> : activeCount}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Kích hoạt trên hệ thống
+          </p>
+        </Card>
+
+        <Card
+          onClick={() => {
+            setStatusFilter("inactive");
+            setPage(1);
+          }}
+          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+            statusFilter === "inactive"
+              ? "border-slate-500/50 bg-slate-500/5 shadow-xs ring-2 ring-slate-500/10"
+              : "border-border/80 bg-card hover:border-border hover:shadow-xs"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Tạm ngưng / Khóa
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center">
+              <XCircle className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-slate-700 dark:text-slate-300">
+            {isLoading ? <Skeleton className="h-7 w-16" /> : inactiveCount}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Vô hiệu hóa trong biểu mẫu
+          </p>
+        </Card>
+
+        <Link
+          href="/admin/danhMucChiTiet"
+          className="block group/kpi"
+          title="Nhấn để chuyển sang quản lý Danh mục chi tiết"
+        >
+          <Card className="p-4 rounded-xl border border-border/80 bg-card hover:border-purple-500/40 hover:bg-purple-500/5 hover:shadow-xs transition-all cursor-pointer h-full">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">
+                Tổng mục con chi tiết
+              </span>
+              <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center group-hover/kpi:scale-105 transition-transform">
+                <Layers className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-2 text-2xl font-bold text-purple-600 dark:text-purple-400 flex items-center justify-between">
+              <span>{isLoading ? <Skeleton className="h-7 w-16" /> : totalSubCategories}</span>
+              <ExternalLink className="w-4 h-4 text-purple-400 opacity-0 group-hover/kpi:opacity-100 transition-opacity" />
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Liên kết qua danh mục chi tiết
+            </p>
+          </Card>
+        </Link>
+      </div>
+
+      {/* 3. Toolbar: Tìm kiếm, Lọc trạng thái & Reset */}
+      <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs space-y-2.5">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -256,13 +427,14 @@ export default function DanhMucChungPageClient() {
               placeholder="Tìm kiếm theo tên danh mục..."
               value={searchInput}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-sm"
+              className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-sm focus-visible:ring-blue-500/20"
             />
             {searchInput && (
               <button
                 type="button"
                 onClick={() => handleSearch("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground w-4 h-4 rounded-full flex items-center justify-center hover:bg-muted cursor-pointer transition-colors"
+                title="Xóa tìm kiếm"
               >
                 ✕
               </button>
@@ -323,11 +495,49 @@ export default function DanhMucChungPageClient() {
             onClick={() => refetch()}
             disabled={isFetching}
             title="Tải lại dữ liệu"
-            className="h-9.5 w-9.5 shrink-0"
+            className="h-9.5 w-9.5 shrink-0 cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin text-blue-500" : ""}`} />
           </Button>
         </div>
+
+        {/* Active Filter Chips */}
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2 pt-1 border-t border-border/50 text-xs flex-wrap">
+            <span className="text-muted-foreground font-medium">Đang lọc:</span>
+            {searchInput && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/60">
+                Từ khóa: &quot;{searchInput}&quot;
+                <button
+                  type="button"
+                  onClick={() => handleSearch("")}
+                  className="hover:text-red-500 cursor-pointer ml-0.5"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {statusFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/60">
+                Trạng thái: {statusFilter === "active" ? "Đang sử dụng" : "Đã khóa"}
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("all")}
+                  className="hover:text-red-500 cursor-pointer ml-0.5"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer ml-auto"
+            >
+              Xóa tất cả bộ lọc
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 4. Table danh sách */}
@@ -343,7 +553,7 @@ export default function DanhMucChungPageClient() {
           <div className="p-3 flex flex-col gap-3 w-full">
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-                <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-3">
+                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
                   <FolderOpen className="w-7 h-7 stroke-[1.5]" />
                 </div>
                 <p className="font-semibold text-base text-foreground">
@@ -351,16 +561,28 @@ export default function DanhMucChungPageClient() {
                 </p>
                 <p className="text-xs text-muted-foreground max-w-sm mt-1">
                   {searchInput
-                    ? `Không có kết quả nào khớp với từ khóa "${searchInput}". Bạn hãy thử tìm kiếm từ khóa khác.`
+                    ? `Không có kết quả nào khớp với từ khóa "${searchInput}". Bạn hãy thử tìm kiếm từ khóa khác hoặc đặt lại bộ lọc.`
                     : "Hiện tại chưa có danh mục chung nào trong hệ thống. Hãy tạo danh mục đầu tiên!"}
                 </p>
-                <Button
-                  size="sm"
-                  onClick={handleModalAdd}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Thêm danh mục mới
-                </Button>
+                <div className="flex items-center gap-2 mt-4">
+                  {hasActiveFilters && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResetFilters}
+                      className="cursor-pointer"
+                    >
+                      Xóa bộ lọc
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={handleModalAdd}
+                    className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Thêm danh mục mới
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
@@ -375,7 +597,7 @@ export default function DanhMucChungPageClient() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/70 text-sm text-muted-foreground">
                   <div className="text-xs">
                     Trang <strong className="text-foreground">{page}</strong> / {totalPages}{" "}
-                    (Tổng {totalCount} danh mục)
+                    (Tổng <strong className="text-foreground">{totalCount}</strong> danh mục)
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -385,19 +607,20 @@ export default function DanhMucChungPageClient() {
                         setPageSize(Number(e.target.value));
                         setPage(1);
                       }}
-                      className="h-8 border border-border/80 rounded-md px-2 bg-background text-foreground text-xs outline-none focus:border-blue-500"
+                      className="h-8 border border-border/80 rounded-md px-2 bg-background text-foreground text-xs outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value={10}>10 / trang</option>
                       <option value={20}>20 / trang</option>
                       <option value={50}>50 / trang</option>
                       <option value={100}>100 / trang</option>
                     </select>
+
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={page <= 1}
                       onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                      className="h-8 text-xs"
+                      className="h-8 text-xs cursor-pointer"
                     >
                       Trước
                     </Button>
@@ -414,12 +637,12 @@ export default function DanhMucChungPageClient() {
                         return (
                           <React.Fragment key={p}>
                             {prev && p - prev > 1 && (
-                              <span className="px-1 text-muted-foreground">...</span>
+                              <span className="px-1 text-muted-foreground text-xs">...</span>
                             )}
                             <Button
                               variant={page === p ? "default" : "outline"}
                               size="sm"
-                              className={`h-8 w-8 p-0 text-xs ${
+                              className={`h-8 w-8 p-0 text-xs cursor-pointer ${
                                 page === p ? "bg-blue-600 text-white hover:bg-blue-700" : ""
                               }`}
                               onClick={() => setPage(p)}
@@ -435,7 +658,7 @@ export default function DanhMucChungPageClient() {
                       size="sm"
                       disabled={page >= totalPages}
                       onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                      className="h-8 text-xs"
+                      className="h-8 text-xs cursor-pointer"
                     >
                       Sau
                     </Button>
@@ -451,9 +674,9 @@ export default function DanhMucChungPageClient() {
       <SlideOver
         open={open}
         onClose={() => setOpen(false)}
-        title="Thêm mới danh mục chung"
-        description="Định nghĩa danh mục thuộc tính mới vào hệ thống"
-        icon={FolderTree}
+        title="Thêm mới danh mục dùng chung"
+        description="Định nghĩa danh mục thuộc tính phân loại mẹ vào hệ thống"
+        icon={FolderPlus}
         footer={
           <>
             <Button
@@ -480,13 +703,16 @@ export default function DanhMucChungPageClient() {
         <div className="grid grid-cols-2 gap-4">
           {/* Tên danh mục */}
           <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tên danh mục <span className="text-red-600">*</span>
+            <label className="text-sm font-medium text-foreground flex items-center justify-between">
+              <span>
+                Tên danh mục <span className="text-red-500">*</span>
+              </span>
+              <span className="text-[11px] text-muted-foreground">Bắt buộc</span>
             </label>
             <Input
               type="text"
               value={dataAdd.Ten}
-              placeholder="Ví dụ: Thương hiệu linh kiện, Loại khung xe..."
+              placeholder="Ví dụ: Thương hiệu xe, Loại khung xe, Dung tích pin..."
               className={`rounded-lg ${errors.ten ? "border-red-500 focus-visible:ring-red-500/30" : ""}`}
               onChange={(e) =>
                 setDataAdd((prev) => ({
@@ -497,20 +723,23 @@ export default function DanhMucChungPageClient() {
               autoFocus
             />
             {errors.ten && (
-              <p className="text-xs text-red-600">{errors.ten}</p>
+              <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {errors.ten}
+              </p>
             )}
           </div>
 
           {/* Thứ tự sắp xếp */}
           <div className="col-span-1 flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
-              Thứ tự sắp xếp
+              Thứ tự hiển thị
             </label>
             <Input
               type="number"
               min={0}
               value={dataAdd.ThuTu}
-              className="rounded-lg"
+              className="rounded-lg font-mono"
               onChange={(e) =>
                 setDataAdd((prev) => ({
                   ...prev,
@@ -523,27 +752,29 @@ export default function DanhMucChungPageClient() {
             )}
           </div>
 
-          {/* Trạng thái sử dụng */}
-          <div className="col-span-1 flex items-center gap-2 pt-6">
-            <input
-              type="checkbox"
-              name="isActiveAdd"
-              id="isActiveAdd"
-              checked={dataAdd.TrangThai}
-              onChange={(e) =>
-                setDataAdd((prev) => ({
-                  ...prev,
-                  TrangThai: e.target.checked,
-                }))
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <label
-              htmlFor="isActiveAdd"
-              className="text-sm font-medium text-foreground cursor-pointer select-none"
-            >
-              Kích hoạt sử dụng
-            </label>
+          {/* Trạng thái sử dụng (Switch Radix) */}
+          <div className="col-span-1 flex flex-col gap-1.5 justify-end pb-1">
+            <span className="text-sm font-medium text-foreground">
+              Trạng thái
+            </span>
+            <div className="flex items-center gap-2.5 h-9.5 px-3 rounded-lg border border-border/70 bg-muted/30">
+              <Switch
+                id="isActiveAdd"
+                checked={dataAdd.TrangThai}
+                onCheckedChange={(checked) =>
+                  setDataAdd((prev) => ({
+                    ...prev,
+                    TrangThai: checked,
+                  }))
+                }
+              />
+              <label
+                htmlFor="isActiveAdd"
+                className="text-xs font-medium text-foreground cursor-pointer select-none"
+              >
+                {dataAdd.TrangThai ? "Kích hoạt sử dụng" : "Tạm khóa"}
+              </label>
+            </div>
           </div>
 
           {/* Mô tả */}
@@ -559,9 +790,12 @@ export default function DanhMucChungPageClient() {
                   MoTa: e.target.value,
                 }))
               }
-              placeholder="Nhập mô tả hoặc ghi chú..."
-              className="h-28 resize-none rounded-lg"
+              placeholder="Nhập mô tả tóm tắt mục đích hoặc ghi chú của danh mục này..."
+              className="h-28 resize-none rounded-lg text-sm"
             />
+            <p className="text-[11px] text-muted-foreground">
+              Mô tả ngắn gọn giúp các quản trị viên khác hiểu rõ phạm vi phân loại.
+            </p>
           </div>
         </div>
       </SlideOver>
@@ -571,7 +805,7 @@ export default function DanhMucChungPageClient() {
         open={openUpdate}
         onClose={() => setOpenUpdate(false)}
         title={`Cập nhật danh mục #${dataUpdate.DanhMucID}`}
-        description="Chỉnh sửa thông tin danh mục thuộc tính"
+        description="Chỉnh sửa thông tin danh mục phân loại mẹ"
         icon={SquarePen}
         footer={
           <>
@@ -599,8 +833,11 @@ export default function DanhMucChungPageClient() {
         <div className="grid grid-cols-2 gap-4">
           {/* Tên danh mục */}
           <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tên danh mục <span className="text-red-600">*</span>
+            <label className="text-sm font-medium text-foreground flex items-center justify-between">
+              <span>
+                Tên danh mục <span className="text-red-500">*</span>
+              </span>
+              <span className="text-[11px] text-muted-foreground">Bắt buộc</span>
             </label>
             <Input
               type="text"
@@ -615,20 +852,23 @@ export default function DanhMucChungPageClient() {
               }
             />
             {errors.ten && (
-              <p className="text-xs text-red-600">{errors.ten}</p>
+              <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {errors.ten}
+              </p>
             )}
           </div>
 
           {/* Thứ tự sắp xếp */}
           <div className="col-span-1 flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
-              Thứ tự sắp xếp
+              Thứ tự hiển thị
             </label>
             <Input
               type="number"
               min={0}
               value={dataUpdate.ThuTu}
-              className="rounded-lg"
+              className="rounded-lg font-mono"
               onChange={(e) =>
                 setDataUpdate((prev) => ({
                   ...prev,
@@ -641,33 +881,35 @@ export default function DanhMucChungPageClient() {
             )}
           </div>
 
-          {/* Trạng thái sử dụng */}
-          <div className="col-span-1 flex items-center gap-2 pt-6">
-            <input
-              type="checkbox"
-              name="isActiveUpdate"
-              id="isActiveUpdate"
-              checked={dataUpdate.TrangThai}
-              onChange={(e) =>
-                setDataUpdate((prev) => ({
-                  ...prev,
-                  TrangThai: e.target.checked,
-                }))
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <label
-              htmlFor="isActiveUpdate"
-              className="text-sm font-medium text-foreground cursor-pointer select-none"
-            >
-              Kích hoạt sử dụng
-            </label>
+          {/* Trạng thái sử dụng (Switch Radix) */}
+          <div className="col-span-1 flex flex-col gap-1.5 justify-end pb-1">
+            <span className="text-sm font-medium text-foreground">
+              Trạng thái
+            </span>
+            <div className="flex items-center gap-2.5 h-9.5 px-3 rounded-lg border border-border/70 bg-muted/30">
+              <Switch
+                id="isActiveUpdate"
+                checked={dataUpdate.TrangThai}
+                onCheckedChange={(checked) =>
+                  setDataUpdate((prev) => ({
+                    ...prev,
+                    TrangThai: checked,
+                  }))
+                }
+              />
+              <label
+                htmlFor="isActiveUpdate"
+                className="text-xs font-medium text-foreground cursor-pointer select-none"
+              >
+                {dataUpdate.TrangThai ? "Kích hoạt sử dụng" : "Tạm khóa"}
+              </label>
+            </div>
           </div>
 
           {/* Mô tả */}
           <div className="col-span-2 flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
-              Mô tả
+              Mô tả danh mục
             </label>
             <Textarea
               value={dataUpdate.MoTa || ""}
@@ -677,8 +919,8 @@ export default function DanhMucChungPageClient() {
                   MoTa: e.target.value,
                 }))
               }
-              placeholder="Nhập mô tả hoặc ghi chú..."
-              className="h-28 resize-none rounded-lg"
+              placeholder="Nhập mô tả tóm tắt..."
+              className="h-28 resize-none rounded-lg text-sm"
             />
           </div>
         </div>
@@ -700,7 +942,7 @@ export default function DanhMucChungPageClient() {
               <strong className="text-foreground">{selectItemName}</strong>&quot; không?
             </p>
             <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác. Nếu danh mục đang có mục con hoặc dữ liệu phụ thuộc, hệ thống sẽ từ chối xóa.
+              Hành động này không thể hoàn tác. Nếu danh mục đang có mục con hoặc dữ liệu phụ thuộc, hệ thống sẽ từ chối xóa để đảm bảo toàn vẹn dữ liệu.
             </span>
           </div>
         }
