@@ -57,3 +57,13 @@ export interface UpdateDiaDiemPayload {
   XoaFile?: boolean;
   file?: File | null;
 }
+
+export interface DD_NavTabs {
+  total_DiaDiem?: number;
+  total_DiaPhuongCapTinh?: number;
+  total_DiaPhuongCapXa?: number;
+  total_QuocGia?: number;
+}
+
+
+

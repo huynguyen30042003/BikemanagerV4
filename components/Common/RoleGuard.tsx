@@ -66,7 +66,7 @@ export function AdminRouteGuard({
   const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
-    // 1. Đọc tức thì từ Token trong localStorage để tránh giật lag frame đầu
+    // 1. Đọc tức thì từ Token trong Cookie để tránh giật lag frame đầu
     const tUser = getUserFromToken();
     setTokenUser(tUser);
 
@@ -87,7 +87,7 @@ export function AdminRouteGuard({
     return <>{children}</>;
   }
 
-  // Kết hợp roles từ user (API/Zustand) và tokenUser (localStorage)
+  // Kết hợp roles từ user (API/Zustand) và tokenUser (Cookie)
   const effectiveRoles = user?.roles ?? tokenUser?.roles ?? [];
   const hasAccess = isUserAuthorized(requiredRoles, effectiveRoles);
 

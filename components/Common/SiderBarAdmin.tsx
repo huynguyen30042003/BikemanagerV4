@@ -4,11 +4,12 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useAuthStore, useRole } from "@/hooks/Auth/useAuth";
+import { useAuthStore, useRole, useLogout } from "@/hooks/Auth/useAuth";
 
 import bike from "@/image/bike.svg";
 
 import {
+  Award,
   Barcode,
   Bike,
   Boxes,
@@ -36,6 +37,13 @@ import {
   Building2,
   Compass,
   Globe,
+  Layers,
+  ArrowLeftRight,
+  ClipboardCheck,
+  Wrench,
+  Sparkles,
+  LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 
 type MenuItem = {
@@ -60,6 +68,18 @@ type MenuSection = {
 };
 
 const MENU_SECTIONS: MenuSection[] = [
+  {
+    label: "Tổng quan",
+    roles: ["Administrator", "AdminAccess", "SaleAccess", "WarehouseAccess", "TechnicalAccess", "PurchaseAccess"],
+    groups: [
+      {
+        title: "Bảng điều khiển",
+        href: "/admin",
+        icon: LayoutDashboard,
+        roles: ["Administrator", "AdminAccess", "SaleAccess", "WarehouseAccess", "TechnicalAccess", "PurchaseAccess"],
+      },
+    ],
+  },
   {
     label: "Hệ thống",
     roles: ["Administrator"],
@@ -135,9 +155,9 @@ const MENU_SECTIONS: MenuSection[] = [
             roles: ["Administrator", "AdminAccess", "SaleAccess"],
           },
           {
-            title: "Đánh giá",
+            title: "Xếp hạng & Thống kê",
             href: "/admin/customer/statistics",
-            icon: Star,
+            icon: Award,
             roles: ["Administrator", "AdminAccess", "SaleAccess"],
           },
           {
@@ -155,17 +175,11 @@ const MENU_SECTIONS: MenuSection[] = [
         ],
       },
       {
-        title: "Sản phẩm",
+        title: "Sản phẩm & Xe",
         href: "/admin/products",
         icon: Package,
         roles: ["Administrator", "AdminAccess", "ProductAccess"],
         items: [
-          {
-            title: "Danh sách sản phẩm",
-            href: "/admin/products/manage",
-            icon: ShoppingBag,
-            roles: ["Administrator", "AdminAccess", "ProductAccess"],
-          },
           {
             title: "Thương hiệu",
             href: "/admin/brands",
@@ -173,15 +187,9 @@ const MENU_SECTIONS: MenuSection[] = [
             roles: ["Administrator", "AdminAccess", "ProductAccess"],
           },
           {
-            title: "Quản lý sản phẩm",
+            title: "Sản phẩm & Dòng xe",
             href: "/admin/products",
             icon: Package,
-            roles: ["Administrator", "AdminAccess", "ProductAccess"],
-          },
-          {
-            title: "Hình ảnh sản phẩm",
-            href: "/admin/product-images",
-            icon: ImageIcon,
             roles: ["Administrator", "AdminAccess", "ProductAccess"],
           },
           {
@@ -191,7 +199,13 @@ const MENU_SECTIONS: MenuSection[] = [
             roles: ["Administrator", "AdminAccess", "ProductAccess"],
           },
           {
-            title: "Seri sản phẩm",
+            title: "Hình ảnh sản phẩm",
+            href: "/admin/product-images",
+            icon: ImageIcon,
+            roles: ["Administrator", "AdminAccess", "ProductAccess"],
+          },
+          {
+            title: "Số Serial & Khung",
             href: "/admin/product-serials",
             icon: Barcode,
             roles: ["Administrator", "AdminAccess", "ProductAccess"],
@@ -257,10 +271,82 @@ const MENU_SECTIONS: MenuSection[] = [
         ],
       },
       {
-        title: "Kho hàng",
+        title: "Vận hành kho",
         href: "/admin/warehouses",
         icon: Warehouse,
         roles: ["Administrator", "AdminAccess", "WarehouseAccess"],
+        items: [
+          {
+            title: "Danh sách kho bãi",
+            href: "/admin/warehouses",
+            icon: Warehouse,
+            roles: ["Administrator", "AdminAccess", "WarehouseAccess"],
+          },
+          {
+            title: "Tồn kho & Thẻ kho",
+            href: "/admin/inventory",
+            icon: Layers,
+            roles: ["Administrator", "AdminAccess", "WarehouseAccess"],
+          },
+          {
+            title: "Điều chuyển kho",
+            href: "/admin/stock-transfers",
+            icon: ArrowLeftRight,
+            roles: ["Administrator", "AdminAccess", "WarehouseAccess"],
+          },
+          {
+            title: "Kiểm kê kho",
+            href: "/admin/stock-audits",
+            icon: ClipboardCheck,
+            roles: ["Administrator", "AdminAccess", "WarehouseAccess"],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Kỹ thuật & Dịch vụ",
+    roles: ["Administrator", "AdminAccess", "TechnicalAccess", "SaleAccess"],
+    groups: [
+      {
+        title: "Bảo hành xe",
+        href: "/admin/warranties",
+        icon: ShieldCheck,
+        roles: ["Administrator", "AdminAccess", "TechnicalAccess", "SaleAccess"],
+        items: [
+          {
+            title: "Sổ bảo hành điện tử",
+            href: "/admin/warranties",
+            icon: ShieldCheck,
+            roles: ["Administrator", "AdminAccess", "TechnicalAccess", "SaleAccess"],
+          },
+          {
+            title: "Phiếu tiếp nhận BH",
+            href: "/admin/warranty-claims",
+            icon: FileText,
+            roles: ["Administrator", "AdminAccess", "TechnicalAccess"],
+          },
+        ],
+      },
+      {
+        title: "Sửa chữa & Dịch vụ",
+        href: "/admin/repair-tickets",
+        icon: Wrench,
+        roles: ["Administrator", "AdminAccess", "TechnicalAccess"],
+        items: [
+          {
+            title: "Phiếu sửa chữa",
+            href: "/admin/repair-tickets",
+            icon: Wrench,
+            roles: ["Administrator", "AdminAccess", "TechnicalAccess"],
+          },
+          {
+            title: "Bảng giá tiền công",
+            href: "/admin/repair-services",
+            icon: Sparkles,
+            roles: ["Administrator", "AdminAccess", "TechnicalAccess"],
+          },
+        ],
       },
     ],
   },
@@ -279,20 +365,61 @@ const hasRequiredRole = (
   );
 };
 
+const ROLE_DISPLAY_NAMES: Record<string, string> = {
+  administrator: "Quản trị cấp cao",
+  admin: "Quản trị cấp cao",
+  adminaccess: "Quản trị viên",
+  saleaccess: "Kinh doanh",
+  productaccess: "Quản lý sản phẩm",
+  purchaseaccess: "Mua hàng & NCC",
+  warehouseaccess: "Quản lý kho",
+  technicalaccess: "Kỹ thuật & Dịch vụ",
+  orderaccess: "Xử lý đơn hàng",
+};
+
+function formatRoleLabel(role?: string | null): string {
+  if (!role) return "Quản trị viên";
+  const normalized = role.toLowerCase().trim();
+  return ROLE_DISPLAY_NAMES[normalized] || role;
+}
+
+function getUserInitials(name?: string | null, fallback = "BM"): string {
+  if (!name || !name.trim()) return fallback;
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
 export default function SiderBarAdmin() {
   const pathname = usePathname();
-  const { user, fetchUser, clearUser, isAdmin } = useAuthStore();
+  const { user } = useAuthStore();
+  const { user: tokenUser, role: primaryTokenRole } = useRole();
+  const logout = useLogout();
+
   const [isClose, setIsClose] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(270);
   const [isResizing, setIsResizing] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  useEffect(() => {
-    if (!user) {
-      fetchUser();
+  // Hợp nhất dữ liệu user từ Zustand store (API /auth/me) và JWT Token
+  const currentUser = user || tokenUser;
+  const userRoles = useMemo(() => currentUser?.roles ?? [], [currentUser?.roles]);
+  const activeRole = userRoles.length > 0 ? userRoles[0] : (primaryTokenRole || "Quản trị viên");
+  const displayName = currentUser?.fullName || currentUser?.username || "Quản trị viên";
+  const userInitials = getUserInitials(displayName);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout("/login");
+    } catch (err) {
+      console.error("[Logout Error]", err);
+      setIsLoggingOut(false);
     }
-  }, [user, fetchUser]);
-
-  const userRoles = useMemo(() => user?.roles ?? [], [user?.roles]);
+  };
 
   // Lọc MENU_SECTIONS theo đúng role của user
   const filteredSections = useMemo(() => {
@@ -435,9 +562,7 @@ export default function SiderBarAdmin() {
             </div>
             <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="truncate">
-                {user?.roles?.join(',') || "Quản trị viên"}
-              </span>
+              <span className="truncate">Hệ thống quản trị chuỗi</span>
             </div>
           </div>
         </Link>
@@ -616,7 +741,136 @@ export default function SiderBarAdmin() {
         ))}
       </div>
 
-      {/* 3. Footer Toggle / Expand Button */}
+      {/* 3. User Management Profile Section (Ai đang quản lý) */}
+      {!isClose ? (
+        <div className="p-3 border-t border-border/70 shrink-0 bg-muted/20">
+          <div className="flex items-center gap-3 p-2 rounded-xl bg-card/70 hover:bg-card border border-border/60 shadow-2xs transition-all duration-200 group">
+            {/* Avatar & Online Dot */}
+            <div className="relative shrink-0">
+              {currentUser?.avatarUrl ? (
+                <img
+                  src={currentUser.avatarUrl}
+                  alt={displayName}
+                  className="w-10 h-10 rounded-xl object-cover border border-blue-500/20 shadow-xs"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 text-white font-bold text-xs flex items-center justify-center shadow-xs select-none">
+                  {userInitials}
+                </div>
+              )}
+              <span
+                className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-card"
+                title="Đang hoạt động"
+              />
+            </div>
+
+            {/* Thông tin người dùng & Role */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="font-semibold text-xs text-foreground truncate group-hover:text-blue-600 transition-colors"
+                  title={displayName}
+                >
+                  {displayName}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 truncate max-w-[130px]">
+                  <ShieldCheck className="w-3 h-3 shrink-0 text-blue-600 dark:text-blue-400" />
+                  <span className="truncate">{formatRoleLabel(activeRole)}</span>
+                </span>
+              </div>
+
+              {currentUser?.username && (
+                <p
+                  className="text-[10px] text-muted-foreground/80 truncate mt-0.5"
+                  title={currentUser.email || `@${currentUser.username}`}
+                >
+                  @{currentUser.username}
+                </p>
+              )}
+            </div>
+
+            {/* Nút Đăng xuất */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer shrink-0 disabled:opacity-50"
+              title="Đăng xuất khỏi hệ thống"
+            >
+              <LogOut className={`w-4 h-4 ${isLoggingOut ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Collapsed Mode User Profile (Hover Flyout Card) */
+        <div className="p-2 border-t border-border/70 shrink-0 bg-muted/20 flex flex-col items-center">
+          <div className="relative group/user cursor-pointer">
+            <button
+              type="button"
+              className="relative flex items-center justify-center p-1 rounded-xl hover:bg-muted transition-all active:scale-95"
+              title={`${displayName} (${formatRoleLabel(activeRole)})`}
+            >
+              {currentUser?.avatarUrl ? (
+                <img
+                  src={currentUser.avatarUrl}
+                  alt={displayName}
+                  className="w-9 h-9 rounded-xl object-cover border border-blue-500/20 shadow-xs"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 text-white font-bold text-xs flex items-center justify-center shadow-xs select-none">
+                  {userInitials}
+                </div>
+              )}
+              <span
+                className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-card"
+                title="Đang hoạt động"
+              />
+            </button>
+
+            {/* Flyout Card on Hover */}
+            <div className="absolute left-full bottom-0 ml-3 w-60 p-3 rounded-2xl bg-card border border-border shadow-xl backdrop-blur-md opacity-0 pointer-events-none group-hover/user:opacity-100 group-hover/user:pointer-events-auto transition-all duration-200 z-50">
+              <div className="flex items-center gap-3 pb-2.5 border-b border-border/60">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  {userInitials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-xs text-foreground truncate">
+                    {displayName}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    @{currentUser?.username || "admin"}
+                  </p>
+                  <span className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    <ShieldCheck className="w-3 h-3 shrink-0" />
+                    {formatRoleLabel(activeRole)}
+                  </span>
+                </div>
+              </div>
+
+              {currentUser?.email && (
+                <div className="py-2 text-[11px] text-muted-foreground truncate border-b border-border/60">
+                  {currentUser.email}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="w-full mt-2.5 py-1.5 px-3 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <LogOut className={`w-3.5 h-3.5 ${isLoggingOut ? "animate-spin" : ""}`} />
+                <span>Đăng xuất hệ thống</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Footer Toggle / Expand Button */}
       <div className="p-3 border-t border-border/70 shrink-0 bg-muted/20 flex items-center justify-between">
         {!isClose ? (
           <div className="flex items-center justify-between w-full text-xs text-muted-foreground">

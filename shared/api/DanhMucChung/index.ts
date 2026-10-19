@@ -5,7 +5,10 @@ import {
   CreateDanhMucChungPayload,
   DanhMucChungFilter,
   UpdateDanhMucChungPayload,
+  DMC_NavTabs,
+  DanhMucChungKPI,
 } from "@/types/danhMucChung";
+
 
 const getAuthHeaders = () => {
   const token = getAccessToken();
@@ -123,3 +126,65 @@ export const syncDanhMucChungApi = async () => {
 
   return response.data;
 };
+
+/**
+ * Lấy số lượng thống kê cho các tabs danh mục
+ * GET /api/DanhMucChungApi/NavTabs
+ */
+export const getDanhMucChungNavTabsApi = async (): Promise<DMC_NavTabs> => {
+  const response = await api.get(`${APP_URL}/DanhMucChungApi/NavTabs`, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
+
+  return response.data?.data ?? response.data;
+};
+
+/**
+ * Lấy dữ liệu thống kê KPI danh mục dùng chung
+ * GET /api/DanhMucChung/GetKPI
+ */
+export const getDanhMucChungKPIApi = async (): Promise<DanhMucChungKPI> => {
+  const endpoints = [
+    `${APP_URL}/DanhMucChung/GetKPI`,
+    `${APP_URL}/DanhMucChungApi/GetKPI`,
+    `/api/DanhMucChung/GetKPI`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.get(url, {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      });
+      if (response?.data?.data) {
+        return response.data.data;
+      }
+      if (response?.data?.total_DanhMucChung !== undefined) {
+        return response.data;
+      }
+    } catch {
+      try {
+        const response = await api.post(
+          url,
+          {},
+          {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          }
+        );
+        if (response?.data?.data) {
+          return response.data.data;
+        }
+        if (response?.data?.total_DanhMucChung !== undefined) {
+          return response.data;
+        }
+      } catch {
+        // Tiếp tục thử URL tiếp theo
+      }
+    }
+  }
+
+  throw new Error("Không thể tải dữ liệu KPI danh mục dùng chung");
+};
+

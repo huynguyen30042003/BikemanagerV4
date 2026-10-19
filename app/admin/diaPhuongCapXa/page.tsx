@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useMemo, Suspense } from "react";
+import React, { useMemo, Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Column, Table } from "@/components/ui/Table";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import {
   Compass,
@@ -23,24 +23,39 @@ import {
   XCircle,
   Building2,
   Store,
-  AlertCircle,
   Tag,
+  LayoutGrid,
+  List,
+  Copy,
+  Check,
+  ArrowRight,
+  MapPin,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useDiaPhuongCapXa } from "@/hooks/DiaPhuongCapXa/useDiaPhuongCapXa";
 import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
-import { SlideOver } from "@/components/ui/SlideOver";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { LocationNavTabs } from "@/components/Common/LocationNavTabs";
+import { Pagination } from "@/components/Common/Pagination";
+import { CreateDiaPhuongCapXaSlideOver } from "@/components/DiaPhuongCapXa/CreateDiaPhuongCapXaSlideOver";
+import { UpdateDiaPhuongCapXaSlideOver } from "@/components/DiaPhuongCapXa/UpdateDiaPhuongCapXaSlideOver";
 
-const LOAI_XA_OPTIONS = [
-  { value: 1, label: "Xã" },
-  { value: 2, label: "Phường" },
-  { value: 3, label: "Thị trấn / Đặc khu" },
-];
+type ViewMode = "grid" | "table";
 
 function DiaPhuongCapXaContent() {
   const searchParams = useSearchParams();
-  const tinhIdFromUrl = searchParams.get("tinhId") || searchParams.get("TinhID") || "";
+  const tinhIdFromUrl = searchParams.get("tinhId") || "";
+
+  // Dual View Mode (Showcase Grid vs Data Table)
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  // Local state for modals to isolate form re-renders from the main catalog list
+  const [openCreate, setOpenCreate] = useState<boolean>(false);
+  const [editingItem, setEditingItem] = useState<DM_DiaPhuongCapXa | null>(
+    null,
+  );
 
   const {
     page,
@@ -65,22 +80,6 @@ function DiaPhuongCapXaContent() {
     isFetching,
     refetch,
 
-    open,
-    setOpen,
-    dataAdd,
-    setDataAdd,
-    handleModalAdd,
-    handleSubmit,
-    isCreating,
-
-    openUpdate,
-    setOpenUpdate,
-    dataUpdate,
-    setDataUpdate,
-    handleOpenEdit,
-    handleSubmitUpdate,
-    isUpdating,
-
     openDelete,
     setOpenDelete,
     selectItemName,
@@ -90,18 +89,84 @@ function DiaPhuongCapXaContent() {
 
     handleSync,
     isSyncing,
-
-    errors,
   } = useDiaPhuongCapXa(tinhIdFromUrl ? Number(tinhIdFromUrl) : "");
 
   // Metrics
   const activeCount = useMemo(
     () => items.filter((item) => item.trangThai === true).length,
-    [items]
+    [items],
   );
   const inactiveCount = useMemo(
     () => items.filter((item) => item.trangThai === false).length,
-    [items]
+    [items],
+  );
+
+  const kpiCards = useMemo(
+    () => [
+      {
+        id: "all",
+        label: "Tổng Xã / Phường",
+        value: totalCount,
+        subtext: "Đơn vị hành chính cấp cơ sở",
+        icon: Compass,
+        iconBg: "bg-blue-500/10",
+        iconColor: "text-blue-600 dark:text-blue-400",
+        valueColor: "text-foreground",
+        filterKey: "all",
+        activeBorderClass:
+          "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10",
+        isLoading: isLoading,
+      },
+      {
+        id: "active",
+        label: "Đang hoạt động",
+        value: activeCount,
+        subtext: "Sẵn sàng liên kết cơ sở",
+        icon: CheckCircle2,
+        iconBg: "bg-emerald-500/10",
+        iconColor: "text-emerald-600 dark:text-emerald-400",
+        valueColor: "text-emerald-600 dark:text-emerald-400",
+        filterKey: "active",
+        activeBorderClass:
+          "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10",
+        isLoading: isLoading,
+      },
+      {
+        id: "inactive",
+        label: "Tạm ngưng / Khóa",
+        value: inactiveCount,
+        subtext: "Vô hiệu hóa trong biểu mẫu",
+        icon: XCircle,
+        iconBg: "bg-slate-500/10",
+        iconColor: "text-slate-600 dark:text-slate-400",
+        valueColor: "text-slate-700 dark:text-slate-300",
+        filterKey: "inactive",
+        activeBorderClass:
+          "border-slate-500/50 bg-slate-500/5 shadow-xs ring-2 ring-slate-500/10",
+        isLoading: isLoading,
+      },
+      {
+        id: "provinces",
+        label: "Tỉnh / TP liên kết",
+        value: provinceOptions.length,
+        subtext: "Xem toàn bộ danh mục cấp tỉnh",
+        icon: Building2,
+        iconBg: "bg-purple-500/10",
+        iconColor: "text-purple-600 dark:text-purple-400",
+        valueColor: "text-purple-600 dark:text-purple-400",
+        href: "/admin/diaPhuongCapTinh",
+        hoverClass: "hover:border-purple-500/40 hover:bg-purple-500/5",
+        isLoading: isLoadingTinh,
+      },
+    ],
+    [
+      totalCount,
+      activeCount,
+      inactiveCount,
+      provinceOptions.length,
+      isLoading,
+      isLoadingTinh,
+    ]
   );
 
   const filterProvinceOptions: SelectOption[] = useMemo(() => {
@@ -116,16 +181,60 @@ function DiaPhuongCapXaContent() {
     return provinceMap.get(Number(tinhFilter)) || `Tỉnh #${tinhFilter}`;
   }, [tinhFilter, provinceMap]);
 
+  const handleCopyCode = (code: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(code);
+    setCopiedId(code);
+    toast.success(`Đã sao chép mã xã: ${code}`);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const getLoaiXaBadge = (loai?: number | null) => {
+    if (loai === 2) {
+      return {
+        label: "Phường",
+        bgClass:
+          "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/25",
+        icon: <Building2 className="w-2.5 h-2.5" />,
+      };
+    }
+    if (loai === 3) {
+      return {
+        label: "Thị trấn",
+        bgClass:
+          "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25",
+        icon: <Tag className="w-2.5 h-2.5" />,
+      };
+    }
+    return {
+      label: "Xã",
+      bgClass:
+        "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25",
+      icon: <Compass className="w-2.5 h-2.5" />,
+    };
+  };
+
   const columns: Column<DM_DiaPhuongCapXa>[] = [
     {
       key: "maXa",
       title: "Mã Xã",
-      classNameHeader: "w-24 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-28 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => (
-        <span className="font-mono text-xs font-medium px-2 py-0.5 rounded-md bg-muted/60 border border-border/50 text-foreground">
-          {v || "—"}
-        </span>
+        <button
+          type="button"
+          onClick={(e) => handleCopyCode(String(v || ""), e)}
+          title="Nhấn để sao chép mã xã"
+          className="group/btn inline-flex items-center gap-1.5 font-mono text-xs font-medium px-2.5 py-1 rounded-md bg-muted/70 hover:bg-muted border border-border/60 hover:border-border text-foreground transition-all cursor-pointer shadow-2xs"
+        >
+          <span>{v || "-"}</span>
+          {copiedId === v ? (
+            <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+          ) : (
+            <Copy className="w-3 h-3 opacity-40 group-hover/btn:opacity-100 transition-opacity" />
+          )}
+        </button>
       ),
     },
     {
@@ -134,24 +243,21 @@ function DiaPhuongCapXaContent() {
       classNameHeader: "text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => {
-        const loaiLabel =
-          row.loai === 2 ? "Phường" : row.loai === 3 ? "Thị trấn" : "Xã";
+        const badge = getLoaiXaBadge(row.loai);
         return (
-          <div className="flex flex-col gap-0.5 py-0.5">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-foreground text-sm hover:text-blue-600 transition-colors">
+          <div className="flex flex-col gap-0.5 py-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                onClick={() => setEditingItem(row)}
+                className="font-semibold text-foreground text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+              >
                 {row.ten}
               </span>
               <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
-                  row.loai === 2
-                    ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
-                    : row.loai === 3
-                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                    : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-                }`}
+                className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium border ${badge.bgClass}`}
               >
-                {loaiLabel}
+                {badge.icon}
+                {badge.label}
               </span>
             </div>
             {row.tenKhongDau && (
@@ -166,25 +272,35 @@ function DiaPhuongCapXaContent() {
     {
       key: "tinhID",
       title: "Trực thuộc Tỉnh / TP",
-      classNameHeader: "w-56 text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-56 text-left text-xs font-semibold text-muted-foreground",
       render: (tinhId, row) => {
         const tName =
           row.tenTinh || provinceMap.get(Number(tinhId)) || `Tỉnh #${tinhId}`;
         return (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-500/20 max-w-[210px] truncate shadow-2xs">
+          <button
+            type="button"
+            onClick={() => {
+              setTinhFilter(String(tinhId));
+              setPage(1);
+            }}
+            title="Lọc nhanh danh sách theo tỉnh này"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 hover:bg-blue-500/15 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-500/20 max-w-[210px] truncate shadow-2xs transition-colors cursor-pointer text-left"
+          >
             <Building2 className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
             <span className="truncate">{tName}</span>
-          </div>
+          </button>
         );
       },
     },
     {
       key: "thuTu",
       title: "Thứ tự",
-      classNameHeader: "text-center w-20 text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "text-center w-20 text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => (
-        <span className="inline-flex items-center justify-center min-w-6 px-1.5 py-0.5 rounded text-xs font-mono bg-muted/80 text-foreground border border-border/60">
+        <span className="inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded text-xs font-mono bg-muted/80 text-foreground border border-border/60">
           {v ?? 0}
         </span>
       ),
@@ -192,7 +308,8 @@ function DiaPhuongCapXaContent() {
     {
       key: "trangThai",
       title: "Trạng thái",
-      classNameHeader: "text-center w-32 text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "text-center w-32 text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) =>
         v ? (
@@ -214,16 +331,17 @@ function DiaPhuongCapXaContent() {
     {
       key: "function",
       title: "Thao tác",
-      classNameHeader: "text-center w-28 text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "text-center w-28 text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex gap-1 justify-center items-center">
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => handleOpenEdit(row)}
+            onClick={() => setEditingItem(row)}
             title="Chỉnh sửa xã / phường"
-            className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
+            className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer active:scale-95"
           >
             <SquarePen className="w-4 h-4" />
           </Button>
@@ -233,7 +351,7 @@ function DiaPhuongCapXaContent() {
             size="icon-sm"
             onClick={() => handleOpenDelete(row)}
             title="Xóa xã / phường"
-            className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+            className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer active:scale-95"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -242,7 +360,9 @@ function DiaPhuongCapXaContent() {
     },
   ];
 
-  const hasActiveFilters = Boolean(searchInput || tinhFilter || statusFilter !== "all");
+  const hasActiveFilters = Boolean(
+    searchInput || tinhFilter || statusFilter !== "all",
+  );
 
   const handleResetFilters = () => {
     handleSearch("");
@@ -277,7 +397,8 @@ function DiaPhuongCapXaContent() {
                     Cấp Xã & Phường
                   </h1>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Quản lý danh mục địa phương cấp xã / phường / thị trấn trực thuộc các tỉnh
+                    Quản lý danh mục địa phương cấp xã / phường / thị trấn trực
+                    thuộc các tỉnh thành
                   </p>
                 </div>
               </div>
@@ -289,7 +410,7 @@ function DiaPhuongCapXaContent() {
                 size="sm"
                 onClick={handleSync}
                 disabled={isSyncing}
-                className="h-9 px-3.5 flex items-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs"
+                className="h-9 px-3.5 flex items-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs active:scale-[0.98] transition-transform"
                 title="Đồng bộ danh sách xã/phường từ dữ liệu chuẩn"
               >
                 <RefreshCw
@@ -300,7 +421,7 @@ function DiaPhuongCapXaContent() {
 
               <Button
                 size="sm"
-                onClick={handleModalAdd}
+                onClick={() => setOpenCreate(true)}
                 className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -310,118 +431,71 @@ function DiaPhuongCapXaContent() {
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <LocationNavTabs activeTab="xa" totalXa={totalCount} />
+            <LocationNavTabs activeTab="xa" total_DiaPhuongCapXa={totalCount} />
           </div>
         </div>
       )}
 
-      {/* 2. KPI Overview Cards */}
+      {/* 2. Interactive KPI Overview Cards (Render bằng map data) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-        <Card
-          onClick={() => {
-            setStatusFilter("all");
-            setPage(1);
-          }}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
-            statusFilter === "all"
-              ? "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10"
-              : "border-border/80 bg-card hover:border-border hover:shadow-xs"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Tổng Xã / Phường
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <Compass className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-bold text-foreground">
-            {isLoading ? <Skeleton className="h-7 w-16" /> : totalCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            Đơn vị hành chính cấp cơ sở
-          </p>
-        </Card>
+        {kpiCards.map((card) => {
+          const Icon = card.icon;
+          const isActive = Boolean(
+            card.filterKey && statusFilter === card.filterKey
+          );
 
-        <Card
-          onClick={() => {
-            setStatusFilter("active");
-            setPage(1);
-          }}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
-            statusFilter === "active"
-              ? "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10"
-              : "border-border/80 bg-card hover:border-border hover:shadow-xs"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Đang hoạt động
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {isLoading ? <Skeleton className="h-7 w-16" /> : activeCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            Sẵn sàng liên kết cơ sở
-          </p>
-        </Card>
-
-        <Card
-          onClick={() => {
-            setStatusFilter("inactive");
-            setPage(1);
-          }}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
-            statusFilter === "inactive"
-              ? "border-slate-500/50 bg-slate-500/5 shadow-xs ring-2 ring-slate-500/10"
-              : "border-border/80 bg-card hover:border-border hover:shadow-xs"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Tạm ngưng / Khóa
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center">
-              <XCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 text-2xl font-bold text-slate-700 dark:text-slate-300">
-            {isLoading ? <Skeleton className="h-7 w-16" /> : inactiveCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            Vô hiệu hóa trong biểu mẫu
-          </p>
-        </Card>
-
-        <Link href="/admin/diaPhuongCapTinh" className="block group/kpi">
-          <Card className="p-4 rounded-xl border border-border/80 bg-card hover:border-purple-500/40 hover:bg-purple-500/5 transition-all cursor-pointer h-full">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">
-                Tỉnh / TP liên kết
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center group-hover/kpi:scale-105 transition-transform">
-                <Building2 className="w-4 h-4" />
+          const cardElement = (
+            <Card
+              key={card.id}
+              onClick={
+                card.filterKey
+                  ? () => {
+                      setStatusFilter(card.filterKey);
+                      setPage(1);
+                    }
+                  : undefined
+              }
+              className={`p-4 gap-0 rounded-xl border transition-all cursor-pointer h-full ${
+                isActive
+                  ? card.activeBorderClass
+                  : `border-border/80 bg-card hover:border-border hover:shadow-xs ${card.hoverClass || ""}`
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {card.label}
+                </span>
+                <div
+                  className={`w-7 h-7 rounded-lg ${card.iconBg} ${card.iconColor} flex items-center justify-center transition-transform group-hover/kpi:scale-105`}
+                >
+                  <Icon className="w-4 h-4" />
+                </div>
               </div>
-            </div>
-            <div className="mt-2 text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {isLoadingTinh ? <Skeleton className="h-7 w-16" /> : provinceOptions.length}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Nhóm tỉnh thành phố trực thuộc
-            </p>
-          </Card>
-        </Link>
+              <div className={`mt-2 text-2xl font-bold ${card.valueColor}`}>
+                {card.isLoading ? <Skeleton className="h-7 w-16" /> : card.value}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {card.subtext}
+              </p>
+            </Card>
+          );
+
+          if (card.href) {
+            return (
+              <Link key={card.id} href={card.href} className="block group/kpi">
+                {cardElement}
+              </Link>
+            );
+          }
+
+          return cardElement;
+        })}
       </div>
 
-      {/* 3. Toolbar: Tìm kiếm, SearchSelect Tỉnh thành & Trạng thái */}
+      {/* 3. Toolbar: Tìm kiếm, SearchSelect Tỉnh thành, Trạng thái & Switcher View Mode */}
       <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs space-y-2.5">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-[220px]">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               placeholder="Tìm theo tên hoặc mã xã..."
@@ -441,7 +515,7 @@ function DiaPhuongCapXaContent() {
             )}
           </div>
 
-          {/* CUSTOM SEARCH SELECT: Lọc theo Tỉnh / Thành phố (Bắt buộc theo ruleFE.md) */}
+          {/* CUSTOM SEARCH SELECT: Lọc theo Tỉnh / Thành phố */}
           <div className="w-full lg:w-72 shrink-0">
             <SearchSelect
               options={filterProvinceOptions}
@@ -455,62 +529,96 @@ function DiaPhuongCapXaContent() {
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("all");
-                setPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                statusFilter === "all"
-                  ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Tất cả ({totalCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("active");
-                setPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                statusFilter === "active"
-                  ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Sử dụng ({activeCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("inactive");
-                setPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                statusFilter === "inactive"
-                  ? "bg-background shadow-xs text-slate-700 dark:text-slate-300 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Khóa ({inactiveCount})
-            </button>
-          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Status Segment Control */}
+            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("all");
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                  statusFilter === "all"
+                    ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Tất cả ({totalCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("active");
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                  statusFilter === "active"
+                    ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Sử dụng ({activeCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("inactive");
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                  statusFilter === "inactive"
+                    ? "bg-background shadow-xs text-slate-700 dark:text-slate-300 font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Khóa ({inactiveCount})
+              </button>
+            </div>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            title="Tải lại dữ liệu"
-            className="h-9.5 w-9.5 shrink-0 cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin text-blue-500" : ""}`} />
-          </Button>
+            {/* View Mode Switcher */}
+            <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                title="Chế độ xem lưới thẻ (Showcase Grid)"
+                className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                  viewMode === "grid"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                title="Chế độ xem bảng chi tiết (Data Table)"
+                className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                  viewMode === "table"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Reload Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              title="Tải lại dữ liệu"
+              className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs active:scale-95"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+              />
+            </Button>
+          </div>
         </div>
 
         {hasActiveFilters && (
@@ -543,7 +651,8 @@ function DiaPhuongCapXaContent() {
             )}
             {statusFilter !== "all" && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/60">
-                Trạng thái: {statusFilter === "active" ? "Đang sử dụng" : "Đã khóa"}
+                Trạng thái:{" "}
+                {statusFilter === "active" ? "Đang sử dụng" : "Đã khóa"}
                 <button
                   type="button"
                   onClick={() => setStatusFilter("all")}
@@ -564,357 +673,274 @@ function DiaPhuongCapXaContent() {
         )}
       </div>
 
-      {/* 4. Table */}
+      {/* 4. Content Area (Showcase Grid vs Data Table) */}
       {isLoading ? (
-        <Card className="p-6">
-          <Skeleton className="h-10 w-full mb-3" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full" />
-        </Card>
-      ) : (
-        <div className="rounded-xl border border-border/80 bg-card shadow-xs overflow-hidden">
-          <div className="p-3 flex flex-col gap-3 w-full">
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
-                  <FolderOpen className="w-7 h-7 stroke-[1.5]" />
+        viewMode === "grid" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <Card
+                key={idx}
+                className="rounded-xl border border-border/70 p-4 space-y-3"
+              >
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
                 </div>
-                <p className="font-semibold text-base text-foreground">
-                  Không tìm thấy xã / phường nào
-                </p>
-                <p className="text-xs text-muted-foreground max-w-sm mt-1">
-                  {hasActiveFilters
-                    ? "Không có kết quả khớp với bộ lọc. Hãy điều chỉnh từ khóa hoặc xóa bớt tiêu chí lọc."
-                    : "Chưa có dữ liệu xã / phường. Hãy thêm mới hoặc nhấn Đồng bộ chuẩn!"}
-                </p>
-                <div className="flex items-center gap-2 mt-4">
-                  {hasActiveFilters && (
-                    <Button variant="outline" size="sm" onClick={handleResetFilters} className="cursor-pointer">
-                      Xóa bộ lọc
-                    </Button>
-                  )}
-                  <Button size="sm" onClick={handleModalAdd} className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
-                    <Plus className="w-4 h-4 mr-1" /> Thêm xã / phường mới
-                  </Button>
+                <Skeleton className="h-6 w-3/4 rounded-md" />
+                <Skeleton className="h-4 w-1/2 rounded-md" />
+                <div className="pt-2 border-t border-border/40 flex justify-between gap-2">
+                  <Skeleton className="h-8 flex-1 rounded-lg" />
+                  <Skeleton className="h-8 flex-1 rounded-lg" />
                 </div>
-              </div>
-            ) : (
-              <>
-                <Table<DM_DiaPhuongCapXa>
-                  data={items}
-                  columns={columns}
-                  showIndex
-                  startIndex={(page - 1) * pageSize}
-                />
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-6">
+            <Skeleton className="h-10 w-full mb-3" />
+            <Skeleton className="h-12 w-full mb-2" />
+            <Skeleton className="h-12 w-full mb-2" />
+            <Skeleton className="h-12 w-full" />
+          </Card>
+        )
+      ) : items.length === 0 ? (
+        <div className="rounded-xl border border-border/80 bg-card p-12 flex flex-col items-center justify-center text-center text-muted-foreground shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
+            <FolderOpen className="w-7 h-7 stroke-[1.5]" />
+          </div>
+          <p className="font-semibold text-base text-foreground">
+            Không tìm thấy xã / phường nào
+          </p>
+          <p className="text-xs text-muted-foreground max-w-sm mt-1">
+            {hasActiveFilters
+              ? "Không có kết quả khớp với bộ lọc hiện tại. Hãy điều chỉnh từ khóa hoặc xóa bớt tiêu chí lọc."
+              : "Chưa có dữ liệu xã / phường nào trong hệ thống. Hãy thêm mới hoặc nhấn Đồng bộ chuẩn!"}
+          </p>
+          <div className="flex items-center gap-2 mt-4">
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetFilters}
+                className="cursor-pointer"
+              >
+                Xóa bộ lọc
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSync}
+              className="cursor-pointer"
+            >
+              Đồng bộ ngay
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setOpenCreate(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer font-medium"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Thêm xã / phường mới
+            </Button>
+          </div>
+        </div>
+      ) : viewMode === "grid" ? (
+        /* SHOWCASE GRID VIEW */
+        <div className="space-y-4">
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+          >
+            {items.map((xa: DM_DiaPhuongCapXa) => {
+              const badge = getLoaiXaBadge(xa.loai);
+              const parentProvince =
+                xa.tenTinh ||
+                provinceMap.get(Number(xa.tinhID)) ||
+                `Tỉnh #${xa.tinhID}`;
 
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/70 text-sm text-muted-foreground">
-                  <div className="text-xs">
-                    Trang <strong className="text-foreground">{page}</strong> / {totalPages}{" "}
-                    (Tổng <strong className="text-foreground">{totalCount}</strong> xã/phường)
-                  </div>
+              return (
+                <Card
+                  key={xa.xaID}
+                  className="group rounded-xl border border-border/80 bg-card p-4 pb-1.5 shadow-2xs hover:shadow-md hover:border-border transition-all flex flex-col justify-between gap-3 relative"
+                >
+                  <div className="space-y-3">
+                    {/* Top Bar: Loai Badge & Status Badge */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full font-medium border ${badge.bgClass}`}
+                      >
+                        {badge.icon}
+                        {badge.label}
+                      </span>
 
-                  <div className="flex items-center gap-1.5">
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
+                      {xa.trangThai ? (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Sử dụng
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                          Khóa
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Main Header */}
+                    <div>
+                      <h3
+                        onClick={() => setEditingItem(xa)}
+                        className="text-base font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer line-clamp-1"
+                        title={xa.ten}
+                      >
+                        {xa.ten}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                        {xa.tenKhongDau || "Chưa có tên không dấu"}
+                      </p>
+                    </div>
+
+                    {/* Parent Province Link Badge */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTinhFilter(String(xa.tinhID));
                         setPage(1);
                       }}
-                      className="h-8 border border-border/80 rounded-md px-2 bg-background text-foreground text-xs outline-none focus:border-blue-500 cursor-pointer"
+                      title="Lọc nhanh danh sách theo tỉnh này"
+                      className="w-full inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/15 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-500/20 truncate transition-colors cursor-pointer text-left"
                     >
-                      <option value={10}>10 / trang</option>
-                      <option value={20}>20 / trang</option>
-                      <option value={50}>50 / trang</option>
-                      <option value={100}>100 / trang</option>
-                    </select>
+                      <Building2 className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                      <span className="truncate">{parentProvince}</span>
+                    </button>
 
+                    {/* Meta Chips: Mã Xã & Thứ tự */}
+                    <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyCode(xa.maXa, e)}
+                        title="Nhấn để sao chép mã xã"
+                        className="group/code inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-xs bg-muted/70 hover:bg-muted text-foreground border border-border/60 transition-colors cursor-pointer shadow-2xs"
+                      >
+                        <span className="text-muted-foreground text-[10px]">
+                          Mã:
+                        </span>
+                        <span className="font-semibold">{xa.maXa}</span>
+                        {copiedId === xa.maXa ? (
+                          <Check className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3 h-3 opacity-40 group-hover/code:opacity-100 transition-opacity" />
+                        )}
+                      </button>
+
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono bg-muted/50 text-muted-foreground border border-border/40">
+                        <span>#</span>
+                        <span>{xa.thuTu ?? 0}</span>
+                      </span>
+                    </div>
+
+                    {/* Relation Link: Showrooms / Cơ sở trong tỉnh */}
+                    <div className="pt-2 border-t border-border/50 text-xs">
+                      <Link
+                        href={`/admin/diaDiem?tinhId=${xa.tinhID}`}
+                        className="flex items-center justify-between p-2 rounded-lg bg-muted/40 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border border-border/50 hover:border-indigo-500/30 text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer group/link"
+                        title="Xem các cơ sở showroom tại tỉnh này"
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Store className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                          <span className="font-medium text-[11px] truncate">
+                            Showroom thuộc tỉnh
+                          </span>
+                        </div>
+                        <ArrowRight className="w-3 h-3 opacity-50 group-hover/link:opacity-100 group-hover/link:translate-x-0.5 transition-all shrink-0" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Footer Action Buttons */}
+                  <div className="pt-2 border-t border-border/60 flex items-center justify-end gap-1">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      disabled={page <= 1}
-                      onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                      className="h-8 text-xs cursor-pointer"
+                      onClick={() => setEditingItem(xa)}
+                      className="h-8 px-2.5 text-xs text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer active:scale-95 flex items-center gap-1"
                     >
-                      Trước
+                      <SquarePen className="w-3.5 h-3.5" />
+                      <span>Sửa</span>
                     </Button>
 
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                      className="h-8 text-xs cursor-pointer"
+                      onClick={() => handleOpenDelete(xa)}
+                      className="h-8 px-2.5 text-xs text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer active:scale-95 flex items-center gap-1"
                     >
-                      Sau
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Xóa</span>
                     </Button>
                   </div>
-                </div>
-              </>
-            )}
+                </Card>
+              );
+            })}
+          </motion.div>
+
+          {/* Pagination */}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            setPage={setPage}
+            setPageSize={setPageSize}
+            itemName="xã/phường"
+          />
+        </div>
+      ) : (
+        /* DATA TABLE VIEW */
+        <div className="rounded-xl border border-border/80 bg-card shadow-xs overflow-hidden">
+          <div className="p-3 flex flex-col gap-3 w-full">
+            <Table<DM_DiaPhuongCapXa>
+              data={items}
+              columns={columns}
+              showIndex
+              startIndex={(page - 1) * pageSize}
+            />
+
+            {/* Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              setPage={setPage}
+              setPageSize={setPageSize}
+              itemName="xã/phường"
+            />
           </div>
         </div>
       )}
 
-      {/* 5. SlideOver: THÊM MỚI XÃ / PHƯỜNG */}
-      <SlideOver
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Thêm mới Xã / Phường"
-        description="Khai báo đơn vị hành chính cấp cơ sở thuộc tỉnh / thành phố"
-        icon={Compass}
-        footer={
-          <>
-            <Button
-              variant="outline"
-              className="flex-1 cursor-pointer"
-              onClick={() => setOpen(false)}
-              disabled={isCreating}
-            >
-              Hủy
-            </Button>
-            <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-              onClick={handleSubmit}
-              disabled={isCreating}
-            >
-              {isCreating ? <RefreshCw className="w-4 h-4 animate-spin mr-1.5" /> : null}
-              Lưu xã / phường
-            </Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Trực thuộc Tỉnh / Thành phố <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={provinceOptions}
-              value={dataAdd.TinhID || ""}
-              onChange={(val) => setDataAdd((prev) => ({ ...prev, TinhID: Number(val) || 0 }))}
-              placeholder="-- Chọn Tỉnh / TP --"
-            />
-            {errors.tinhID && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {errors.tinhID}
-              </p>
-            )}
-          </div>
+      {/* SlideOver: THÊM MỚI XÃ / PHƯỜNG */}
+      <CreateDiaPhuongCapXaSlideOver
+        open={openCreate}
+        onClose={() => setOpenCreate(false)}
+        provinceOptions={provinceOptions}
+        defaultTinhId={tinhFilter ? Number(tinhFilter) : 0}
+        onSuccess={() => refetch()}
+      />
 
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Mã xã <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={dataAdd.MaXa}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, MaXa: e.target.value }))}
-              placeholder="Ví dụ: 00001..."
-              className={`font-mono rounded-lg ${errors.maXa ? "border-red-500" : ""}`}
-            />
-            {errors.maXa && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {errors.maXa}
-              </p>
-            )}
-          </div>
+      {/* SlideOver: CẬP NHẬT XÃ / PHƯỜNG */}
+      <UpdateDiaPhuongCapXaSlideOver
+        open={Boolean(editingItem)}
+        onClose={() => setEditingItem(null)}
+        data={editingItem}
+        provinceOptions={provinceOptions}
+        onSuccess={() => refetch()}
+      />
 
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Phân loại <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={LOAI_XA_OPTIONS}
-              value={dataAdd.Loai}
-              onChange={(val) => setDataAdd((prev) => ({ ...prev, Loai: Number(val) || 1 }))}
-              placeholder="Chọn loại..."
-            />
-          </div>
-
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tên Xã / Phường / Thị trấn <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={dataAdd.Ten}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, Ten: e.target.value }))}
-              placeholder="Ví dụ: Phường Phúc Xá, Xã Tiền Phong..."
-              className={`rounded-lg ${errors.ten ? "border-red-500" : ""}`}
-            />
-            {errors.ten && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {errors.ten}
-              </p>
-            )}
-          </div>
-
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tên không dấu
-            </label>
-            <Input
-              value={dataAdd.TenKhongDau || ""}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, TenKhongDau: e.target.value }))}
-              placeholder="Ví dụ: Phuong Phuc Xa..."
-              className="rounded-lg"
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Thứ tự hiển thị
-            </label>
-            <Input
-              type="number"
-              min={0}
-              value={dataAdd.ThuTu}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, ThuTu: parseInt(e.target.value) || 0 }))}
-              className="rounded-lg font-mono"
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5 justify-end pb-1">
-            <span className="text-sm font-medium text-foreground">
-              Trạng thái
-            </span>
-            <div className="flex items-center gap-2.5 h-9.5 px-3 rounded-lg border border-border/70 bg-muted/30">
-              <Switch
-                id="isActiveXaAdd"
-                checked={dataAdd.TrangThai}
-                onCheckedChange={(checked) => setDataAdd((prev) => ({ ...prev, TrangThai: checked }))}
-              />
-              <label htmlFor="isActiveXaAdd" className="text-xs font-medium cursor-pointer select-none">
-                {dataAdd.TrangThai ? "Kích hoạt" : "Tạm khóa"}
-              </label>
-            </div>
-          </div>
-        </div>
-      </SlideOver>
-
-      {/* 6. SlideOver: CẬP NHẬT XÃ / PHƯỜNG */}
-      <SlideOver
-        open={openUpdate}
-        onClose={() => setOpenUpdate(false)}
-        title={`Cập nhật Xã / Phường #${dataUpdate.XaID}`}
-        description="Chỉnh sửa thông tin đơn vị hành chính cấp cơ sở"
-        icon={SquarePen}
-        footer={
-          <>
-            <Button
-              variant="outline"
-              className="flex-1 cursor-pointer"
-              onClick={() => setOpenUpdate(false)}
-              disabled={isUpdating}
-            >
-              Hủy
-            </Button>
-            <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-              onClick={handleSubmitUpdate}
-              disabled={isUpdating}
-            >
-              {isUpdating ? <RefreshCw className="w-4 h-4 animate-spin mr-1.5" /> : null}
-              Lưu thay đổi
-            </Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Trực thuộc Tỉnh / Thành phố <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={provinceOptions}
-              value={dataUpdate.TinhID || ""}
-              onChange={(val) => setDataUpdate((prev) => ({ ...prev, TinhID: Number(val) || 0 }))}
-              placeholder="-- Chọn Tỉnh / TP --"
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Mã xã <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={dataUpdate.MaXa}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, MaXa: e.target.value }))}
-              placeholder="Nhập mã..."
-              className={`font-mono rounded-lg ${errors.maXa ? "border-red-500" : ""}`}
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Phân loại <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={LOAI_XA_OPTIONS}
-              value={dataUpdate.Loai}
-              onChange={(val) => setDataUpdate((prev) => ({ ...prev, Loai: Number(val) || 1 }))}
-              placeholder="Chọn loại..."
-            />
-          </div>
-
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tên Xã / Phường / Thị trấn <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={dataUpdate.Ten}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, Ten: e.target.value }))}
-              placeholder="Nhập tên..."
-              className={`rounded-lg ${errors.ten ? "border-red-500" : ""}`}
-            />
-          </div>
-
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tên không dấu
-            </label>
-            <Input
-              value={dataUpdate.TenKhongDau || ""}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, TenKhongDau: e.target.value }))}
-              placeholder="Nhập tên không dấu..."
-              className="rounded-lg"
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Thứ tự hiển thị
-            </label>
-            <Input
-              type="number"
-              min={0}
-              value={dataUpdate.ThuTu}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, ThuTu: parseInt(e.target.value) || 0 }))}
-              className="rounded-lg font-mono"
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5 justify-end pb-1">
-            <span className="text-sm font-medium text-foreground">
-              Trạng thái
-            </span>
-            <div className="flex items-center gap-2.5 h-9.5 px-3 rounded-lg border border-border/70 bg-muted/30">
-              <Switch
-                id="isActiveXaUpdate"
-                checked={dataUpdate.TrangThai}
-                onCheckedChange={(checked) => setDataUpdate((prev) => ({ ...prev, TrangThai: checked }))}
-              />
-              <label htmlFor="isActiveXaUpdate" className="text-xs font-medium cursor-pointer select-none">
-                {dataUpdate.TrangThai ? "Kích hoạt" : "Tạm khóa"}
-              </label>
-            </div>
-          </div>
-        </div>
-      </SlideOver>
-
-      {/* 7. Modal Xóa */}
+      {/* Modal Xóa */}
       <ConfirmModal
         open={openDelete}
         onClose={() => setOpenDelete(false)}
@@ -924,10 +950,12 @@ function DiaPhuongCapXaContent() {
           <div>
             <p>
               Bạn có chắc chắn muốn xóa &quot;
-              <strong className="text-foreground">{selectItemName}</strong>&quot; không?
+              <strong className="text-foreground">{selectItemName}</strong>
+              &quot; không?
             </p>
             <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác nếu xã / phường này đang được liên kết với cơ sở showroom hoặc địa chỉ khách hàng.
+              Hành động này không thể hoàn tác nếu xã / phường này đang được
+              liên kết với cơ sở showroom hoặc địa chỉ khách hàng.
             </span>
           </div>
         }

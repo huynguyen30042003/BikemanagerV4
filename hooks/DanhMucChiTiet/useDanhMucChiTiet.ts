@@ -17,6 +17,7 @@ import {
   useUpdateDanhMucChiTiet,
   useDeleteDanhMucChiTiet,
   useSyncDanhMucChiTiet,
+  useGetDanhMucChiTietKPI,
 } from "./useDanhMucChiTietApi";
 import { useGetDanhMucChung } from "../DanhMucChung/useDanhMucChungApi";
 
@@ -139,6 +140,13 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
   const updateDetail = useUpdateDanhMucChiTiet();
   const deleteDetail = useDeleteDanhMucChiTiet();
   const syncDetail = useSyncDanhMucChiTiet();
+
+  // Gọi API lấy dữ liệu KPI
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetDanhMucChiTietKPI();
 
   // Reset pagination khi search
   const handleSearch = (value: string) => {
@@ -337,6 +345,11 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
     isLoading,
     isFetching,
     refetch,
+
+    // KPI
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     // Add state & actions
     open,

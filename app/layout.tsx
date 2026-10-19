@@ -25,9 +25,9 @@ export default function RootLayout({
 			className={`${roboto.variable} h-full antialiased`}
 		>
 			<body className="font-roboto">
-				<Providers>
-					<QueryProvider>{children}</QueryProvider>
-				</Providers>
+				{/* <Providers> */}
+				<QueryProvider>{children}</QueryProvider>
+				{/* </Providers> */}
 				<Toaster />
 			</body>
 		</html>

@@ -5,7 +5,9 @@ import {
   CreateDiaDiemPayload,
   DiaDiemFilter,
   UpdateDiaDiemPayload,
+  DD_NavTabs,
 } from "@/types/diaDiem";
+
 
 const getAuthHeaders = () => {
   const token = getAccessToken();
@@ -18,6 +20,7 @@ const getAuthHeaders = () => {
 const getAuthFormDataHeaders = () => {
   const token = getAccessToken();
   return {
+    "Content-Type": "multipart/form-data",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 };
@@ -148,3 +151,17 @@ export const deleteDiaDiemApi = async (diaDiemId: string) => {
 
   return response.data;
 };
+
+/**
+ * Lấy số lượng thống kê cho các tabs địa bàn & cơ sở
+ * GET /api/DiaDiemApi/NavTabs
+ */
+export const getDiaDiemNavTabsApi = async (): Promise<DD_NavTabs> => {
+  const response = await api.get(`${APP_URL}/DiaDiemApi/NavTabs`, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
+
+  return response.data?.data ?? response.data;
+};
+

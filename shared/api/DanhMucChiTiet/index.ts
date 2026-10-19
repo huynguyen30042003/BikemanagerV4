@@ -4,6 +4,7 @@ import { getAccessToken } from "@/lib/auth";
 import {
   CreateDanhMucChiTietPayload,
   DanhMucChiTietFilter,
+  DanhMucChiTietKPI,
   UpdateDanhMucChiTietPayload,
 } from "@/types/danhMucChiTiet";
 
@@ -123,4 +124,52 @@ export const syncDanhMucChiTietApi = async () => {
   );
 
   return response.data;
+};
+
+/**
+ * Lấy dữ liệu thống kê KPI danh mục chi tiết
+ * GET /api/DanhMucChiTiet/GetKPI
+ */
+export const getDanhMucChiTietKPIApi = async (): Promise<DanhMucChiTietKPI> => {
+  const endpoints = [
+    `${APP_URL}/DanhMucChiTiet/GetKPI`,
+    `${APP_URL}/DanhMucChiTietApi/GetKPI`,
+    `/api/DanhMucChiTiet/GetKPI`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.get(url, {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      });
+      if (response?.data?.data) {
+        return response.data.data;
+      }
+      if (response?.data?.total_DanhMucChiTiet !== undefined) {
+        return response.data;
+      }
+    } catch {
+      try {
+        const response = await api.post(
+          url,
+          {},
+          {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          }
+        );
+        if (response?.data?.data) {
+          return response.data.data;
+        }
+        if (response?.data?.total_DanhMucChiTiet !== undefined) {
+          return response.data;
+        }
+      } catch {
+        // Tiếp tục thử URL tiếp theo
+      }
+    }
+  }
+
+  throw new Error("Không thể tải dữ liệu KPI danh mục chi tiết");
 };

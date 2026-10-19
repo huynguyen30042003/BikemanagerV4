@@ -40,6 +40,7 @@ export const useCreateQuocGia = () => {
     mutationFn: (body: CreateQuocGiaPayload) => createQuocGiaApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
 };
@@ -51,6 +52,7 @@ export const useUpdateQuocGia = () => {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.detail(vars.QuocGiaID) });
+      qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
 };
@@ -61,6 +63,7 @@ export const useDeleteQuocGia = () => {
     mutationFn: (id: number) => deleteQuocGiaApi(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
 };
@@ -71,6 +74,8 @@ export const useSyncQuocGia = () => {
     mutationFn: () => syncQuocGiaApi(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
+
 };

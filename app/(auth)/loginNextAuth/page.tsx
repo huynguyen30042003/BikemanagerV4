@@ -3,7 +3,8 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 
 export default function LoginButton() {
-  const { data: session } = useSession();
+  const sessionContext = useSession?.();
+  const session = sessionContext?.data;
 
   if (session) {
     return (
@@ -15,5 +16,5 @@ export default function LoginButton() {
     );
   }
 
-  return <button onClick={() => signIn("orchard")}>Login with Orchard</button>;
+  return <button onClick={() => signIn?.("orchard")}>Login with Orchard</button>;
 }

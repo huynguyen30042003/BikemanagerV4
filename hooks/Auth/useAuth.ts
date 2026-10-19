@@ -9,6 +9,8 @@ import {
   getUserRole,
   hasRole,
   UserTokenInfo,
+  setAuthTokens,
+  clearAuthTokens,
 } from "@/lib/auth";
 
 export * from "@/lib/auth";
@@ -21,15 +23,7 @@ export const useLogin = (callbackUrl?: string) => {
   return useMutation({
     mutationFn: loginApi,
     onSuccess: async (data: any) => {
-      if (data?.access_token) {
-        localStorage.setItem("access_token", data.access_token);
-      }
-      if (data?.expires_in) {
-        localStorage.setItem(
-          "expires_at",
-          (Math.floor(Date.now() / 1000) + data.expires_in).toString()
-        );
-      }
+      setAuthTokens(data);
       await fetchUser();
       const target =
         callbackUrl &&
@@ -53,10 +47,7 @@ export const useLogout = () => {
 
   return async (redirectUrl?: string) => {
     clearUser();
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("expires_at");
-    document.cookie = "access_token=; Max-Age=0; path=/";
-    document.cookie = "refresh_token=; Max-Age=0; path=/";
+    clearAuthTokens();
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch (e) {

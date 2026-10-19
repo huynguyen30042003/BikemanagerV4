@@ -13,7 +13,11 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
 
   // 2. Kinh doanh
   "/admin/customer": ["Administrator", "AdminAccess", "SaleAccess"],
+  "/admin/brands": ["Administrator", "AdminAccess", "ProductAccess"],
   "/admin/products": ["Administrator", "AdminAccess", "ProductAccess"],
+  "/admin/product-variants": ["Administrator", "AdminAccess", "ProductAccess"],
+  "/admin/product-images": ["Administrator", "AdminAccess", "ProductAccess"],
+  "/admin/product-serials": ["Administrator", "AdminAccess", "ProductAccess"],
   "/admin/orders": ["Administrator", "AdminAccess", "OrderAccess", "SaleAccess"],
   "/admin/sales": ["Administrator", "AdminAccess", "SaleAccess"],
 
@@ -23,6 +27,15 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/admin/suppliers": ["Administrator", "AdminAccess", "PurchaseAccess"],
   "/admin/purchase-orders": ["Administrator", "AdminAccess", "PurchaseAccess"],
   "/admin/warehouses": ["Administrator", "AdminAccess", "WarehouseAccess"],
+  "/admin/inventory": ["Administrator", "AdminAccess", "WarehouseAccess"],
+  "/admin/stock-transfers": ["Administrator", "AdminAccess", "WarehouseAccess"],
+  "/admin/stock-audits": ["Administrator", "AdminAccess", "WarehouseAccess"],
+
+  // 4. Kỹ thuật & Bảo hành
+  "/admin/warranties": ["Administrator", "AdminAccess", "TechnicalAccess", "SaleAccess"],
+  "/admin/warranty-claims": ["Administrator", "AdminAccess", "TechnicalAccess"],
+  "/admin/repair-tickets": ["Administrator", "AdminAccess", "TechnicalAccess"],
+  "/admin/repair-services": ["Administrator", "AdminAccess", "TechnicalAccess"],
 };
 
 /**

@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
+
+  // Bỏ qua tuyệt đối các file tĩnh, hình ảnh, scripts và API
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/favicon.ico") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
   const token =
     req.cookies.get("access_token")?.value ||
     req.cookies.get("refresh_token")?.value;
 
-  const isAuthPage = req.nextUrl.pathname === "/login";
+  const isAuthPage = pathname === "/login";
 
   // Chưa đăng nhập mà truy cập trang quản trị/dashboard -> chuyển đến login kèm callbackUrl
   if (!token && !isAuthPage) {

@@ -19,6 +19,8 @@ import {
 } from "./useDiaDiemApi";
 import { useGetDiaPhuongCapTinh } from "../DiaPhuongCapTinh/useDiaPhuongCapTinhApi";
 import { useGetDiaPhuongCapXa } from "../DiaPhuongCapXa/useDiaPhuongCapXaApi";
+import { DANH_MUC_CHUNG } from "@/constants/danhMuc";
+import { useDanhMucChiTietLookup } from "../DanhMucChiTiet/useDanhMucChiTietLookup";
 
 export * from "./useDiaDiemApi";
 
@@ -39,6 +41,14 @@ export function useDiaDiem(initialTinhId?: string | number) {
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tinhFilter, setTinhFilter] = useState<string | number>(initialTinhId ?? "");
+
+  // Lấy danh mục loại cơ sở địa điểm động từ DM_DanhMucChiTiet (DanhMucID = 1)
+  const {
+    options: loaiDiaDiemOptions,
+    getLabel: getLoaiDiaDiemLabel,
+    getBadge: getLoaiDiaDiemBadge,
+    isLoading: isLoadingLoaiDiaDiem,
+  } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.LOAI_DIA_DIEM);
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -90,7 +100,7 @@ export function useDiaDiem(initialTinhId?: string | number) {
   });
 
   const provinces: DM_DiaPhuongCapTinh[] = useMemo(() => {
-    return dataTinh?.data ?? dataTinh?.items ?? [];
+    return dataTinh?.data ?? [];
   }, [dataTinh]);
 
   const provinceOptions = useMemo(() => {
@@ -115,7 +125,7 @@ export function useDiaDiem(initialTinhId?: string | number) {
   });
 
   const communeOptions = useMemo(() => {
-    const communes: DM_DiaPhuongCapXa[] = dataXa?.data ?? dataXa?.items ?? [];
+    const communes: DM_DiaPhuongCapXa[] = dataXa?.data ?? [];
     return communes.map((c) => ({
       value: c.xaID,
       label: c.ten,
@@ -155,18 +165,14 @@ export function useDiaDiem(initialTinhId?: string | number) {
   const deleteMutation = useDeleteDiaDiem();
 
   const items: DM_DiaDiem[] = useMemo(() => {
-    return dataDiaDiem?.data ?? dataDiaDiem?.items ?? [];
+    return dataDiaDiem?.data ?? [];
   }, [dataDiaDiem]);
 
   const totalCount: number =
-    dataDiaDiem?.pagination?.totalItems ??
-    dataDiaDiem?.totalCount ??
-    dataDiaDiem?.recordsTotal ??
-    items.length;
+    dataDiaDiem?.pagination?.totalItems ?? items.length;
 
   const totalPages: number =
     dataDiaDiem?.pagination?.totalPages ??
-    dataDiaDiem?.totalPages ??
     Math.max(1, Math.ceil(totalCount / pageSize));
 
   // Parent locations options (loại bỏ chính nó khi sửa)
@@ -334,6 +340,11 @@ export function useDiaDiem(initialTinhId?: string | number) {
     communeOptions,
     parentLocationOptions,
     isLoadingTinh,
+
+    loaiDiaDiemOptions,
+    getLoaiDiaDiemLabel,
+    getLoaiDiaDiemBadge,
+    isLoadingLoaiDiaDiem,
 
     items,
     totalCount,

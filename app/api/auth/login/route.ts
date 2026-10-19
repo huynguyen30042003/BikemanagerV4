@@ -32,57 +32,58 @@ export async function POST(req: NextRequest) {
         },
       );
     }
+    const allSetCookies = response.headers.getSetCookie?.() || [];
+    const setCookieHeader = response.headers.get("set-cookie") || "";
+    const allCookieStrings = [setCookieHeader, ...allSetCookies].join("; ");
+    const cookieMatch = allCookieStrings.match(/(?:refresh_token|refreshToken)=([^;]+)/i);
+    const rawRefreshToken =
+      data.refresh_token ||
+      data.refreshToken ||
+      data.RefreshToken ||
+      data.token?.refresh_token ||
+      data.token?.refreshToken ||
+      (cookieMatch ? cookieMatch[1] : null);
+
     const nextResponse = NextResponse.json({
       success: true,
-
       access_token: data.access_token,
-
       expires_in: data.expires_in,
+      refresh_token: rawRefreshToken,
+      token_type: data.token_type || "Bearer",
     });
-    const isProduction = process.env.NODE_ENV === "production";
-    // lưu cookie HttpOnly
+
+    // 1. Lưu cookie access_token (httpOnly: false để client JS đọc được và đính kèm Authorization header)
     nextResponse.cookies.set("access_token", data.access_token, {
-      httpOnly: true,
-
-      secure: isProduction,
-
+      httpOnly: false,
+      secure: false,
       sameSite: "lax",
-
       path: "/",
-
       maxAge: data.expires_in,
     });
-    const setCookie = response.headers.get("set-cookie");
-    if (setCookie) {
-      const match = setCookie.match(/refresh_token=([^;]+)/);
 
-      if (match) {
-        nextResponse.cookies.set("refresh_token", match[1], {
-          httpOnly: true,
-          secure: false,
-          sameSite: "lax",
-          path: "/",
-          maxAge: 60 * 60 * 24 * 7,
-        });
-      }
+    // 2. Lưu cookie refresh_token (HttpOnly để bảo mật tuyệt đối)
+    if (rawRefreshToken) {
+      const refreshMaxAge = 60 * 60 * 24 * 7; // 7 ngày
+      nextResponse.cookies.set("refresh_token", rawRefreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        path: "/",
+        maxAge: refreshMaxAge,
+      });
     }
 
-    // expires_at
-    nextResponse.cookies.set(
-      "expires_at",
-      (Math.floor(Date.now() / 1000) + data.expires_in).toString(),
-      {
-        httpOnly: false,
-
-        secure: false,
-
-        sameSite: "lax",
-
-        path: "/",
-
-        maxAge: data.expires_in,
-      },
-    );
+    // Forward Set-Cookie từ backend nếu có (loại bỏ Secure và Domain để browser localhost:3000 chấp nhận)
+    if (allSetCookies.length > 0 || setCookieHeader) {
+      const cookiesToForward = allSetCookies.length > 0 ? allSetCookies : [setCookieHeader];
+      cookiesToForward.forEach((cookie) => {
+        if (!cookie) return;
+        const cleanedCookie = cookie
+          .replace(/;\s*Secure/gi, "")
+          .replace(/;\s*Domain=[^;]+/gi, "");
+        nextResponse.headers.append("Set-Cookie", cleanedCookie);
+      });
+    }
 
     return nextResponse;
   } catch (error) {

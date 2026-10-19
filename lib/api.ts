@@ -1,4 +1,4 @@
-import { getAccessToken } from "./auth";
+import { getAccessToken, clearAuthTokens } from "./auth";
 
 export async function apiFetch(
   url: string,
@@ -20,16 +20,8 @@ export async function apiFetch(
     });
 
   // token hết hạn
-  if (
-    response.status === 401
-  ) {
-    localStorage.removeItem(
-      "access_token"
-    );
-
-    localStorage.removeItem(
-      "expires_at"
-    );
+  if (response.status === 401) {
+    clearAuthTokens();
 
     const currentPath =
       typeof window !== "undefined"

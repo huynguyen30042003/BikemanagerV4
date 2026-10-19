@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useMemo, Suspense, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useMemo, Suspense, useState } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Column, Table } from "@/components/ui/Table";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import {
   Store,
@@ -25,29 +24,36 @@ import {
   Building2,
   MapPin,
   Compass,
-  AlertCircle,
-  Upload,
-  Wrench,
-  Warehouse,
-  ImageIcon,
+  LayoutGrid,
+  List,
+  Navigation,
+  ExternalLink,
+  Layers,
+  Copy,
+  Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useDiaDiem } from "@/hooks/DiaDiem/useDiaDiem";
 import { DM_DiaDiem } from "@/types/diaDiem";
-import { SlideOver } from "@/components/ui/SlideOver";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { LocationNavTabs } from "@/components/Common/LocationNavTabs";
-
-const LOAI_DIA_DIEM_OPTIONS = [
-  { value: 1, label: "Showroom & Bán lẻ" },
-  { value: 2, label: "Trạm bảo hành & Dịch vụ" },
-  { value: 3, label: "Kho tổng & Chi nhánh kho" },
-];
+import { Pagination } from "@/components/Common/Pagination";
+import { CreateDiaDiemSlideOver } from "@/components/DiaDiem/CreateDiaDiemSlideOver";
+import { UpdateDiaDiemSlideOver } from "@/components/DiaDiem/UpdateDiaDiemSlideOver";
+import { getImageUrl } from "@/shared/constants/apiConstants";
 
 function DiaDiemContent() {
   const searchParams = useSearchParams();
-  const tinhIdFromUrl = searchParams.get("tinhId") || searchParams.get("TinhID") || "";
-  const fileInputRefAdd = useRef<HTMLInputElement>(null);
-  const fileInputRefUpdate = useRef<HTMLInputElement>(null);
+  const tinhIdFromUrl = searchParams.get("tinhId") || "";
+
+  // Dual View Mode (Showcase Grid vs Data Table)
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const shouldReduceMotion = useReducedMotion();
+
+  // Local state for modals to isolate form re-renders from the main catalog list
+  const [openCreate, setOpenCreate] = useState<boolean>(false);
+  const [editingItem, setEditingItem] = useState<DM_DiaDiem | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const {
     page,
@@ -63,9 +69,11 @@ function DiaDiemContent() {
 
     provinceOptions,
     provinceMap,
-    communeOptions,
     parentLocationOptions,
-    isLoadingTinh,
+
+    loaiDiaDiemOptions,
+    getLoaiDiaDiemBadge,
+    isLoadingLoaiDiaDiem,
 
     items,
     totalCount,
@@ -74,44 +82,26 @@ function DiaDiemContent() {
     isFetching,
     refetch,
 
-    open,
-    setOpen,
-    dataAdd,
-    setDataAdd,
-    handleModalAdd,
-    handleSubmit,
-    isCreating,
-
-    openUpdate,
-    setOpenUpdate,
-    dataUpdate,
-    setDataUpdate,
-    handleOpenEdit,
-    handleSubmitUpdate,
-    isUpdating,
-
     openDelete,
     setOpenDelete,
     selectItemName,
     handleOpenDelete,
     handleSubmitDelete,
     isDeleting,
-
-    errors,
   } = useDiaDiem(tinhIdFromUrl ? Number(tinhIdFromUrl) : "");
 
   // Metrics
   const activeCount = useMemo(
     () => items.filter((item) => item.trangThai === true).length,
-    [items]
+    [items],
   );
   const inactiveCount = useMemo(
     () => items.filter((item) => item.trangThai === false).length,
-    [items]
+    [items],
   );
   const showroomCount = useMemo(
     () => items.filter((item) => item.loaiDiaDiemID === 1).length,
-    [items]
+    [items],
   );
 
   const filterProvinceOptions: SelectOption[] = useMemo(() => {
@@ -127,41 +117,76 @@ function DiaDiemContent() {
   }, [tinhFilter, provinceMap]);
 
   const getLoaiBadge = (loaiId?: number | null) => {
-    switch (loaiId) {
-      case 2:
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-            <Wrench className="w-2.5 h-2.5" /> Trạm dịch vụ
-          </span>
-        );
-      case 3:
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20">
-            <Warehouse className="w-2.5 h-2.5" /> Kho hàng
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20">
-            <Store className="w-2.5 h-2.5" /> Showroom
-          </span>
-        );
-    }
+    const badge = getLoaiDiaDiemBadge(loaiId);
+    return (
+      <span
+        className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.bgClass} ${badge.textClass} border ${badge.borderClass}`}
+      >
+        <Store className="w-2.5 h-2.5" />
+        {badge.label}
+      </span>
+    );
+  };
+
+  const handleCopyId = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    toast.success("Đã sao chép mã cơ sở!");
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const columns: Column<DM_DiaDiem>[] = [
     {
+      key: "anhDaiDien",
+      title: "Ảnh",
+      classNameHeader:
+        "w-16 text-center text-xs font-semibold text-muted-foreground",
+      classNameItem: "text-center",
+      render: (_v, row) => {
+        const imgUrl = getImageUrl(row.anhDaiDien);
+        return (
+          <div className="flex justify-center">
+            {imgUrl ? (
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-border/60 relative bg-muted/40 shrink-0 shadow-2xs">
+                <Image
+                  unoptimized
+                  src={imgUrl}
+                  alt={row.tenDiaDiem}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-lg border border-border/60 bg-muted/50 flex items-center justify-center text-muted-foreground shrink-0 shadow-2xs">
+                <Store className="w-4 h-4 text-muted-foreground/70" />
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       key: "diaDiemID",
       title: "Mã",
-      classNameHeader: "w-20 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-24 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => (
-        <span
-          className="font-mono text-[11px] font-medium px-2 py-0.5 rounded-md bg-muted/60 border border-border/50 text-muted-foreground"
-          title={String(v)}
+        <button
+          type="button"
+          onClick={(e) => handleCopyId(String(v), e)}
+          title="Nhấn để sao chép mã"
+          className="group inline-flex items-center gap-1 font-mono text-[11px] font-medium px-2 py-0.5 rounded-md bg-muted/60 hover:bg-muted border border-border/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          #{String(v).substring(0, 6)}...
-        </span>
+          <span>#{String(v).substring(0, 6)}</span>
+          {copiedId === String(v) ? (
+            <Check className="w-3 h-3 text-emerald-500" />
+          ) : (
+            <Copy className="w-3 h-3 opacity-0 group-hover:opacity-70 transition-opacity" />
+          )}
+        </button>
       ),
     },
     {
@@ -177,6 +202,12 @@ function DiaDiemContent() {
             </span>
             {getLoaiBadge(row.loaiDiaDiemID)}
           </div>
+          {row.diaDiemCapChaID && (
+            <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Layers className="w-3 h-3 text-muted-foreground/70" />
+              <span>Trực thuộc: {row.tenDiaDiemCha || "Cơ sở cấp trên"}</span>
+            </div>
+          )}
           {row.moTa && (
             <span className="text-xs text-muted-foreground line-clamp-1 max-w-md">
               {row.moTa}
@@ -188,33 +219,63 @@ function DiaDiemContent() {
     {
       key: "tinhID",
       title: "Khu vực",
-      classNameHeader: "w-48 text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-52 text-left text-xs font-semibold text-muted-foreground",
       render: (tinhId, row) => {
         const tName =
-          row.tenTinh || provinceMap.get(Number(tinhId)) || `Tỉnh #${tinhId}`;
+          row.tenTinh ||
+          provinceMap.get(Number(tinhId)) ||
+          (tinhId ? `Tỉnh #${tinhId}` : "Chưa chọn tỉnh");
         return (
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-500/20 max-w-[180px] truncate shadow-2xs">
-            <Building2 className="w-3 h-3 shrink-0 text-blue-600 dark:text-blue-400" />
-            <span className="truncate">{tName}</span>
+          <div className="flex flex-col gap-1 py-0.5">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-500/20 max-w-[190px] truncate shadow-2xs">
+              <Building2 className="w-3 h-3 shrink-0 text-blue-600 dark:text-blue-400" />
+              <span className="truncate">{tName}</span>
+            </div>
+            {row.tenXa && (
+              <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground pl-0.5">
+                <Compass className="w-3 h-3 text-indigo-500/80" />
+                <span className="truncate">{row.tenXa}</span>
+              </div>
+            )}
           </div>
         );
       },
     },
     {
       key: "diaChiSo",
-      title: "Địa chỉ cụ thể",
-      classNameHeader: "text-left text-xs font-semibold text-muted-foreground max-w-xs",
-      render: (v) => (
-        <div className="flex items-center gap-1.5 text-xs text-foreground truncate max-w-xs">
-          <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-          <span className="truncate">{v || "Chưa cập nhật địa chỉ"}</span>
+      title: "Địa chỉ cụ thể & Bản đồ",
+      classNameHeader:
+        "text-left text-xs font-semibold text-muted-foreground max-w-xs",
+      render: (v, row) => (
+        <div className="flex flex-col gap-1 text-xs text-foreground max-w-xs">
+          <div className="flex items-start gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+            <span className="line-clamp-2">{v || "Chưa cập nhật địa chỉ"}</span>
+          </div>
+          {row.kinhDo != null && row.viDo != null && (
+            <a
+              href={`https://www.google.com/maps?q=${row.viDo},${row.kinhDo}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:underline pl-5"
+              title="Mở Google Maps"
+            >
+              <Navigation className="w-3 h-3" />
+              <span>
+                {row.viDo.toFixed(4)}, {row.kinhDo.toFixed(4)}
+              </span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+            </a>
+          )}
         </div>
       ),
     },
     {
       key: "trangThai",
       title: "Trạng thái",
-      classNameHeader: "text-center w-32 text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "text-center w-32 text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) =>
         v ? (
@@ -236,14 +297,15 @@ function DiaDiemContent() {
     {
       key: "function",
       title: "Thao tác",
-      classNameHeader: "text-center w-28 text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "text-center w-28 text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex gap-1 justify-center items-center">
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => handleOpenEdit(row)}
+            onClick={() => setEditingItem(row)}
             title="Chỉnh sửa cơ sở"
             className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
           >
@@ -264,7 +326,9 @@ function DiaDiemContent() {
     },
   ];
 
-  const hasActiveFilters = Boolean(searchInput || tinhFilter || statusFilter !== "all");
+  const hasActiveFilters = Boolean(
+    searchInput || tinhFilter || statusFilter !== "all",
+  );
 
   const handleResetFilters = () => {
     handleSearch("");
@@ -299,7 +363,8 @@ function DiaDiemContent() {
                     Chi nhánh & Showroom
                   </h1>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Quản lý mạng lưới showroom bán hàng, trạm dịch vụ kỹ thuật và kho chi nhánh
+                    Quản lý mạng lưới showroom bán hàng, trạm dịch vụ kỹ thuật
+                    và kho chi nhánh
                   </p>
                 </div>
               </div>
@@ -322,7 +387,7 @@ function DiaDiemContent() {
 
               <Button
                 size="sm"
-                onClick={handleModalAdd}
+                onClick={() => setOpenCreate(true)}
                 className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -332,20 +397,21 @@ function DiaDiemContent() {
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <LocationNavTabs activeTab="diaDiem" totalDiaDiem={totalCount} />
+            <LocationNavTabs activeTab="diaDiem" total_DiaDiem={totalCount} />
           </div>
         </div>
       )}
 
-      {/* 2. KPI Overview Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+      {/* 2. Interactive KPI Overview Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card
           onClick={() => {
             setStatusFilter("all");
+            setTinhFilter("");
             setPage(1);
           }}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
-            statusFilter === "all"
+          className={`p-4 rounded-xl border transition-all cursor-pointer gap-0 ${
+            statusFilter === "all" && !tinhFilter
               ? "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10"
               : "border-border/80 bg-card hover:border-border hover:shadow-xs"
           }`}
@@ -371,7 +437,7 @@ function DiaDiemContent() {
             setStatusFilter("active");
             setPage(1);
           }}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+          className={`gap-0 p-4 rounded-xl border transition-all cursor-pointer ${
             statusFilter === "active"
               ? "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10"
               : "border-border/80 bg-card hover:border-border hover:shadow-xs"
@@ -389,7 +455,7 @@ function DiaDiemContent() {
             {isLoading ? <Skeleton className="h-7 w-16" /> : activeCount}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
-            Mở cửa tiếp nhận dịch vụ & bán hàng
+            Mở cửa đón khách & xuất kho
           </p>
         </Card>
 
@@ -398,7 +464,7 @@ function DiaDiemContent() {
             setStatusFilter("inactive");
             setPage(1);
           }}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+          className={`gap-0 p-4 rounded-xl border transition-all cursor-pointer ${
             statusFilter === "inactive"
               ? "border-slate-500/50 bg-slate-500/5 shadow-xs ring-2 ring-slate-500/10"
               : "border-border/80 bg-card hover:border-border hover:shadow-xs"
@@ -406,7 +472,7 @@ function DiaDiemContent() {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">
-              Tạm ngưng / Đóng cửa
+              Tạm đóng / Khóa
             </span>
             <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center">
               <XCircle className="w-4 h-4" />
@@ -416,14 +482,14 @@ function DiaDiemContent() {
             {isLoading ? <Skeleton className="h-7 w-16" /> : inactiveCount}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
-            Bảo trì hoặc tạm ngưng hoạt động
+            Bảo trì hoặc ngừng hoạt động
           </p>
         </Card>
 
-        <Card className="p-4 rounded-xl border border-border/80 bg-card">
+        <Card className="gap-0 p-4 rounded-xl border border-border/80 bg-card">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">
-              Showroom xe điện
+              Showroom bán hàng
             </span>
             <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
               <Store className="w-4 h-4" />
@@ -433,15 +499,16 @@ function DiaDiemContent() {
             {isLoading ? <Skeleton className="h-7 w-16" /> : showroomCount}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
-            Điểm bán hàng trưng bày xe
+            Điểm bán lẻ trực tiếp
           </p>
         </Card>
       </div>
 
-      {/* 3. Toolbar: Tìm kiếm, SearchSelect Tỉnh thành & Trạng thái */}
+      {/* 3. Toolbar: Tìm kiếm, Lọc tỉnh, Lọc trạng thái & Switcher View Mode */}
       <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs space-y-2.5">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-[220px]">
+          {/* Search Box */}
+          <div className="relative flex-1">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               placeholder="Tìm theo tên cơ sở, địa chỉ..."
@@ -461,78 +528,113 @@ function DiaDiemContent() {
             )}
           </div>
 
-          {/* CUSTOM SEARCH SELECT: Lọc theo Tỉnh / Thành phố */}
-          <div className="w-full lg:w-72 shrink-0">
+          {/* Filter Tỉnh / Thành phố */}
+          <div className="w-full lg:w-64">
             <SearchSelect
               options={filterProvinceOptions}
               value={tinhFilter}
               onChange={(val) => {
-                setTinhFilter(val);
+                setTinhFilter(val ? Number(val) : "");
                 setPage(1);
               }}
-              placeholder="-- Chọn Tỉnh / Thành phố --"
-              className="w-full"
+              placeholder="Lọc theo Tỉnh / TP..."
+              className="h-9.5 text-xs"
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("all");
-                setPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                statusFilter === "all"
-                  ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Tất cả ({totalCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("active");
-                setPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                statusFilter === "active"
-                  ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Hoạt động ({activeCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter("inactive");
-                setPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                statusFilter === "inactive"
-                  ? "bg-background shadow-xs text-slate-700 dark:text-slate-300 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Đóng ({inactiveCount})
-            </button>
-          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Status Segment Control */}
+            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("all");
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                  statusFilter === "all"
+                    ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Tất cả ({totalCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("active");
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                  statusFilter === "active"
+                    ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Hoạt động ({activeCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter("inactive");
+                  setPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                  statusFilter === "inactive"
+                    ? "bg-background shadow-xs text-slate-700 dark:text-slate-300 font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Đóng ({inactiveCount})
+              </button>
+            </div>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            title="Tải lại dữ liệu"
-            className="h-9.5 w-9.5 shrink-0 cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin text-blue-500" : ""}`} />
-          </Button>
+            {/* View Mode Switcher */}
+            <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                title="Chế độ xem lưới thẻ (Showcase Grid)"
+                className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                  viewMode === "grid"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                title="Chế độ xem bảng chi tiết (Data Table)"
+                className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                  viewMode === "table"
+                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Reload Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              title="Tải lại dữ liệu"
+              className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+              />
+            </Button>
+          </div>
         </div>
 
+        {/* Active Filter Chips */}
         {hasActiveFilters && (
           <div className="flex items-center gap-2 pt-1 border-t border-border/50 text-xs flex-wrap">
             <span className="text-muted-foreground font-medium">Đang lọc:</span>
@@ -563,7 +665,8 @@ function DiaDiemContent() {
             )}
             {statusFilter !== "all" && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/60">
-                Trạng thái: {statusFilter === "active" ? "Đang hoạt động" : "Đã đóng"}
+                Trạng thái:{" "}
+                {statusFilter === "active" ? "Đang hoạt động" : "Đã đóng"}
                 <button
                   type="button"
                   onClick={() => setStatusFilter("all")}
@@ -584,496 +687,300 @@ function DiaDiemContent() {
         )}
       </div>
 
-      {/* 4. Table */}
+      {/* 4. Content Display (Showcase Grid vs Data Table) */}
       {isLoading ? (
-        <Card className="p-6">
-          <Skeleton className="h-10 w-full mb-3" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full" />
-        </Card>
+        viewMode === "grid" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <Card
+                key={idx}
+                className="rounded-xl border border-border/70 overflow-hidden space-y-3 p-4"
+              >
+                <Skeleton className="h-36 w-full rounded-lg" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-8 w-full" />
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-6">
+            <Skeleton className="h-10 w-full mb-3" />
+            <Skeleton className="h-12 w-full mb-2" />
+            <Skeleton className="h-12 w-full mb-2" />
+            <Skeleton className="h-12 w-full" />
+          </Card>
+        )
+      ) : items.length === 0 ? (
+        <div className="rounded-xl border border-border/80 bg-card p-12 flex flex-col items-center justify-center text-center text-muted-foreground shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
+            <FolderOpen className="w-7 h-7 stroke-[1.5]" />
+          </div>
+          <p className="font-semibold text-base text-foreground">
+            Không tìm thấy cơ sở hoặc showroom nào
+          </p>
+          <p className="text-xs text-muted-foreground max-w-sm mt-1">
+            {hasActiveFilters
+              ? "Không có kết quả khớp với bộ lọc. Hãy điều chỉnh từ khóa hoặc xóa bớt tiêu chí lọc."
+              : "Chưa có địa điểm chi nhánh nào trong hệ thống. Hãy tạo cơ sở đầu tiên!"}
+          </p>
+          <div className="flex items-center gap-2 mt-4">
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetFilters}
+                className="cursor-pointer"
+              >
+                Xóa bộ lọc
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={() => setOpenCreate(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer font-medium"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Thêm cơ sở mới
+            </Button>
+          </div>
+        </div>
+      ) : viewMode === "grid" ? (
+        /* SHOWCASE GRID VIEW */
+        <div className="space-y-4">
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+          >
+            {items.map((loc: DM_DiaDiem) => {
+              const imgUrl = getImageUrl(loc.anhDaiDien);
+              const tName =
+                loc.tenTinh ||
+                provinceMap.get(Number(loc.tinhID)) ||
+                (loc.tinhID ? `Tỉnh #${loc.tinhID}` : "");
+
+              return (
+                <Card
+                  key={loc.diaDiemID}
+                  className="gap-0 p-0 group rounded-xl border border-border/80 bg-card overflow-hidden shadow-2xs hover:shadow-md hover:border-border transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Card Thumbnail Banner */}
+                    <div className="relative h-40 w-full bg-muted/40 overflow-hidden border-b border-border/50">
+                      {imgUrl ? (
+                        <>
+                          <Image
+                            unoptimized
+                            src={imgUrl}
+                            alt={loc.tenDiaDiem}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-muted/40 to-indigo-500/10 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-xl bg-background/80 shadow-2xs border border-border/60 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
+                            <Store className="w-6 h-6 stroke-[1.5]" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Floating Header Badges */}
+                      <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1 z-10">
+                        {getLoaiBadge(loc.loaiDiaDiemID)}
+
+                        {loc.trangThai ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/90 text-white backdrop-blur-md shadow-2xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            Hoạt động
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-900/80 text-slate-200 backdrop-blur-md shadow-2xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                            Tạm đóng
+                          </span>
+                        )}
+                      </div>
+
+                      {/* ID Chip bottom overlay */}
+                      <div className="absolute bottom-2 left-2.5 z-10">
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyId(loc.diaDiemID, e)}
+                          title="Nhấn để sao chép mã cơ sở"
+                          className="group/btn inline-flex items-center gap-1 font-mono text-[10px] font-semibold px-2 py-0.5 rounded-md bg-background/90 hover:bg-background text-foreground border border-border/70 backdrop-blur-md transition-colors shadow-2xs cursor-pointer"
+                        >
+                          <span>#{loc.diaDiemID.slice(0, 8)}</span>
+                          {copiedId === loc.diaDiemID ? (
+                            <Check className="w-2.5 h-2.5 text-emerald-500" />
+                          ) : (
+                            <Copy className="w-2.5 h-2.5 opacity-60 group-hover/btn:opacity-100" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="p-3.5 space-y-2.5">
+                      <div>
+                        <h3 className="font-semibold text-sm text-foreground line-clamp-1 hover:text-blue-600 transition-colors">
+                          {loc.tenDiaDiem}
+                        </h3>
+
+                        {loc.diaDiemCapChaID && (
+                          <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
+                            <Layers className="w-3 h-3 text-muted-foreground/70" />
+                            <span className="truncate">
+                              Trực thuộc:{" "}
+                              {loc.tenDiaDiemCha || "Cơ sở cấp trên"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Regional Tags */}
+                      <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                        {tName && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 font-medium border border-blue-500/20 text-[11px]">
+                            <Building2 className="w-3 h-3" />
+                            {tName}
+                          </span>
+                        )}
+                        {loc.tenXa && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-medium border border-indigo-500/20 text-[11px]">
+                            <Compass className="w-3 h-3" />
+                            {loc.tenXa}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Specific Address */}
+                      <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">
+                          {loc.diaChiSo || "Chưa cập nhật địa chỉ chi tiết"}
+                        </span>
+                      </div>
+
+                      {/* GPS Coordinates with Direct Map Link */}
+                      {loc.kinhDo != null && loc.viDo != null && (
+                        <div className="pt-0.5">
+                          <a
+                            href={`https://www.google.com/maps?q=${loc.viDo},${loc.kinhDo}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/60 hover:bg-muted text-foreground text-[11px] font-mono border border-border/60 transition-colors"
+                            title="Mở Google Maps"
+                          >
+                            <Navigation className="w-3 h-3 text-emerald-500" />
+                            <span>
+                              {loc.viDo.toFixed(4)}, {loc.kinhDo.toFixed(4)}
+                            </span>
+                            <ExternalLink className="w-2.5 h-2.5 text-muted-foreground" />
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Description */}
+                      {loc.moTa && (
+                        <p className="text-xs text-muted-foreground/80 line-clamp-2 pt-1 border-t border-border/40">
+                          {loc.moTa}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Card Actions Footer */}
+                  <div className="p-3 bg-muted/20 border-t border-border/60 flex items-center justify-between gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingItem(loc)}
+                      className="flex-1 h-8 text-xs cursor-pointer flex items-center justify-center gap-1.5 hover:text-blue-600 hover:border-blue-500/40"
+                    >
+                      <SquarePen className="w-3.5 h-3.5" />
+                      <span>Chỉnh sửa</span>
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenDelete(loc)}
+                      className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg cursor-pointer shrink-0"
+                      title="Xóa cơ sở"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </motion.div>
+
+          {/* Grid View Pagination */}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            setPage={setPage}
+            setPageSize={setPageSize}
+            itemName="cơ sở"
+          />
+        </div>
       ) : (
+        /* DATA TABLE VIEW */
         <div className="rounded-xl border border-border/80 bg-card shadow-xs overflow-hidden">
           <div className="p-3 flex flex-col gap-3 w-full">
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
-                  <FolderOpen className="w-7 h-7 stroke-[1.5]" />
-                </div>
-                <p className="font-semibold text-base text-foreground">
-                  Không tìm thấy cơ sở hoặc showroom nào
-                </p>
-                <p className="text-xs text-muted-foreground max-w-sm mt-1">
-                  {hasActiveFilters
-                    ? "Không có kết quả khớp với bộ lọc. Hãy điều chỉnh từ khóa hoặc xóa bớt tiêu chí lọc."
-                    : "Chưa có địa điểm chi nhánh nào trong hệ thống. Hãy tạo cơ sở đầu tiên!"}
-                </p>
-                <div className="flex items-center gap-2 mt-4">
-                  {hasActiveFilters && (
-                    <Button variant="outline" size="sm" onClick={handleResetFilters} className="cursor-pointer">
-                      Xóa bộ lọc
-                    </Button>
-                  )}
-                  <Button size="sm" onClick={handleModalAdd} className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
-                    <Plus className="w-4 h-4 mr-1" /> Thêm cơ sở mới
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <Table<DM_DiaDiem>
-                  data={items}
-                  columns={columns}
-                  showIndex
-                  startIndex={(page - 1) * pageSize}
-                />
+            <Table<DM_DiaDiem>
+              data={items}
+              columns={columns}
+              showIndex
+              startIndex={(page - 1) * pageSize}
+            />
 
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/70 text-sm text-muted-foreground">
-                  <div className="text-xs">
-                    Trang <strong className="text-foreground">{page}</strong> / {totalPages}{" "}
-                    (Tổng <strong className="text-foreground">{totalCount}</strong> cơ sở)
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setPage(1);
-                      }}
-                      className="h-8 border border-border/80 rounded-md px-2 bg-background text-foreground text-xs outline-none focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value={10}>10 / trang</option>
-                      <option value={20}>20 / trang</option>
-                      <option value={50}>50 / trang</option>
-                      <option value={100}>100 / trang</option>
-                    </select>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                      className="h-8 text-xs cursor-pointer"
-                    >
-                      Trước
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                      className="h-8 text-xs cursor-pointer"
-                    >
-                      Sau
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
+            {/* Table Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              setPage={setPage}
+              setPageSize={setPageSize}
+              itemName="cơ sở"
+            />
           </div>
         </div>
       )}
 
-      {/* 5. SlideOver: THÊM MỚI CƠ SỞ / SHOWROOM */}
-      <SlideOver
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Thêm mới Cơ sở / Showroom"
-        description="Đăng ký điểm bán hàng, trạm dịch vụ bảo hành hoặc kho chi nhánh"
-        icon={Store}
-        footer={
-          <>
-            <Button
-              variant="outline"
-              className="flex-1 cursor-pointer"
-              onClick={() => setOpen(false)}
-              disabled={isCreating}
-            >
-              Hủy
-            </Button>
-            <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-              onClick={handleSubmit}
-              disabled={isCreating}
-            >
-              {isCreating ? <RefreshCw className="w-4 h-4 animate-spin mr-1.5" /> : null}
-              Lưu cơ sở
-            </Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tên địa điểm / Showroom <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={dataAdd.TenDiaDiem}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, TenDiaDiem: e.target.value }))}
-              placeholder="Ví dụ: Showroom BikeManager Cầu Giấy..."
-              className={`rounded-lg ${errors.tenDiaDiem ? "border-red-500" : ""}`}
-            />
-            {errors.tenDiaDiem && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {errors.tenDiaDiem}
-              </p>
-            )}
-          </div>
+      {/* SlideOver: THÊM MỚI CƠ SỞ / SHOWROOM (Tách component riêng, cách ly form state) */}
+      <CreateDiaDiemSlideOver
+        open={openCreate}
+        onClose={() => setOpenCreate(false)}
+        provinceOptions={provinceOptions}
+        parentLocationOptions={parentLocationOptions}
+        loaiDiaDiemOptions={loaiDiaDiemOptions}
+        isLoadingLoaiDiaDiem={isLoadingLoaiDiaDiem}
+        defaultTinhId={tinhFilter ? Number(tinhFilter) : 0}
+        onSuccess={() => refetch()}
+      />
 
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Loại hình cơ sở <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={LOAI_DIA_DIEM_OPTIONS}
-              value={dataAdd.LoaiDiaDiemID}
-              onChange={(val) => setDataAdd((prev) => ({ ...prev, LoaiDiaDiemID: Number(val) || 1 }))}
-              placeholder="Chọn loại..."
-            />
-          </div>
+      {/* SlideOver: CẬP NHẬT CƠ SỞ / SHOWROOM (Tách component riêng, cách ly form state) */}
+      <UpdateDiaDiemSlideOver
+        open={Boolean(editingItem)}
+        onClose={() => setEditingItem(null)}
+        data={editingItem}
+        provinceOptions={provinceOptions}
+        parentLocationOptions={parentLocationOptions}
+        loaiDiaDiemOptions={loaiDiaDiemOptions}
+        isLoadingLoaiDiaDiem={isLoadingLoaiDiaDiem}
+        onSuccess={() => refetch()}
+      />
 
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Trực thuộc cơ sở cha (nếu có)
-            </label>
-            <SearchSelect
-              options={[{ value: "", label: "-- Không có (Độc lập) --" }, ...parentLocationOptions]}
-              value={dataAdd.DiaDiemCapChaID || ""}
-              onChange={(val) => setDataAdd((prev) => ({ ...prev, DiaDiemCapChaID: val ? String(val) : null }))}
-              placeholder="Chọn cơ sở cha..."
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tỉnh / Thành phố <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={provinceOptions}
-              value={dataAdd.TinhID || ""}
-              onChange={(val) =>
-                setDataAdd((prev) => ({
-                  ...prev,
-                  TinhID: Number(val) || 0,
-                  XaID: 0,
-                }))
-              }
-              placeholder="-- Chọn Tỉnh / TP --"
-            />
-            {errors.tinhID && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {errors.tinhID}
-              </p>
-            )}
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Phường / Xã <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={communeOptions}
-              value={dataAdd.XaID || ""}
-              onChange={(val) => setDataAdd((prev) => ({ ...prev, XaID: Number(val) || 0 }))}
-              placeholder={dataAdd.TinhID ? "-- Chọn Phường / Xã --" : "Vui lòng chọn Tỉnh trước"}
-            />
-            {errors.xaID && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {errors.xaID}
-              </p>
-            )}
-          </div>
-
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Địa chỉ số (Số nhà, Tên đường, Tòa nhà) <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={dataAdd.DiaChiSo}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, DiaChiSo: e.target.value }))}
-              placeholder="Ví dụ: 123 Đường Cầu Giấy, Tòa nhà Indochina..."
-              className={`rounded-lg ${errors.diaChiSo ? "border-red-500" : ""}`}
-            />
-            {errors.diaChiSo && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {errors.diaChiSo}
-              </p>
-            )}
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Kinh độ (Longitude)
-            </label>
-            <Input
-              type="number"
-              step="any"
-              value={dataAdd.KinhDo ?? ""}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, KinhDo: e.target.value ? parseFloat(e.target.value) : null }))}
-              placeholder="Ví dụ: 105.7832"
-              className="rounded-lg font-mono text-sm"
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Vĩ độ (Latitude)
-            </label>
-            <Input
-              type="number"
-              step="any"
-              value={dataAdd.ViDo ?? ""}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, ViDo: e.target.value ? parseFloat(e.target.value) : null }))}
-              placeholder="Ví dụ: 21.0333"
-              className="rounded-lg font-mono text-sm"
-            />
-          </div>
-
-          {/* Upload ảnh đại diện */}
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Ảnh đại diện cơ sở
-            </label>
-            <input
-              type="file"
-              ref={fileInputRefAdd}
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setDataAdd((prev) => ({ ...prev, file }));
-              }}
-            />
-            <div
-              onClick={() => fileInputRefAdd.current?.click()}
-              className="border-2 border-dashed border-border/80 rounded-xl p-4 text-center hover:bg-muted/30 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5"
-            >
-              <Upload className="w-5 h-5 text-muted-foreground" />
-              <span className="text-xs font-medium text-foreground">
-                {dataAdd.file ? dataAdd.file.name : "Nhấn để chọn ảnh đại diện showroom (PNG, JPG)"}
-              </span>
-              <span className="text-[11px] text-muted-foreground">Kích thước tối đa 5MB</span>
-            </div>
-          </div>
-
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Mô tả chi tiết
-            </label>
-            <Textarea
-              value={dataAdd.MoTa || ""}
-              onChange={(e) => setDataAdd((prev) => ({ ...prev, MoTa: e.target.value }))}
-              placeholder="Ghi chú về dịch vụ, giờ mở cửa, năng lực trạm sửa chữa..."
-              className="h-24 resize-none rounded-lg text-sm"
-            />
-          </div>
-
-          <div className="col-span-2 flex items-center justify-between p-3 rounded-lg border border-border/70 bg-muted/20">
-            <div>
-              <p className="text-sm font-medium text-foreground">Trạng thái hoạt động</p>
-              <p className="text-xs text-muted-foreground">Cho phép giao dịch và hiển thị trên bản đồ dịch vụ</p>
-            </div>
-            <Switch
-              id="isActiveDiaDiemAdd"
-              checked={dataAdd.TrangThai}
-              onCheckedChange={(checked) => setDataAdd((prev) => ({ ...prev, TrangThai: checked }))}
-            />
-          </div>
-        </div>
-      </SlideOver>
-
-      {/* 6. SlideOver: CẬP NHẬT CƠ SỞ / SHOWROOM */}
-      <SlideOver
-        open={openUpdate}
-        onClose={() => setOpenUpdate(false)}
-        title="Cập nhật Cơ sở / Showroom"
-        description="Chỉnh sửa thông tin cơ sở chi nhánh"
-        icon={SquarePen}
-        footer={
-          <>
-            <Button
-              variant="outline"
-              className="flex-1 cursor-pointer"
-              onClick={() => setOpenUpdate(false)}
-              disabled={isUpdating}
-            >
-              Hủy
-            </Button>
-            <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-              onClick={handleSubmitUpdate}
-              disabled={isUpdating}
-            >
-              {isUpdating ? <RefreshCw className="w-4 h-4 animate-spin mr-1.5" /> : null}
-              Lưu thay đổi
-            </Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tên địa điểm / Showroom <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={dataUpdate.TenDiaDiem}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, TenDiaDiem: e.target.value }))}
-              placeholder="Nhập tên cơ sở..."
-              className={`rounded-lg ${errors.tenDiaDiem ? "border-red-500" : ""}`}
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Loại hình cơ sở <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={LOAI_DIA_DIEM_OPTIONS}
-              value={dataUpdate.LoaiDiaDiemID}
-              onChange={(val) => setDataUpdate((prev) => ({ ...prev, LoaiDiaDiemID: Number(val) || 1 }))}
-              placeholder="Chọn loại..."
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Trực thuộc cơ sở cha
-            </label>
-            <SearchSelect
-              options={[{ value: "", label: "-- Không có --" }, ...parentLocationOptions]}
-              value={dataUpdate.DiaDiemCapChaID || ""}
-              onChange={(val) => setDataUpdate((prev) => ({ ...prev, DiaDiemCapChaID: val ? String(val) : null }))}
-              placeholder="Chọn cơ sở cha..."
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Tỉnh / Thành phố <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={provinceOptions}
-              value={dataUpdate.TinhID || ""}
-              onChange={(val) =>
-                setDataUpdate((prev) => ({
-                  ...prev,
-                  TinhID: Number(val) || 0,
-                  XaID: 0,
-                }))
-              }
-              placeholder="-- Chọn Tỉnh / TP --"
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Phường / Xã <span className="text-red-500">*</span>
-            </label>
-            <SearchSelect
-              options={communeOptions}
-              value={dataUpdate.XaID || ""}
-              onChange={(val) => setDataUpdate((prev) => ({ ...prev, XaID: Number(val) || 0 }))}
-              placeholder="-- Chọn Phường / Xã --"
-            />
-          </div>
-
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Địa chỉ số <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={dataUpdate.DiaChiSo}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, DiaChiSo: e.target.value }))}
-              placeholder="Nhập địa chỉ..."
-              className={`rounded-lg ${errors.diaChiSo ? "border-red-500" : ""}`}
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Kinh độ (Longitude)
-            </label>
-            <Input
-              type="number"
-              step="any"
-              value={dataUpdate.KinhDo ?? ""}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, KinhDo: e.target.value ? parseFloat(e.target.value) : null }))}
-              className="rounded-lg font-mono text-sm"
-            />
-          </div>
-
-          <div className="col-span-1 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Vĩ độ (Latitude)
-            </label>
-            <Input
-              type="number"
-              step="any"
-              value={dataUpdate.ViDo ?? ""}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, ViDo: e.target.value ? parseFloat(e.target.value) : null }))}
-              className="rounded-lg font-mono text-sm"
-            />
-          </div>
-
-          {/* Đổi ảnh đại diện */}
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Cập nhật ảnh đại diện cơ sở
-            </label>
-            <input
-              type="file"
-              ref={fileInputRefUpdate}
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setDataUpdate((prev) => ({ ...prev, file, XoaFile: false }));
-              }}
-            />
-            <div
-              onClick={() => fileInputRefUpdate.current?.click()}
-              className="border-2 border-dashed border-border/80 rounded-xl p-4 text-center hover:bg-muted/30 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5"
-            >
-              <Upload className="w-5 h-5 text-muted-foreground" />
-              <span className="text-xs font-medium text-foreground">
-                {dataUpdate.file ? dataUpdate.file.name : "Nhấn để tải lên ảnh mới thay thế"}
-              </span>
-            </div>
-          </div>
-
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Mô tả chi tiết
-            </label>
-            <Textarea
-              value={dataUpdate.MoTa || ""}
-              onChange={(e) => setDataUpdate((prev) => ({ ...prev, MoTa: e.target.value }))}
-              placeholder="Nhập mô tả..."
-              className="h-24 resize-none rounded-lg text-sm"
-            />
-          </div>
-
-          <div className="col-span-2 flex items-center justify-between p-3 rounded-lg border border-border/70 bg-muted/20">
-            <div>
-              <p className="text-sm font-medium text-foreground">Trạng thái hoạt động</p>
-              <p className="text-xs text-muted-foreground">Kích hoạt tiếp nhận đơn hàng & dịch vụ</p>
-            </div>
-            <Switch
-              id="isActiveDiaDiemUpdate"
-              checked={dataUpdate.TrangThai}
-              onCheckedChange={(checked) => setDataUpdate((prev) => ({ ...prev, TrangThai: checked }))}
-            />
-          </div>
-        </div>
-      </SlideOver>
-
-      {/* 7. Modal Xóa */}
+      {/* Modal Xác nhận Xóa */}
       <ConfirmModal
         open={openDelete}
         onClose={() => setOpenDelete(false)}
@@ -1083,10 +990,12 @@ function DiaDiemContent() {
           <div>
             <p>
               Bạn có chắc chắn muốn xóa cơ sở &quot;
-              <strong className="text-foreground">{selectItemName}</strong>&quot; không?
+              <strong className="text-foreground">{selectItemName}</strong>
+              &quot; không?
             </p>
             <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác nếu cơ sở đang có giao dịch đơn hàng hoặc kho hàng liên kết.
+              Hành động này không thể hoàn tác nếu cơ sở đang có giao dịch đơn
+              hàng hoặc kho hàng liên kết.
             </span>
           </div>
         }

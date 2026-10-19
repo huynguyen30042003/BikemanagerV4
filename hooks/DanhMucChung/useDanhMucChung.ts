@@ -12,6 +12,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetDanhMucChung,
+  useGetDanhMucChungKPI,
   useCreateDanhMucChung,
   useUpdateDanhMucChung,
   useDeleteDanhMucChung,
@@ -92,6 +93,12 @@ export function useDanhMucChung() {
     isFetching,
     refetch,
   } = useGetDanhMucChung(filterParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetDanhMucChungKPI();
 
   const createCategory = useCreateDanhMucChung();
   const updateCategory = useUpdateDanhMucChung();
@@ -258,6 +265,11 @@ export function useDanhMucChung() {
     isLoading,
     isFetching,
     refetch,
+
+    // KPI data
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     // Add state & actions
     open,

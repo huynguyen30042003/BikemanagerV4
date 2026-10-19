@@ -36,3 +36,18 @@ export interface UpdateDanhMucChungPayload {
   ThuTu: number;
   TrangThai: boolean;
 }
+
+export interface DMC_NavTabs {
+  total_DanhMucChung?: number;
+  total_DanhMucChiTiet?: number;
+}
+
+export interface DanhMucChungKPI {
+  total_DanhMucChung: number;
+  total_HoatDong: number;
+  total_NgungHoatDong: number;
+  total_DanhMucChiTiet: number;
+}
+
+
+

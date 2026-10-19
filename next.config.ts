@@ -11,6 +11,16 @@ const nextConfig = {
         port: "5001",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "api.nhithoi.io.vn",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "**.nhithoi.io.vn",
+        pathname: "/**",
+      },
     ],
     dangerouslyAllowLocalIP: true,
   },

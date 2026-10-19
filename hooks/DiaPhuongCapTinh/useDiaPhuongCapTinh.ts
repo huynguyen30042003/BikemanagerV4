@@ -92,18 +92,14 @@ export function useDiaPhuongCapTinh() {
   const syncMutation = useSyncDiaPhuongCapTinh();
 
   const items: DM_DiaPhuongCapTinh[] = useMemo(() => {
-    return dataDiaPhuongCapTinh?.data ?? dataDiaPhuongCapTinh?.items ?? [];
+    return dataDiaPhuongCapTinh?.data ?? [];
   }, [dataDiaPhuongCapTinh]);
 
   const totalCount: number =
-    dataDiaPhuongCapTinh?.pagination?.totalItems ??
-    dataDiaPhuongCapTinh?.totalCount ??
-    dataDiaPhuongCapTinh?.recordsTotal ??
-    items.length;
+    dataDiaPhuongCapTinh?.pagination?.totalItems ?? items.length;
 
   const totalPages: number =
     dataDiaPhuongCapTinh?.pagination?.totalPages ??
-    dataDiaPhuongCapTinh?.totalPages ??
     Math.max(1, Math.ceil(totalCount / pageSize));
 
   const handleSearch = (value: string) => {
@@ -112,15 +108,11 @@ export function useDiaPhuongCapTinh() {
   };
 
   const handleModalAdd = () => {
-    const currentMaxThuTu = items.length > 0
-      ? Math.max(...items.map((i) => i.thuTu ?? 0))
-      : 0;
-
     setDataAdd({
       MaTinh: "",
       Ten: "",
       TenKhongDau: "",
-      ThuTu: currentMaxThuTu + 1,
+      ThuTu: 1,
       Loai: 1,
       TrangThai: true,
     });

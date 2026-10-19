@@ -79,7 +79,7 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
   });
 
   const provinces: DM_DiaPhuongCapTinh[] = useMemo(() => {
-    return dataTinh?.data ?? dataTinh?.items ?? [];
+    return dataTinh?.data ?? [];
   }, [dataTinh]);
 
   const provinceOptions = useMemo(() => {
@@ -129,18 +129,14 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
   const syncMutation = useSyncDiaPhuongCapXa();
 
   const items: DM_DiaPhuongCapXa[] = useMemo(() => {
-    return dataDiaPhuongCapXa?.data ?? dataDiaPhuongCapXa?.items ?? [];
+    return dataDiaPhuongCapXa?.data ?? [];
   }, [dataDiaPhuongCapXa]);
 
   const totalCount: number =
-    dataDiaPhuongCapXa?.pagination?.totalItems ??
-    dataDiaPhuongCapXa?.totalCount ??
-    dataDiaPhuongCapXa?.recordsTotal ??
-    items.length;
+    dataDiaPhuongCapXa?.pagination?.totalItems ?? items.length;
 
   const totalPages: number =
     dataDiaPhuongCapXa?.pagination?.totalPages ??
-    dataDiaPhuongCapXa?.totalPages ??
     Math.max(1, Math.ceil(totalCount / pageSize));
 
   const handleSearch = (value: string) => {
@@ -162,7 +158,7 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
       Ten: "",
       TenKhongDau: "",
       Loai: 1,
-      ThuTu: items.length + 1,
+      ThuTu: 1,
       TrangThai: true,
     });
     setErrors({});

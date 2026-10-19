@@ -6,6 +6,8 @@ import {
   updateDanhMucChungApi,
   deleteDanhMucChungApi,
   syncDanhMucChungApi,
+  getDanhMucChungNavTabsApi,
+  getDanhMucChungKPIApi,
 } from "@/shared/api/DanhMucChung";
 import {
   CreateDanhMucChungPayload,
@@ -17,11 +19,36 @@ export const DANH_MUC_CHUNG_KEYS = {
   all: ["danhMucChung"] as const,
   list: (params?: object) => [...DANH_MUC_CHUNG_KEYS.all, "list", params] as const,
   detail: (id: number) => [...DANH_MUC_CHUNG_KEYS.all, "detail", id] as const,
+  navTabs: () => ["danhMucChungNavTabs"] as const,
+  kpi: () => ["danhMucChungKPI"] as const,
 };
+
+/**
+ * Hook lấy số liệu thống kê KPI danh mục dùng chung
+ */
+export const useGetDanhMucChungKPI = () =>
+  useQuery({
+    queryKey: DANH_MUC_CHUNG_KEYS.kpi(),
+    queryFn: () => getDanhMucChungKPIApi(),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
+  });
+
+/**
+ * Hook lấy số lượng thống kê cho các tabs danh mục
+ */
+export const useGetDanhMucChungNavTabs = () =>
+  useQuery({
+    queryKey: DANH_MUC_CHUNG_KEYS.navTabs(),
+    queryFn: () => getDanhMucChungNavTabsApi(),
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
 
 /**
  * Hook lấy danh sách danh mục chung (phân trang & tìm kiếm)
  */
+
 export const useGetDanhMucChung = (params: DanhMucChungFilter) =>
   useQuery({
     queryKey: DANH_MUC_CHUNG_KEYS.list(params),
@@ -49,6 +76,8 @@ export const useCreateDanhMucChung = () => {
     mutationFn: (body: CreateDanhMucChungPayload) => createDanhMucChungApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.all });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.navTabs() });
     },
   });
 };
@@ -63,6 +92,8 @@ export const useUpdateDanhMucChung = () => {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.detail(vars.DanhMucID) });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.navTabs() });
     },
   });
 };
@@ -76,6 +107,8 @@ export const useDeleteDanhMucChung = () => {
     mutationFn: (id: number) => deleteDanhMucChungApi(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.all });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.navTabs() });
     },
   });
 };
@@ -89,6 +122,9 @@ export const useSyncDanhMucChung = () => {
     mutationFn: () => syncDanhMucChungApi(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.all });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.navTabs() });
     },
   });
 };
+

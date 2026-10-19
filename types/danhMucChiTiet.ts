@@ -49,3 +49,10 @@ export interface DanhMucChiTietListResponse {
   pageSize: number;
   totalPages?: number;
 }
+
+export interface DanhMucChiTietKPI {
+  total_DanhMucChiTiet: number;
+  total_HoatDong: number;
+  total_NgungHoatDong: number;
+  total_DanhMucChung: number;
+}

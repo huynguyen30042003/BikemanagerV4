@@ -1,37 +1,111 @@
 /**
- * Lấy Access Token từ localStorage, sessionStorage hoặc Cookies
+ * Lấy Access Token từ Cookie
  */
 export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
+  if (typeof document === "undefined" || !document.cookie) return null;
 
-  // 1. Kiểm tra localStorage với các key thông dụng
-  const localToken =
-    localStorage.getItem("access_token") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("accessToken");
-
-  if (localToken) return localToken;
-
-  // 2. Kiểm tra sessionStorage
-  const sessionToken =
-    sessionStorage.getItem("access_token") ||
-    sessionStorage.getItem("token");
-
-  if (sessionToken) return sessionToken;
-
-  // 3. Kiểm tra document.cookie
-  if (typeof document !== "undefined" && document.cookie) {
-    const match = document.cookie.match(/(?:^|;\s*)(?:access_token|token)=([^;]+)/);
-    if (match) {
-      try {
-        return decodeURIComponent(match[1]);
-      } catch {
-        return match[1];
-      }
+  const match = document.cookie.match(/(?:^|;\s*)access_token=([^;]+)/);
+  if (match) {
+    try {
+      return decodeURIComponent(match[1]);
+    } catch {
+      return match[1];
     }
   }
 
   return null;
+}
+
+export interface SaveTokenPayload {
+  access_token?: string | null;
+  accessToken?: string | null;
+  token?: string | null;
+  refresh_token?: string | null;
+  expires_in?: number | null;
+  expiresIn?: number | null;
+}
+
+/**
+ * Lưu Access Token vào Cookie (Client-side)
+ * Refresh Token được lưu dạng HttpOnly Cookie từ Server Route Handler
+ */
+export function setAuthTokens(payload?: SaveTokenPayload | null): void {
+  if (typeof document === "undefined" || !payload) return;
+
+  const accessToken =
+    payload.access_token || payload.accessToken || payload.token;
+  const expiresIn =
+    payload.expires_in ?? payload.expiresIn ?? 3600;
+
+  if (accessToken) {
+    document.cookie = `access_token=${encodeURIComponent(
+      accessToken
+    )}; path=/; max-age=${expiresIn}; SameSite=Lax`;
+  }
+}
+
+/**
+ * Xóa sạch Auth Tokens khỏi Cookie và dọn dẹp bộ nhớ tạm
+ */
+export function clearAuthTokens(): void {
+  if (typeof document !== "undefined") {
+    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "refresh_token=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "refreshToken=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "expires_at=; path=/; max-age=0; SameSite=Lax";
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("expires_at");
+      localStorage.removeItem("auth-storage");
+      localStorage.removeItem("remembered_username");
+    } catch {
+      // Bỏ qua lỗi nếu môi trường không cho phép truy cập localStorage
+    }
+  }
+}
+
+/**
+ * Lấy Refresh Token từ Cookie (nếu có cookie phía client không httpOnly)
+ */
+export function getRefreshToken(): string | null {
+  if (typeof document === "undefined" || !document.cookie) return null;
+
+  const match = document.cookie.match(/(?:^|;\s*)(?:refresh_token|refreshToken)=([^;]+)/);
+  if (match) {
+    try {
+      return decodeURIComponent(match[1]);
+    } catch {
+      return match[1];
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Kiểm tra xem Access Token đã hết hạn hoặc sắp hết hạn hay chưa dựa vào claim 'exp' trong JWT
+ * @param bufferSeconds Thời gian dự phòng trước khi token thực sự hết hạn (mặc định 15 giây)
+ */
+export function isAccessTokenExpired(bufferSeconds = 15): boolean {
+  const token = getAccessToken();
+  if (!token) return true;
+
+  try {
+    const payload = decodeJwt<{ exp?: number }>(token);
+    if (!payload || typeof payload.exp !== "number") return false;
+
+    // exp tính bằng giây, Date.now() tính bằng mili-giây
+    return Date.now() >= (payload.exp - bufferSeconds) * 1000;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -191,6 +265,7 @@ export interface UserTokenInfo {
   username?: string | null;
   email?: string | null;
   fullName?: string | null;
+  avatarUrl?: string | null;
   roles: string[];
   role: string | null;
   rawPayload?: Record<string, unknown> | null;
@@ -226,11 +301,19 @@ export function getUserFromToken(token?: string | null): UserTokenInfo | null {
     username ||
     null;
 
+  const avatarUrl =
+    payload.avatarUrl ||
+    payload.avatar ||
+    payload.picture ||
+    payload.image ||
+    null;
+
   const userResult: UserTokenInfo = {
     id: payload.sub || payload.id || null,
     username,
     email,
     fullName,
+    avatarUrl,
     roles,
     role: roles[0] || null,
     rawPayload: payload,

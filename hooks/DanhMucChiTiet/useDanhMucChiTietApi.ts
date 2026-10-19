@@ -6,6 +6,7 @@ import {
   updateDanhMucChiTietApi,
   deleteDanhMucChiTietApi,
   syncDanhMucChiTietApi,
+  getDanhMucChiTietKPIApi,
 } from "@/shared/api/DanhMucChiTiet";
 import {
   CreateDanhMucChiTietPayload,
@@ -17,7 +18,19 @@ export const DANH_MUC_CHI_TIET_KEYS = {
   all: ["danhMucChiTiet"] as const,
   list: (params?: object) => [...DANH_MUC_CHI_TIET_KEYS.all, "list", params] as const,
   detail: (id: number) => [...DANH_MUC_CHI_TIET_KEYS.all, "detail", id] as const,
+  kpi: () => ["danhMucChiTietKPI"] as const,
 };
+
+/**
+ * Hook lấy số liệu thống kê KPI danh mục chi tiết
+ */
+export const useGetDanhMucChiTietKPI = () =>
+  useQuery({
+    queryKey: DANH_MUC_CHI_TIET_KEYS.kpi(),
+    queryFn: () => getDanhMucChiTietKPIApi(),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
+  });
 
 /**
  * Hook lấy danh sách danh mục chi tiết (phân trang, lọc theo danh mục cha & tìm kiếm)
@@ -49,6 +62,8 @@ export const useCreateDanhMucChiTiet = () => {
     mutationFn: (body: CreateDanhMucChiTietPayload) => createDanhMucChiTietApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: ["danhMucChungNavTabs"] });
     },
   });
 };
@@ -63,6 +78,8 @@ export const useUpdateDanhMucChiTiet = () => {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.detail(vars.DanhMucChiTietID) });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: ["danhMucChungNavTabs"] });
     },
   });
 };
@@ -76,6 +93,8 @@ export const useDeleteDanhMucChiTiet = () => {
     mutationFn: (id: number) => deleteDanhMucChiTietApi(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: ["danhMucChungNavTabs"] });
     },
   });
 };
@@ -89,6 +108,9 @@ export const useSyncDanhMucChiTiet = () => {
     mutationFn: () => syncDanhMucChiTietApi(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
+      qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: ["danhMucChungNavTabs"] });
     },
   });
 };
+
