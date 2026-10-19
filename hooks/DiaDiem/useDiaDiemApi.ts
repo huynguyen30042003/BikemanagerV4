@@ -6,6 +6,7 @@ import {
   updateDiaDiemApi,
   deleteDiaDiemApi,
   getDiaDiemNavTabsApi,
+  getDiaDiemKPIApi,
 } from "@/shared/api/DiaDiem";
 import {
   CreateDiaDiemPayload,
@@ -18,7 +19,19 @@ export const DIA_DIEM_KEYS = {
   list: (params?: object) => [...DIA_DIEM_KEYS.all, "list", params] as const,
   detail: (id: string) => [...DIA_DIEM_KEYS.all, "detail", id] as const,
   navTabs: () => ["diaDiemNavTabs"] as const,
+  kpi: () => ["diaDiemKPI"] as const,
 };
+
+/**
+ * Hook lấy số liệu thống kê KPI địa điểm
+ */
+export const useGetDiaDiemKPI = () =>
+  useQuery({
+    queryKey: DIA_DIEM_KEYS.kpi(),
+    queryFn: () => getDiaDiemKPIApi(),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
+  });
 
 export const useGetDiaDiemNavTabs = () =>
   useQuery({
@@ -49,6 +62,7 @@ export const useCreateDiaDiem = () => {
     mutationFn: (body: CreateDiaDiemPayload) => createDiaDiemApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.all });
+      qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.navTabs() });
     },
   });
@@ -61,6 +75,7 @@ export const useUpdateDiaDiem = () => {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.detail(vars.DiaDiemID) });
+      qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.navTabs() });
     },
   });
@@ -72,6 +87,7 @@ export const useDeleteDiaDiem = () => {
     mutationFn: (id: string) => deleteDiaDiemApi(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.all });
+      qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.navTabs() });
     },
   });

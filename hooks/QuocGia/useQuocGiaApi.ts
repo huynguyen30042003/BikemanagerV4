@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getQuocGiaApi,
   getQuocGiaByIdApi,
+  getQuocGiaKPIApi,
   createQuocGiaApi,
   updateQuocGiaApi,
   deleteQuocGiaApi,
@@ -17,6 +18,7 @@ export const QUOC_GIA_KEYS = {
   all: ["quocGia"] as const,
   list: (params?: object) => [...QUOC_GIA_KEYS.all, "list", params] as const,
   detail: (id: number) => [...QUOC_GIA_KEYS.all, "detail", id] as const,
+  kpi: () => [...QUOC_GIA_KEYS.all, "kpi"] as const,
 };
 
 export const useGetQuocGia = (params: QuocGiaFilter) =>
@@ -34,12 +36,20 @@ export const useGetQuocGiaById = (id?: number) =>
     staleTime: 1000 * 60 * 5,
   });
 
+export const useGetQuocGiaKPI = () =>
+  useQuery({
+    queryKey: QUOC_GIA_KEYS.kpi(),
+    queryFn: () => getQuocGiaKPIApi(),
+    staleTime: 1000 * 60 * 5,
+  });
+
 export const useCreateQuocGia = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateQuocGiaPayload) => createQuocGiaApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
+      qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
@@ -52,6 +62,7 @@ export const useUpdateQuocGia = () => {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.detail(vars.QuocGiaID) });
+      qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
@@ -63,6 +74,7 @@ export const useDeleteQuocGia = () => {
     mutationFn: (id: number) => deleteQuocGiaApi(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
+      qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
@@ -74,8 +86,9 @@ export const useSyncQuocGia = () => {
     mutationFn: () => syncQuocGiaApi(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
+      qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
-
 };
+

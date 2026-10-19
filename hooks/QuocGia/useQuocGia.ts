@@ -11,6 +11,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetQuocGia,
+  useGetQuocGiaKPI,
   useCreateQuocGia,
   useUpdateQuocGia,
   useDeleteQuocGia,
@@ -82,6 +83,12 @@ export function useQuocGia() {
     isFetching,
     refetch,
   } = useGetQuocGia(filterParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetQuocGiaKPI();
 
   const createMutation = useCreateQuocGia();
   const updateMutation = useUpdateQuocGia();
@@ -165,6 +172,7 @@ export function useQuocGia() {
       toast.success("Thêm mới quốc gia thành công");
       setOpen(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data
@@ -196,6 +204,7 @@ export function useQuocGia() {
       toast.success("Cập nhật quốc gia thành công");
       setOpenUpdate(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data
@@ -211,6 +220,7 @@ export function useQuocGia() {
       toast.success(`Đã xóa "${selectItemName}" thành công`);
       setOpenDelete(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data
@@ -224,6 +234,7 @@ export function useQuocGia() {
       await syncMutation.mutateAsync();
       toast.success("Đồng bộ danh mục quốc gia thành công");
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data
@@ -248,6 +259,11 @@ export function useQuocGia() {
     isLoading,
     isFetching,
     refetch,
+
+    // KPI data
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     open,
     setOpen,
@@ -278,3 +294,4 @@ export function useQuocGia() {
     errors,
   };
 }
+

@@ -4,6 +4,7 @@ import { getAccessToken } from "@/lib/auth";
 import {
   CreateQuocGiaPayload,
   QuocGiaFilter,
+  QuocGiaKPI,
   UpdateQuocGiaPayload,
 } from "@/types/quocGia";
 
@@ -14,6 +15,51 @@ const getAuthHeaders = () => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 };
+
+/**
+ * Lấy số liệu thống kê KPI Quốc gia
+ * POST/GET /api/QuocGiaApi/GetKPI hoặc /api/QuocGia/GetKPI
+ */
+export const getQuocGiaKPIApi = async (): Promise<QuocGiaKPI> => {
+  try {
+    const response = await api.post(
+      `${APP_URL}/QuocGiaApi/GetKPI`,
+      {},
+      {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      }
+    );
+    return response.data?.data ?? response.data;
+  } catch (error: unknown) {
+    try {
+      const response = await api.get(`${APP_URL}/QuocGiaApi/GetKPI`, {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      });
+      return response.data?.data ?? response.data;
+    } catch {
+      try {
+        const response = await api.post(
+          `${APP_URL}/QuocGia/GetKPI`,
+          {},
+          {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          }
+        );
+        return response.data?.data ?? response.data;
+      } catch {
+        const response = await api.get(`${APP_URL}/QuocGia/GetKPI`, {
+          headers: getAuthHeaders(),
+          withCredentials: true,
+        });
+        return response.data?.data ?? response.data;
+      }
+    }
+  }
+};
+
 
 /**
  * Lấy danh sách quốc gia có phân trang và tìm kiếm

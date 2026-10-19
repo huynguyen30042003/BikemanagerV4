@@ -41,3 +41,10 @@ export interface UpdateDiaPhuongCapXaPayload {
   ThuTu: number;
   TrangThai: boolean;
 }
+
+export interface DiaPhuongCapXaKPI {
+  total_DiaPhuongCapXa: number;
+  total_HoatDong: number;
+  total_NgungHoatDong: number;
+  total_DiaPhuongCapTinh: number;
+}

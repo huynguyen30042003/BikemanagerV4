@@ -11,6 +11,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetDiaPhuongCapTinh,
+  useGetDiaPhuongCapTinhKPI,
   useCreateDiaPhuongCapTinh,
   useUpdateDiaPhuongCapTinh,
   useDeleteDiaPhuongCapTinh,
@@ -85,6 +86,12 @@ export function useDiaPhuongCapTinh() {
     isFetching,
     refetch,
   } = useGetDiaPhuongCapTinh(filterParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetDiaPhuongCapTinhKPI();
 
   const createMutation = useCreateDiaPhuongCapTinh();
   const updateMutation = useUpdateDiaPhuongCapTinh();
@@ -164,6 +171,7 @@ export function useDiaPhuongCapTinh() {
       toast.success("Thêm mới tỉnh/thành phố thành công");
       setOpen(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -196,6 +204,7 @@ export function useDiaPhuongCapTinh() {
       toast.success("Cập nhật tỉnh/thành phố thành công");
       setOpenUpdate(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -211,6 +220,7 @@ export function useDiaPhuongCapTinh() {
       toast.success(`Đã xóa "${selectItemName}" thành công`);
       setOpenDelete(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -224,6 +234,7 @@ export function useDiaPhuongCapTinh() {
       await syncMutation.mutateAsync();
       toast.success("Đồng bộ danh mục tỉnh/thành phố thành công");
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -249,6 +260,11 @@ export function useDiaPhuongCapTinh() {
     isFetching,
     refetch,
 
+    // KPI data
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
+
     open,
     setOpen,
     dataAdd,
@@ -256,6 +272,9 @@ export function useDiaPhuongCapTinh() {
     handleModalAdd,
     handleSubmit,
     isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isSyncing: syncMutation.isPending,
 
     openUpdate,
     setOpenUpdate,
@@ -263,17 +282,14 @@ export function useDiaPhuongCapTinh() {
     setDataUpdate,
     handleOpenEdit,
     handleSubmitUpdate,
-    isUpdating: updateMutation.isPending,
 
     openDelete,
     setOpenDelete,
     selectItemName,
     handleOpenDelete,
     handleSubmitDelete,
-    isDeleting: deleteMutation.isPending,
 
     handleSync,
-    isSyncing: syncMutation.isPending,
 
     errors,
   };

@@ -6,7 +6,9 @@ import {
   KhachHangFilter,
   UpdateKhachHangPayload,
   KH_NavTabs,
+  KhachHangKPI,
 } from "@/types/khachHang";
+
 
 
 const getAuthHeaders = () => {
@@ -203,4 +205,61 @@ export const getKhachHangNavTabsApi = async (): Promise<KH_NavTabs> => {
 
   return response.data?.data ?? response.data;
 };
+
+/**
+ * Lấy số liệu thống kê KPI Khách hàng
+ * POST/GET /api/KhachHangApi/GetKPI hoặc /api/KhachHangApi/KPI hoặc /api/KhachHang/GetKPI
+ */
+export const getKhachHangKPIApi = async (): Promise<KhachHangKPI> => {
+  try {
+    const response = await api.post(
+      `${APP_URL}/KhachHangApi/GetKPI`,
+      {},
+      {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      }
+    );
+    return response.data?.data ?? response.data;
+  } catch (error: unknown) {
+    try {
+      const response = await api.get(`${APP_URL}/KhachHangApi/GetKPI`, {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      });
+      return response.data?.data ?? response.data;
+    } catch {
+      try {
+        const response = await api.post(
+          `${APP_URL}/KhachHangApi/KPI`,
+          {},
+          {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          }
+        );
+        return response.data?.data ?? response.data;
+      } catch {
+        try {
+          const response = await api.get(`${APP_URL}/KhachHangApi/KPI`, {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          });
+          return response.data?.data ?? response.data;
+        } catch {
+          const response = await api.post(
+            `${APP_URL}/KhachHang/GetKPI`,
+            {},
+            {
+              headers: getAuthHeaders(),
+              withCredentials: true,
+            }
+          );
+          return response.data?.data ?? response.data;
+        }
+      }
+    }
+  }
+};
+
 

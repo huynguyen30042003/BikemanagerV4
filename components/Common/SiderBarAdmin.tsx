@@ -46,14 +46,14 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 
-type MenuItem = {
+export type MenuItem = {
   title: string;
   href: string;
   icon: LucideIcon;
   roles?: string[];
 };
 
-type MenuGroup = {
+export type MenuGroup = {
   title: string;
   href: string;
   icon: LucideIcon;
@@ -61,13 +61,14 @@ type MenuGroup = {
   roles?: string[];
 };
 
-type MenuSection = {
+export type MenuSection = {
   label: string;
   groups: MenuGroup[];
   roles?: string[];
 };
 
-const MENU_SECTIONS: MenuSection[] = [
+export const MENU_SECTIONS: MenuSection[] = [
+
   {
     label: "Tổng quan",
     roles: ["Administrator", "AdminAccess", "SaleAccess", "WarehouseAccess", "TechnicalAccess", "PurchaseAccess"],
@@ -352,7 +353,7 @@ const MENU_SECTIONS: MenuSection[] = [
   },
 ];
 
-const hasRequiredRole = (
+export const hasRequiredRole = (
   requiredRoles: string[] | undefined,
   userRoles: string[]
 ): boolean => {
@@ -365,7 +366,7 @@ const hasRequiredRole = (
   );
 };
 
-const ROLE_DISPLAY_NAMES: Record<string, string> = {
+export const ROLE_DISPLAY_NAMES: Record<string, string> = {
   administrator: "Quản trị cấp cao",
   admin: "Quản trị cấp cao",
   adminaccess: "Quản trị viên",
@@ -377,13 +378,13 @@ const ROLE_DISPLAY_NAMES: Record<string, string> = {
   orderaccess: "Xử lý đơn hàng",
 };
 
-function formatRoleLabel(role?: string | null): string {
+export function formatRoleLabel(role?: string | null): string {
   if (!role) return "Quản trị viên";
   const normalized = role.toLowerCase().trim();
   return ROLE_DISPLAY_NAMES[normalized] || role;
 }
 
-function getUserInitials(name?: string | null, fallback = "BM"): string {
+export function getUserInitials(name?: string | null, fallback = "BM"): string {
   if (!name || !name.trim()) return fallback;
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) {
@@ -528,11 +529,12 @@ export default function SiderBarAdmin() {
         width: isClose ? 72 : sidebarWidth,
       }}
       className={`
-        relative sticky top-0 h-screen flex flex-col
+        hidden lg:flex relative sticky top-0 h-screen flex-col shrink-0
         border-r border-border/80 bg-card select-none
         ${!isResizing ? "transition-[width] duration-300 ease-in-out" : ""}
       `}
     >
+
       {/* 1. Header & Brand Identity */}
       <div
         className={`h-16 px-4 border-b border-border/70 flex items-center shrink-0 transition-all duration-300 ${

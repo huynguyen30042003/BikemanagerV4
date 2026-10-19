@@ -17,7 +17,7 @@ import { Pagination } from "@/components/Common/Pagination";
 import { CreateCustomerSlideOver } from "@/components/Customer/CreateCustomerSlideOver";
 import { UpdateCustomerSlideOver } from "@/components/Customer/UpdateCustomerSlideOver";
 import { useKhachHang } from "@/hooks/KhachHang/useKhachHang";
-import { KH_KhachHang } from "@/types/khachHang";
+import { KH_KhachHang, KhachHangKPI } from "@/types/khachHang";
 import { getImageUrl } from "@/shared/constants/apiConstants";
 import {
   Users,
@@ -78,6 +78,11 @@ function CustomerContent() {
     isFetching,
     refetch,
 
+    // KPI data
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
+
     provinceOptions,
     isLoadingTinh,
     communeOptionsAdd,
@@ -121,7 +126,7 @@ function CustomerContent() {
     null,
   );
 
-  // Metrics
+  // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback lọc cục bộ)
   const individualCount = useMemo(
     () => items.filter((i) => i.loaiKhachHang === 1).length,
     [items],
@@ -135,13 +140,25 @@ function CustomerContent() {
     [items],
   );
 
+  const kpi = kpiData as unknown as (KhachHangKPI & { data?: KhachHangKPI }) | undefined;
+
+  const total_KhachHang = kpi?.data?.total_KhachHang ?? kpi?.total_KhachHang ?? totalCount;
+  const total_CaNhan = kpi?.data?.total_CaNhan ?? kpi?.total_CaNhan ?? individualCount;
+  const total_ToChuc = kpi?.data?.total_ToChuc ?? kpi?.total_ToChuc ?? businessCount;
+  const total_HoatDong = kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
+
+  const handleReload = () => {
+    refetch();
+    refetchKPI();
+  };
+
   // Dynamic KPI Cards mapped via .map()
   const kpiCards = useMemo(
     () => [
       {
         id: "all",
         label: "Tổng số khách hàng",
-        value: totalCount,
+        value: total_KhachHang,
         subtext: "Đăng ký trong toàn hệ thống",
         icon: Users,
         iconBg: "bg-blue-500/10",
@@ -155,12 +172,12 @@ function CustomerContent() {
         },
         activeBorderClass:
           "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "individual",
         label: "Khách hàng Cá nhân",
-        value: individualCount,
+        value: total_CaNhan,
         subtext: "Người tiêu dùng cá nhân & mua lẻ",
         icon: User,
         iconBg: "bg-sky-500/10",
@@ -173,12 +190,12 @@ function CustomerContent() {
         },
         activeBorderClass:
           "border-sky-500/50 bg-sky-500/5 shadow-xs ring-2 ring-sky-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "business",
         label: "Doanh nghiệp / Tổ chức",
-        value: businessCount,
+        value: total_ToChuc,
         subtext: "Đối tác mua sỉ, công ty & đại lý",
         icon: Building2,
         iconBg: "bg-indigo-500/10",
@@ -191,12 +208,12 @@ function CustomerContent() {
         },
         activeBorderClass:
           "border-indigo-500/50 bg-indigo-500/5 shadow-xs ring-2 ring-indigo-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "active",
         label: "Đang hoạt động",
-        value: activeCount,
+        value: total_HoatDong,
         subtext: "Được phép tạo đơn & bảo dưỡng",
         icon: CheckCircle2,
         iconBg: "bg-emerald-500/10",
@@ -209,22 +226,24 @@ function CustomerContent() {
         },
         activeBorderClass:
           "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
     ],
     [
-      totalCount,
-      individualCount,
-      businessCount,
-      activeCount,
+      total_KhachHang,
+      total_CaNhan,
+      total_ToChuc,
+      total_HoatDong,
       loaiFilter,
       statusFilter,
+      isLoadingKPI,
       isLoading,
       setLoaiFilter,
       setStatusFilter,
       setPage,
     ],
   );
+
 
   const handleCopyCode = (code: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -492,7 +511,7 @@ function CustomerContent() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6">
+    <div className="p-3 sm:p-4 md:p-8 min-h-screen space-y-4 sm:space-y-6 max-w-full overflow-x-hidden">
       {/* 1. Header & Navigation Hub */}
       {isLoading ? (
         <div className="flex flex-col gap-3">
@@ -500,25 +519,25 @@ function CustomerContent() {
           <Skeleton className="h-4 w-96" />
         </div>
       ) : (
-        <div className="flex flex-col gap-4 pb-4 border-b border-border/70">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-border/70">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
                 <span>Hệ thống</span>
                 <span className="text-muted-foreground/30">/</span>
                 <span>Kinh doanh</span>
                 <span className="text-muted-foreground/30">/</span>
                 <span className="text-foreground">Khách hàng</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-xs ring-4 ring-blue-500/5">
-                  <Users className="w-5 h-5" />
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-xs ring-4 ring-blue-500/5">
+                  <Users className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground truncate">
                     Hồ sơ Khách hàng
                   </h1>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">
                     Quản lý khách hàng cá nhân & tổ chức doanh nghiệp, tích hợp
                     thông tin liên hệ và định danh
                   </p>
@@ -526,17 +545,17 @@ function CustomerContent() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => refetch()}
-                disabled={isFetching}
-                className="h-9 px-3.5 flex items-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs active:scale-95"
-                title="Làm mới danh sách khách hàng"
+                onClick={handleReload}
+                disabled={isFetching || isLoadingKPI}
+                className="h-9 px-3 flex-1 sm:flex-initial flex items-center justify-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs active:scale-95"
+                title="Làm mới danh sách khách hàng và KPI"
               >
                 <RefreshCw
-                  className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+                  className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
                 />
                 <span className="text-xs font-medium">Làm mới</span>
               </Button>
@@ -548,52 +567,52 @@ function CustomerContent() {
                   setLogoPreviewAdd(null);
                   handleModalAdd();
                 }}
-                className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
+                className="h-9 px-3.5 sm:px-4 flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span className="text-xs font-medium">Thêm khách hàng</span>
+                <span className="text-xs font-medium whitespace-nowrap">Thêm khách hàng</span>
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-1">
-            <CustomerNavTabs activeTab="customer" totalCustomer={totalCount} />
+          <div className="w-full overflow-x-auto no-scrollbar pt-1">
+            <CustomerNavTabs activeTab="customer" totalCustomer={total_KhachHang} />
           </div>
         </div>
       )}
 
       {/* 2. KPI Cards (Rendered dynamically via .map()) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
             <Card
               key={card.id}
               onClick={card.onClick}
-              className={`p-4 gap-0 rounded-xl border transition-all cursor-pointer ${
+              className={`p-3 sm:p-4 gap-0 rounded-xl border transition-all cursor-pointer ${
                 card.isActive
                   ? card.activeBorderClass
                   : "border-border/80 bg-card hover:border-border hover:shadow-xs"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate pr-1">
                   {card.label}
                 </span>
                 <div
-                  className={`w-7 h-7 rounded-lg ${card.iconBg} ${card.iconColor} flex items-center justify-center`}
+                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
-              <div className={`mt-2 text-2xl font-bold ${card.valueColor}`}>
+              <div className={`mt-1.5 sm:mt-2 text-xl sm:text-2xl font-bold ${card.valueColor}`}>
                 {card.isLoading ? (
-                  <Skeleton className="h-7 w-16" />
+                  <Skeleton className="h-6 sm:h-7 w-14 sm:w-16" />
                 ) : (
                   card.value
                 )}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 sm:mt-1 truncate">
                 {card.subtext}
               </p>
             </Card>
@@ -602,16 +621,16 @@ function CustomerContent() {
       </div>
 
       {/* 3. Toolbar: Tìm kiếm & Lọc & Chuyển chế độ xem */}
-      <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs space-y-2.5">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs space-y-2.5">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
           {/* Search Box */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
-              placeholder="Tìm theo tên khách hàng, số điện thoại, số CCCD / MST..."
+              placeholder="Tìm theo tên khách hàng, số điện thoại, CCCD / MST..."
               value={searchInput}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-sm focus-visible:ring-blue-500/20"
+              className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-xs sm:text-sm focus-visible:ring-blue-500/20"
             />
             {searchInput && (
               <button
@@ -625,9 +644,9 @@ function CustomerContent() {
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
             {/* Tỉnh thành Filter */}
-            <div className="w-48">
+            <div className="w-full sm:w-44 lg:w-48 shrink-0">
               <SearchSelect
                 options={[
                   { value: "", label: "Tất cả Tỉnh/Thành" },
@@ -640,144 +659,148 @@ function CustomerContent() {
                 }}
                 placeholder="Chọn Tỉnh/Thành"
                 isLoading={isLoadingTinh}
-                className="h-9.5 text-xs"
+                className="h-9.5 text-xs w-full"
               />
             </div>
 
-            {/* Phân loại Tabs */}
-            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
-              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
-              <button
-                type="button"
-                onClick={() => {
-                  setLoaiFilter("all");
-                  setPage(1);
-                }}
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  loaiFilter === "all"
-                    ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Tất cả
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoaiFilter("1");
-                  setPage(1);
-                }}
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  loaiFilter === "1"
-                    ? "bg-background shadow-xs text-sky-600 dark:text-sky-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Cá nhân
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoaiFilter("2");
-                  setPage(1);
-                }}
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  loaiFilter === "2"
-                    ? "bg-background shadow-xs text-indigo-600 dark:text-indigo-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Doanh nghiệp
-              </button>
-            </div>
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              {/* Phân loại Tabs */}
+              <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0 max-w-full overflow-x-auto no-scrollbar">
+                <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5 hidden sm:block shrink-0" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoaiFilter("all");
+                    setPage(1);
+                  }}
+                  className={`px-2 sm:px-2.5 py-1.5 rounded-md font-medium text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap ${
+                    loaiFilter === "all"
+                      ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Tất cả ({total_KhachHang})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoaiFilter("1");
+                    setPage(1);
+                  }}
+                  className={`px-2 sm:px-2.5 py-1.5 rounded-md font-medium text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap ${
+                    loaiFilter === "1"
+                      ? "bg-background shadow-xs text-sky-600 dark:text-sky-400 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Cá nhân ({total_CaNhan})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoaiFilter("2");
+                    setPage(1);
+                  }}
+                  className={`px-2 sm:px-2.5 py-1.5 rounded-md font-medium text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap ${
+                    loaiFilter === "2"
+                      ? "bg-background shadow-xs text-indigo-600 dark:text-indigo-400 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Tổ chức ({total_ToChuc})
+                </button>
+              </div>
 
-            {/* Trạng thái filter */}
-            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setStatusFilter("all");
-                  setPage(1);
-                }}
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "all"
-                    ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Mọi trạng thái
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setStatusFilter("active");
-                  setPage(1);
-                }}
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "active"
-                    ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Hoạt động
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setStatusFilter("inactive");
-                  setPage(1);
-                }}
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "inactive"
-                    ? "bg-background shadow-xs text-slate-700 dark:text-slate-300 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Khóa
-              </button>
-            </div>
+              {/* Trạng thái filter */}
+              <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0 max-w-full overflow-x-auto no-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setPage(1);
+                  }}
+                  className={`px-2 sm:px-2.5 py-1.5 rounded-md font-medium text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap ${
+                    statusFilter === "all"
+                      ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Tất cả
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusFilter("active");
+                    setPage(1);
+                  }}
+                  className={`px-2 sm:px-2.5 py-1.5 rounded-md font-medium text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap ${
+                    statusFilter === "active"
+                      ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Hoạt động ({total_HoatDong})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusFilter("inactive");
+                    setPage(1);
+                  }}
+                  className={`px-2 sm:px-2.5 py-1.5 rounded-md font-medium text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap ${
+                    statusFilter === "inactive"
+                      ? "bg-background shadow-xs text-slate-700 dark:text-slate-300 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Khóa
+                </button>
+              </div>
 
-            {/* View Mode Switcher */}
-            <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setViewMode("grid")}
-                title="Chế độ xem lưới thẻ (Showcase Grid)"
-                className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
-                  viewMode === "grid"
-                    ? "bg-background text-foreground shadow-2xs font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("table")}
-                title="Chế độ xem bảng chi tiết (Data Table)"
-                className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
-                  viewMode === "table"
-                    ? "bg-background text-foreground shadow-2xs font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+              {/* View Mode & Reload */}
+              <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
+                <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("grid")}
+                    title="Chế độ xem lưới thẻ (Showcase Grid)"
+                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                      viewMode === "grid"
+                        ? "bg-background text-foreground shadow-2xs font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("table")}
+                    title="Chế độ xem bảng chi tiết (Data Table)"
+                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                      viewMode === "table"
+                        ? "bg-background text-foreground shadow-2xs font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
 
-            {/* Reload Button */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              title="Tải lại danh sách"
-              className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs active:scale-95"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
-              />
-            </Button>
+                {/* Reload Button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleReload}
+                  disabled={isFetching || isLoadingKPI}
+                  title="Tải lại danh sách và chỉ số KPI"
+                  className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs active:scale-95"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
+                  />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -931,8 +954,8 @@ function CustomerContent() {
                 <div className="space-y-3">
                   {/* Top Bar: Avatar/Logo + Customer Type + Status Badge */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/20 font-bold overflow-hidden shadow-2xs">
+                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/20 font-bold overflow-hidden shadow-2xs">
                         {(cust.anhChanDung || cust.anhBieuTrung) &&
                         getImageUrl(cust.anhChanDung || cust.anhBieuTrung) ? (
                           <Image
@@ -952,9 +975,9 @@ function CustomerContent() {
                         )}
                       </div>
 
-                      <div className="flex flex-col">
+                      <div className="flex flex-col min-w-0">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                          className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-semibold border truncate ${
                             cust.loaiKhachHang === 2
                               ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25"
                               : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25"
@@ -968,12 +991,12 @@ function CustomerContent() {
                     </div>
 
                     {cust.trangThai ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
+                      <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         Hoạt động
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
+                      <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                         Khóa
                       </span>
@@ -988,21 +1011,21 @@ function CustomerContent() {
                         setLogoPreviewUpdate(null);
                         handleOpenEdit(cust);
                       }}
-                      className="text-base font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer line-clamp-1"
+                      className="text-sm sm:text-base font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer line-clamp-1"
                       title={cust.tenKhachHang}
                     >
                       {cust.tenKhachHang}
                     </h3>
 
                     {/* Mã KH click-to-copy */}
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
                       <button
                         type="button"
                         onClick={(e) =>
                           handleCopyCode(cust.maKhachHang || "", e)
                         }
                         title="Sao chép mã khách hàng"
-                        className="group/code inline-flex items-center gap-1 font-mono text-xs px-2 py-0.5 rounded-md bg-muted/70 hover:bg-muted text-foreground border border-border/60 transition-colors cursor-pointer shadow-2xs"
+                        className="group/code inline-flex items-center gap-1 font-mono text-[11px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-md bg-muted/70 hover:bg-muted text-foreground border border-border/60 transition-colors cursor-pointer shadow-2xs"
                       >
                         <span className="text-muted-foreground text-[10px]">
                           Mã:
@@ -1019,7 +1042,7 @@ function CustomerContent() {
 
                       {/* CCCD or MST Chip */}
                       {(cust.maDinhDanh || cust.maSoThue) && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono bg-muted/40 text-muted-foreground border border-border/40 truncate">
+                        <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[10.5px] sm:text-[11px] font-mono bg-muted/40 text-muted-foreground border border-border/40 truncate max-w-[150px] sm:max-w-none">
                           {cust.loaiKhachHang === 2 ? (
                             <>
                               <Briefcase className="w-3 h-3 text-indigo-500 shrink-0" />
@@ -1071,15 +1094,15 @@ function CustomerContent() {
                   </div>
 
                   {/* Hub Links: Xe sở hữu & Thống kê */}
-                  <div className="pt-2 border-t border-border/50 grid grid-cols-2 gap-2 text-xs">
+                  <div className="pt-2 border-t border-border/50 grid grid-cols-2 gap-1.5 sm:gap-2 text-xs">
                     <Link
                       href={`/admin/customer/vehicles?khachHangId=${cust.khachHangID}`}
-                      className="flex items-center justify-between p-2 rounded-lg bg-muted/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-border/50 hover:border-blue-500/30 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer group/link"
+                      className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg bg-muted/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-border/50 hover:border-blue-500/30 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer group/link"
                       title="Xem danh sách xe của khách"
                     >
-                      <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
                         <Bike className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                        <span className="font-medium text-[11px] truncate">
+                        <span className="font-medium text-[10.5px] sm:text-[11px] truncate">
                           Xe sở hữu
                         </span>
                       </div>
@@ -1088,12 +1111,12 @@ function CustomerContent() {
 
                     <Link
                       href={`/admin/customer/statistics`}
-                      className="flex items-center justify-between p-2 rounded-lg bg-muted/40 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-border/50 hover:border-amber-500/30 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-all cursor-pointer group/link"
+                      className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg bg-muted/40 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-border/50 hover:border-amber-500/30 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-all cursor-pointer group/link"
                       title="Xem xếp hạng & công nợ"
                     >
-                      <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
                         <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                        <span className="font-medium text-[11px] truncate">
+                        <span className="font-medium text-[10.5px] sm:text-[11px] truncate">
                           Xếp hạng
                         </span>
                       </div>
@@ -1146,13 +1169,14 @@ function CustomerContent() {
       ) : (
         /* DATA TABLE VIEW */
         <div className="rounded-xl border border-border/80 bg-card shadow-xs overflow-hidden">
-          <div className="p-3 flex flex-col gap-3 w-full">
+          <div className="p-2 sm:p-3 flex flex-col gap-3 w-full overflow-x-auto">
             <Table<KH_KhachHang>
               data={items}
               columns={columns}
               showIndex
               startIndex={(page - 1) * pageSize}
             />
+
 
             {/* Centralized Pagination */}
             <Pagination

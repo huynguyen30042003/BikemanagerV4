@@ -6,6 +6,7 @@ import {
   updateDiaPhuongCapXaApi,
   deleteDiaPhuongCapXaApi,
   syncDiaPhuongCapXaApi,
+  getDiaPhuongCapXaKPIApi,
 } from "@/shared/api/DiaPhuongCapXa";
 import {
   CreateDiaPhuongCapXaPayload,
@@ -17,7 +18,19 @@ export const DIA_PHUONG_CAP_XA_KEYS = {
   all: ["diaPhuongCapXa"] as const,
   list: (params?: object) => [...DIA_PHUONG_CAP_XA_KEYS.all, "list", params] as const,
   detail: (id: number) => [...DIA_PHUONG_CAP_XA_KEYS.all, "detail", id] as const,
+  kpi: () => ["diaPhuongCapXaKPI"] as const,
 };
+
+/**
+ * Hook lấy số liệu thống kê KPI xã/phường
+ */
+export const useGetDiaPhuongCapXaKPI = () =>
+  useQuery({
+    queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi(),
+    queryFn: () => getDiaPhuongCapXaKPIApi(),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
+  });
 
 export const useGetDiaPhuongCapXa = (params: DiaPhuongCapXaFilter) =>
   useQuery({
@@ -40,6 +53,8 @@ export const useCreateDiaPhuongCapXa = () => {
     mutationFn: (body: CreateDiaPhuongCapXaPayload) => createDiaPhuongCapXaApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
+      qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
 };
@@ -51,6 +66,8 @@ export const useUpdateDiaPhuongCapXa = () => {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.detail(vars.XaID) });
+      qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
 };
@@ -61,6 +78,8 @@ export const useDeleteDiaPhuongCapXa = () => {
     mutationFn: (id: number) => deleteDiaPhuongCapXaApi(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
+      qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
 };
@@ -71,6 +90,8 @@ export const useSyncDiaPhuongCapXa = () => {
     mutationFn: () => syncDiaPhuongCapXaApi(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
+      qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
+      qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
 };

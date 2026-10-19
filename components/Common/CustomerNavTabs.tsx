@@ -68,14 +68,14 @@ export function CustomerNavTabs({
   return (
     <div
       className={cn(
-        "inline-flex items-center p-1 rounded-xl bg-muted/70 border border-border/80 shadow-2xs gap-1 flex-wrap",
+        "flex items-center p-1 rounded-xl bg-muted/70 border border-border/80 shadow-2xs gap-1 max-w-full overflow-x-auto no-scrollbar scroll-smooth",
         className
       )}
     >
       <Link
         href="/admin/customer"
         className={cn(
-          "group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer",
+          "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap",
           activeTab === "customer"
             ? "bg-background text-foreground font-semibold shadow-xs border border-border/50 text-blue-600 dark:text-blue-400"
             : "text-muted-foreground hover:text-foreground hover:bg-background/50"
@@ -89,7 +89,7 @@ export function CustomerNavTabs({
       <Link
         href="/admin/customer/statistics"
         className={cn(
-          "group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer",
+          "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap",
           activeTab === "statistics"
             ? "bg-background text-foreground font-semibold shadow-xs border border-border/50 text-blue-600 dark:text-blue-400"
             : "text-muted-foreground hover:text-foreground hover:bg-background/50"
@@ -103,7 +103,7 @@ export function CustomerNavTabs({
       <Link
         href="/admin/customer/vehicles"
         className={cn(
-          "group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer",
+          "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap",
           activeTab === "vehicles"
             ? "bg-background text-foreground font-semibold shadow-xs border border-border/50 text-blue-600 dark:text-blue-400"
             : "text-muted-foreground hover:text-foreground hover:bg-background/50"
@@ -117,7 +117,7 @@ export function CustomerNavTabs({
       <Link
         href="/admin/customer/ownerships"
         className={cn(
-          "group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer",
+          "group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap",
           activeTab === "ownerships"
             ? "bg-background text-foreground font-semibold shadow-xs border border-border/50 text-blue-600 dark:text-blue-400"
             : "text-muted-foreground hover:text-foreground hover:bg-background/50"
@@ -130,3 +130,4 @@ export function CustomerNavTabs({
     </div>
   );
 }
+

@@ -6,6 +6,7 @@ import {
   DiaDiemFilter,
   UpdateDiaDiemPayload,
   DD_NavTabs,
+  DiaDiemKPI,
 } from "@/types/diaDiem";
 
 
@@ -163,5 +164,53 @@ export const getDiaDiemNavTabsApi = async (): Promise<DD_NavTabs> => {
   });
 
   return response.data?.data ?? response.data;
+};
+
+/**
+ * Lấy dữ liệu thống kê KPI địa điểm cơ sở / showroom
+ * GET /api/DiaDiemApi/GetKPI
+ */
+export const getDiaDiemKPIApi = async (): Promise<DiaDiemKPI> => {
+  const endpoints = [
+    `${APP_URL}/DiaDiemApi/GetKPI`,
+    `${APP_URL}/DiaDiem/GetKPI`,
+    `/api/DiaDiemApi/GetKPI`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.get(url, {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      });
+      if (response?.data?.data) {
+        return response.data.data;
+      }
+      if (response?.data?.total_DiaDiem !== undefined) {
+        return response.data;
+      }
+    } catch {
+      try {
+        const response = await api.post(
+          url,
+          {},
+          {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          }
+        );
+        if (response?.data?.data) {
+          return response.data.data;
+        }
+        if (response?.data?.total_DiaDiem !== undefined) {
+          return response.data;
+        }
+      } catch {
+        // Tiếp tục thử URL tiếp theo
+      }
+    }
+  }
+
+  throw new Error("Không thể tải dữ liệu KPI địa điểm");
 };
 

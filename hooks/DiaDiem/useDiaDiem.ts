@@ -13,6 +13,7 @@ import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetDiaDiem,
+  useGetDiaDiemKPI,
   useCreateDiaDiem,
   useUpdateDiaDiem,
   useDeleteDiaDiem,
@@ -160,6 +161,12 @@ export function useDiaDiem(initialTinhId?: string | number) {
     refetch,
   } = useGetDiaDiem(filterParams);
 
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetDiaDiemKPI();
+
   const createMutation = useCreateDiaDiem();
   const updateMutation = useUpdateDiaDiem();
   const deleteMutation = useDeleteDiaDiem();
@@ -266,6 +273,7 @@ export function useDiaDiem(initialTinhId?: string | number) {
       toast.success("Thêm mới địa điểm cơ sở thành công");
       setOpen(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -299,6 +307,7 @@ export function useDiaDiem(initialTinhId?: string | number) {
       toast.success("Cập nhật địa điểm cơ sở thành công");
       setOpenUpdate(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -314,6 +323,7 @@ export function useDiaDiem(initialTinhId?: string | number) {
       toast.success(`Đã xóa "${selectItemName}" thành công`);
       setOpenDelete(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -352,6 +362,11 @@ export function useDiaDiem(initialTinhId?: string | number) {
     isLoading,
     isFetching,
     refetch,
+
+    // KPI data
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     open,
     setOpen,

@@ -38,3 +38,11 @@ export interface UpdateDiaPhuongCapTinhPayload {
   Loai: number;
   TrangThai: boolean;
 }
+
+export interface DiaPhuongCapTinhKPI {
+  total_DiaPhuongCapTinh: number;
+  total_HoatDong: number;
+  total_NgungHoatDong: number;
+  total_ThanhPho: number;
+  total_Tinh: number;
+}

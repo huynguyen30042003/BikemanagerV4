@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDiaPhuongCapTinh } from "@/hooks/DiaPhuongCapTinh/useDiaPhuongCapTinh";
-import { DM_DiaPhuongCapTinh } from "@/types/diaPhuongCapTinh";
+import { DM_DiaPhuongCapTinh, DiaPhuongCapTinhKPI } from "@/types/diaPhuongCapTinh";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { LocationNavTabs } from "@/components/Common/LocationNavTabs";
 import { Pagination } from "@/components/Common/Pagination";
@@ -69,6 +69,10 @@ export default function DiaPhuongCapTinhPage() {
     isFetching,
     refetch,
 
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
+
     openDelete,
     setOpenDelete,
     selectItemName,
@@ -80,7 +84,7 @@ export default function DiaPhuongCapTinhPage() {
     isSyncing,
   } = useDiaPhuongCapTinh();
 
-  // Metrics
+  // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback lọc cục bộ)
   const activeCount = useMemo(
     () => items.filter((item) => item.trangThai === true).length,
     [items],
@@ -94,12 +98,24 @@ export default function DiaPhuongCapTinhPage() {
     [items],
   );
 
+  const kpi = kpiData as unknown as (DiaPhuongCapTinhKPI & { data?: DiaPhuongCapTinhKPI }) | undefined;
+
+  const total_DiaPhuongCapTinh = kpi?.data?.total_DiaPhuongCapTinh ?? kpi?.total_DiaPhuongCapTinh ?? totalCount;
+  const total_HoatDong = kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
+  const total_NgungHoatDong = kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
+  const total_ThanhPho = kpi?.data?.total_ThanhPho ?? kpi?.total_ThanhPho ?? cityCount;
+
+  const handleReload = () => {
+    refetch();
+    refetchKPI();
+  };
+
   const kpiCards = useMemo(
     () => [
       {
         id: "all",
         label: "Tổng Tỉnh / Thành phố",
-        value: totalCount,
+        value: total_DiaPhuongCapTinh,
         subtext: "Địa bàn cấp tỉnh trên toàn quốc",
         icon: Building2,
         iconBg: "bg-blue-500/10",
@@ -108,12 +124,12 @@ export default function DiaPhuongCapTinhPage() {
         filterKey: "all",
         activeBorderClass:
           "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "active",
         label: "Đang hoạt động",
-        value: activeCount,
+        value: total_HoatDong,
         subtext: "Sẵn sàng liên kết xã phường & cơ sở",
         icon: CheckCircle2,
         iconBg: "bg-emerald-500/10",
@@ -122,12 +138,12 @@ export default function DiaPhuongCapTinhPage() {
         filterKey: "active",
         activeBorderClass:
           "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "inactive",
         label: "Tạm ngưng / Khóa",
-        value: inactiveCount,
+        value: total_NgungHoatDong,
         subtext: "Vô hiệu hóa trong biểu mẫu chọn",
         icon: XCircle,
         iconBg: "bg-slate-500/10",
@@ -136,21 +152,28 @@ export default function DiaPhuongCapTinhPage() {
         filterKey: "inactive",
         activeBorderClass:
           "border-slate-500/50 bg-slate-500/5 shadow-xs ring-2 ring-slate-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "cities",
         label: "Thành phố trực thuộc TW",
-        value: cityCount,
+        value: total_ThanhPho,
         subtext: "Đô thị loại đặc biệt & cấp TW",
         icon: Landmark,
         iconBg: "bg-purple-500/10",
         iconColor: "text-purple-600 dark:text-purple-400",
         valueColor: "text-purple-600 dark:text-purple-400",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
     ],
-    [totalCount, activeCount, inactiveCount, cityCount, isLoading]
+    [
+      total_DiaPhuongCapTinh,
+      total_HoatDong,
+      total_NgungHoatDong,
+      total_ThanhPho,
+      isLoadingKPI,
+      isLoading,
+    ]
   );
 
   const handleCopyCode = (code: string, e: React.MouseEvent) => {
@@ -392,7 +415,7 @@ export default function DiaPhuongCapTinhPage() {
           <div className="flex items-center justify-between pt-1">
             <LocationNavTabs
               activeTab="tinh"
-              total_DiaPhuongCapTinh={totalCount}
+              total_DiaPhuongCapTinh={total_DiaPhuongCapTinh}
             />
           </div>
         </div>
@@ -485,7 +508,7 @@ export default function DiaPhuongCapTinhPage() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Tất cả ({totalCount})
+                Tất cả ({total_DiaPhuongCapTinh})
               </button>
               <button
                 type="button"
@@ -499,7 +522,7 @@ export default function DiaPhuongCapTinhPage() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Sử dụng ({activeCount})
+                Sử dụng ({total_HoatDong})
               </button>
               <button
                 type="button"
@@ -513,7 +536,7 @@ export default function DiaPhuongCapTinhPage() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Khóa ({inactiveCount})
+                Khóa ({total_NgungHoatDong})
               </button>
             </div>
 
@@ -549,13 +572,13 @@ export default function DiaPhuongCapTinhPage() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => refetch()}
-              disabled={isFetching}
+              onClick={handleReload}
+              disabled={isFetching || isLoadingKPI}
               title="Tải lại dữ liệu"
               className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs active:scale-95"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+                className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
               />
             </Button>
           </div>
@@ -858,7 +881,7 @@ export default function DiaPhuongCapTinhPage() {
       <CreateDiaPhuongCapTinhSlideOver
         open={openCreate}
         onClose={() => setOpenCreate(false)}
-        onSuccess={() => refetch()}
+        onSuccess={handleReload}
       />
 
       {/* SlideOver: CẬP NHẬT TỈNH / THÀNH PHỐ */}
@@ -866,7 +889,7 @@ export default function DiaPhuongCapTinhPage() {
         open={Boolean(editingItem)}
         onClose={() => setEditingItem(null)}
         data={editingItem}
-        onSuccess={() => refetch()}
+        onSuccess={handleReload}
       />
 
       {/* Modal Xóa */}

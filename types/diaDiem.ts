@@ -65,5 +65,8 @@ export interface DD_NavTabs {
   total_QuocGia?: number;
 }
 
-
-
+export interface DiaDiemKPI {
+  total_DiaDiem: number;
+  total_HoatDong: number;
+  total_NgungHoatDong: number;
+}

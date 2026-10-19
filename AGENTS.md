@@ -567,4 +567,8 @@ Mỗi khi thêm một trang hoặc module mới (ví dụ: `/admin/reports` ho�
 
 3. **Chỉ dùng `??` và `||` cho Giá trị mặc định (Default Value):**
    - Chỉ được phép dùng `??` khi gán một giá trị mặc định cụ thể (literal value như chuỗi, số, mảng rỗng) cho một biến đã xác định rõ tên.
-   - **Hợp lệ:** `const total = total_DanhMuc ?? 0;` hoặc `const name = diaDiem ?? "Chưa cập nhật";`
+   - **Hợp lệ:** `const total = total_DanhMuc ?? 0;` hoặc `const name = diaDiem ?? "Chưa cập nhật";`.
+   - Không được dùng `return response.data?.data ?? response.data` chỉ dùng `return response.data;`
+4. **Phải làm responsive chính là cho chủ người dùng chủ yếu là desktop và mobi (iphone XsMax và 12Pro Max)**
+   - Các nút trên mobile thì thu gọn vào nút hình 3 gạch (khi chưa có nút cụ thể thì tạo nút 3 gạch để chứa các nút con)
+   - Khi click vào nút 3 gạch thì hiển thị các nút con, khi click lần nữa thì thu gọn vào nút 3 gạch

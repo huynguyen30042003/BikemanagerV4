@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -7,6 +5,7 @@ import {
   deleteKhachHangApi,
   getKhachHangApi,
   getKhachHangByIdApi,
+  getKhachHangKPIApi,
   updateKhachHangApi,
   getKhachHangNavTabsApi,
 } from "@/shared/api/KhachHang";
@@ -22,6 +21,7 @@ export const KHACH_HANG_QUERY_KEYS = {
   list: (params: KhachHangFilter) => [...KHACH_HANG_QUERY_KEYS.lists(), params] as const,
   details: () => [...KHACH_HANG_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...KHACH_HANG_QUERY_KEYS.details(), id] as const,
+  kpi: () => [...KHACH_HANG_QUERY_KEYS.all, "kpi"] as const,
   navTabs: () => ["khachHangNavTabs"] as const,
 };
 
@@ -31,6 +31,14 @@ export const useGetKhachHangNavTabs = () => {
     queryFn: () => getKhachHangNavTabsApi(),
     staleTime: 10000,
     refetchOnWindowFocus: true,
+  });
+};
+
+export const useGetKhachHangKPI = () => {
+  return useQuery({
+    queryKey: KHACH_HANG_QUERY_KEYS.kpi(),
+    queryFn: () => getKhachHangKPIApi(),
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -58,6 +66,7 @@ export const useCreateKhachHang = () => {
     mutationFn: (payload: CreateKhachHangPayload) => createKhachHangApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.kpi() });
       queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.navTabs() });
       toast.success("Thêm mới hồ sơ khách hàng thành công!");
     },
@@ -77,6 +86,7 @@ export const useUpdateKhachHang = () => {
       queryClient.invalidateQueries({
         queryKey: KHACH_HANG_QUERY_KEYS.detail(variables.KhachHangID),
       });
+      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.kpi() });
       queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.navTabs() });
       toast.success("Cập nhật thông tin khách hàng thành công!");
     },
@@ -93,6 +103,7 @@ export const useDeleteKhachHang = () => {
     mutationFn: (id: string) => deleteKhachHangApi(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.kpi() });
       queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.navTabs() });
       toast.success("Xóa hồ sơ khách hàng thành công!");
     },
@@ -101,4 +112,5 @@ export const useDeleteKhachHang = () => {
     },
   });
 };
+
 

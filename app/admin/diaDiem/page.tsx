@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDiaDiem } from "@/hooks/DiaDiem/useDiaDiem";
-import { DM_DiaDiem } from "@/types/diaDiem";
+import { DM_DiaDiem, DiaDiemKPI } from "@/types/diaDiem";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { LocationNavTabs } from "@/components/Common/LocationNavTabs";
 import { Pagination } from "@/components/Common/Pagination";
@@ -82,6 +82,10 @@ function DiaDiemContent() {
     isFetching,
     refetch,
 
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
+
     openDelete,
     setOpenDelete,
     selectItemName,
@@ -90,7 +94,7 @@ function DiaDiemContent() {
     isDeleting,
   } = useDiaDiem(tinhIdFromUrl ? Number(tinhIdFromUrl) : "");
 
-  // Metrics
+  // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback lọc cục bộ)
   const activeCount = useMemo(
     () => items.filter((item) => item.trangThai === true).length,
     [items],
@@ -103,6 +107,17 @@ function DiaDiemContent() {
     () => items.filter((item) => item.loaiDiaDiemID === 1).length,
     [items],
   );
+
+  const kpi = kpiData as unknown as (DiaDiemKPI & { data?: DiaDiemKPI }) | undefined;
+
+  const total_DiaDiem = kpi?.data?.total_DiaDiem ?? kpi?.total_DiaDiem ?? totalCount;
+  const total_HoatDong = kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
+  const total_NgungHoatDong = kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
+
+  const handleReload = () => {
+    refetch();
+    refetchKPI();
+  };
 
   const filterProvinceOptions: SelectOption[] = useMemo(() => {
     return [
@@ -374,13 +389,13 @@ function DiaDiemContent() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => refetch()}
-                disabled={isFetching}
+                onClick={handleReload}
+                disabled={isFetching || isLoadingKPI}
                 className="h-9 px-3.5 flex items-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs"
                 title="Tải lại danh sách cơ sở"
               >
                 <RefreshCw
-                  className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+                  className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
                 />
                 <span className="text-xs font-medium">Làm mới</span>
               </Button>
@@ -397,7 +412,7 @@ function DiaDiemContent() {
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <LocationNavTabs activeTab="diaDiem" total_DiaDiem={totalCount} />
+            <LocationNavTabs activeTab="diaDiem" total_DiaDiem={total_DiaDiem} />
           </div>
         </div>
       )}
@@ -425,7 +440,7 @@ function DiaDiemContent() {
             </div>
           </div>
           <div className="mt-2 text-2xl font-bold text-foreground">
-            {isLoading ? <Skeleton className="h-7 w-16" /> : totalCount}
+            {isLoadingKPI && isLoading ? <Skeleton className="h-7 w-16" /> : total_DiaDiem}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
             Toàn bộ mạng lưới phân phối
@@ -452,7 +467,7 @@ function DiaDiemContent() {
             </div>
           </div>
           <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {isLoading ? <Skeleton className="h-7 w-16" /> : activeCount}
+            {isLoadingKPI && isLoading ? <Skeleton className="h-7 w-16" /> : total_HoatDong}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
             Mở cửa đón khách & xuất kho
@@ -479,7 +494,7 @@ function DiaDiemContent() {
             </div>
           </div>
           <div className="mt-2 text-2xl font-bold text-slate-700 dark:text-slate-300">
-            {isLoading ? <Skeleton className="h-7 w-16" /> : inactiveCount}
+            {isLoadingKPI && isLoading ? <Skeleton className="h-7 w-16" /> : total_NgungHoatDong}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
             Bảo trì hoặc ngừng hoạt động
@@ -499,7 +514,7 @@ function DiaDiemContent() {
             {isLoading ? <Skeleton className="h-7 w-16" /> : showroomCount}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
-            Điểm bán lẻ trực tiếp
+            Điểm bán lẻ trực tiếp (trên trang)
           </p>
         </Card>
       </div>
@@ -558,7 +573,7 @@ function DiaDiemContent() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Tất cả ({totalCount})
+                Tất cả ({total_DiaDiem})
               </button>
               <button
                 type="button"
@@ -572,7 +587,7 @@ function DiaDiemContent() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Hoạt động ({activeCount})
+                Hoạt động ({total_HoatDong})
               </button>
               <button
                 type="button"
@@ -586,7 +601,7 @@ function DiaDiemContent() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Đóng ({inactiveCount})
+                Đóng ({total_NgungHoatDong})
               </button>
             </div>
 
@@ -622,13 +637,13 @@ function DiaDiemContent() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => refetch()}
-              disabled={isFetching}
+              onClick={handleReload}
+              disabled={isFetching || isLoadingKPI}
               title="Tải lại dữ liệu"
               className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+                className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
               />
             </Button>
           </div>
@@ -965,7 +980,7 @@ function DiaDiemContent() {
         loaiDiaDiemOptions={loaiDiaDiemOptions}
         isLoadingLoaiDiaDiem={isLoadingLoaiDiaDiem}
         defaultTinhId={tinhFilter ? Number(tinhFilter) : 0}
-        onSuccess={() => refetch()}
+        onSuccess={handleReload}
       />
 
       {/* SlideOver: CẬP NHẬT CƠ SỞ / SHOWROOM (Tách component riêng, cách ly form state) */}
@@ -977,7 +992,7 @@ function DiaDiemContent() {
         parentLocationOptions={parentLocationOptions}
         loaiDiaDiemOptions={loaiDiaDiemOptions}
         isLoadingLoaiDiaDiem={isLoadingLoaiDiaDiem}
-        onSuccess={() => refetch()}
+        onSuccess={handleReload}
       />
 
       {/* Modal Xác nhận Xóa */}

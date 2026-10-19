@@ -87,5 +87,13 @@ export interface KH_NavTabs {
   total_LichSuSoHuuPhuongTien?: number;
 }
 
+export interface KhachHangKPI {
+  total_KhachHang: number;
+  total_CaNhan: number;
+  total_ToChuc: number;
+  total_HoatDong: number;
+}
+
+
 
 

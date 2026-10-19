@@ -5,6 +5,7 @@ import {
   CreateDiaPhuongCapTinhPayload,
   DiaPhuongCapTinhFilter,
   UpdateDiaPhuongCapTinhPayload,
+  DiaPhuongCapTinhKPI,
 } from "@/types/diaPhuongCapTinh";
 
 const getAuthHeaders = () => {
@@ -122,4 +123,52 @@ export const syncDiaPhuongCapTinhApi = async () => {
   );
 
   return response.data;
+};
+
+/**
+ * Lấy dữ liệu thống kê KPI tỉnh/thành phố
+ * GET /api/DiaPhuongCapTinhApi/GetKPI
+ */
+export const getDiaPhuongCapTinhKPIApi = async (): Promise<DiaPhuongCapTinhKPI> => {
+  const endpoints = [
+    `${APP_URL}/DiaPhuongCapTinhApi/GetKPI`,
+    `${APP_URL}/DiaPhuongCapTinh/GetKPI`,
+    `/api/DiaPhuongCapTinhApi/GetKPI`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.get(url, {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      });
+      if (response?.data?.data) {
+        return response.data.data;
+      }
+      if (response?.data?.total_DiaPhuongCapTinh !== undefined) {
+        return response.data;
+      }
+    } catch {
+      try {
+        const response = await api.post(
+          url,
+          {},
+          {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          }
+        );
+        if (response?.data?.data) {
+          return response.data.data;
+        }
+        if (response?.data?.total_DiaPhuongCapTinh !== undefined) {
+          return response.data;
+        }
+      } catch {
+        // Tiếp tục thử URL tiếp theo
+      }
+    }
+  }
+
+  throw new Error("Không thể tải dữ liệu KPI tỉnh/thành phố");
 };

@@ -12,6 +12,7 @@ import { DM_DiaPhuongCapTinh } from "@/types/diaPhuongCapTinh";
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetDiaPhuongCapXa,
+  useGetDiaPhuongCapXaKPI,
   useCreateDiaPhuongCapXa,
   useUpdateDiaPhuongCapXa,
   useDeleteDiaPhuongCapXa,
@@ -123,6 +124,12 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
     refetch,
   } = useGetDiaPhuongCapXa(filterParams);
 
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetDiaPhuongCapXaKPI();
+
   const createMutation = useCreateDiaPhuongCapXa();
   const updateMutation = useUpdateDiaPhuongCapXa();
   const deleteMutation = useDeleteDiaPhuongCapXa();
@@ -211,6 +218,7 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
       toast.success("Thêm mới xã/phường thành công");
       setOpen(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -244,6 +252,7 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
       toast.success("Cập nhật xã/phường thành công");
       setOpenUpdate(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -259,6 +268,7 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
       toast.success(`Đã xóa "${selectItemName}" thành công`);
       setOpenDelete(false);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -272,6 +282,7 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
       await syncMutation.mutateAsync();
       toast.success("Đồng bộ danh mục xã/phường thành công");
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -303,6 +314,11 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
     isLoading,
     isFetching,
     refetch,
+
+    // KPI data
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     open,
     setOpen,

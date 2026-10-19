@@ -5,6 +5,7 @@ import {
   CreateDiaPhuongCapXaPayload,
   DiaPhuongCapXaFilter,
   UpdateDiaPhuongCapXaPayload,
+  DiaPhuongCapXaKPI,
 } from "@/types/diaPhuongCapXa";
 
 const getAuthHeaders = () => {
@@ -123,4 +124,53 @@ export const syncDiaPhuongCapXaApi = async () => {
   );
 
   return response.data;
+};
+
+/**
+ * Lấy dữ liệu thống kê KPI xã/phường
+ * GET /api/DiaPhuongCapXa/GetKPI hoặc /api/DiaPhuongCapXaApi/GetKPI
+ */
+export const getDiaPhuongCapXaKPIApi = async (): Promise<DiaPhuongCapXaKPI> => {
+  const endpoints = [
+    `${APP_URL}/DiaPhuongCapXa/GetKPI`,
+    `${APP_URL}/DiaPhuongCapXaApi/GetKPI`,
+    `/api/DiaPhuongCapXa/GetKPI`,
+    `/api/DiaPhuongCapXaApi/GetKPI`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.get(url, {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      });
+      if (response?.data?.data) {
+        return response.data.data;
+      }
+      if (response?.data?.total_DiaPhuongCapXa !== undefined) {
+        return response.data;
+      }
+    } catch {
+      try {
+        const response = await api.post(
+          url,
+          {},
+          {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          }
+        );
+        if (response?.data?.data) {
+          return response.data.data;
+        }
+        if (response?.data?.total_DiaPhuongCapXa !== undefined) {
+          return response.data;
+        }
+      } catch {
+        // Tiếp tục thử URL tiếp theo
+      }
+    }
+  }
+
+  throw new Error("Không thể tải dữ liệu KPI xã/phường");
 };

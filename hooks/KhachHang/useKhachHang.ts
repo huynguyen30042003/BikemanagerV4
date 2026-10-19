@@ -13,11 +13,13 @@ import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetKhachHang,
+  useGetKhachHangKPI,
   useCreateKhachHang,
   useUpdateKhachHang,
   useDeleteKhachHang,
 } from "./useKhachHangApi";
 import { useGetDiaPhuongCapTinh } from "../DiaPhuongCapTinh/useDiaPhuongCapTinhApi";
+
 import { useGetDiaPhuongCapXa } from "../DiaPhuongCapXa/useDiaPhuongCapXaApi";
 import { useGetQuocGia } from "../QuocGia/useQuocGiaApi";
 
@@ -210,6 +212,12 @@ export function useKhachHang(initialTinhId?: string | number) {
 
   const { data, isLoading, isFetching, refetch } = useGetKhachHang(queryParams);
 
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetKhachHangKPI();
+
   const items: KH_KhachHang[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
@@ -315,6 +323,7 @@ export function useKhachHang(initialTinhId?: string | number) {
       setErrors({});
       await createMutation.mutateAsync(dataAdd);
       setOpen(false);
+      refetchKPI();
     } catch (err) {
       if (err instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -340,6 +349,7 @@ export function useKhachHang(initialTinhId?: string | number) {
       setErrors({});
       await updateMutation.mutateAsync(dataUpdate);
       setOpenUpdate(false);
+      refetchKPI();
     } catch (err) {
       if (err instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -359,6 +369,7 @@ export function useKhachHang(initialTinhId?: string | number) {
     try {
       await deleteMutation.mutateAsync(selectKhachHangId);
       setOpenDelete(false);
+      refetchKPI();
     } catch {
       // Toast handled by mutation
     }
@@ -389,6 +400,11 @@ export function useKhachHang(initialTinhId?: string | number) {
     isLoading,
     isFetching,
     refetch,
+
+    // KPI data
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     provinceOptions,
     isLoadingTinh,

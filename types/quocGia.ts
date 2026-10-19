@@ -33,3 +33,10 @@ export interface UpdateQuocGiaPayload {
   ThuTu: number;
   TrangThai: boolean;
 }
+
+export interface QuocGiaKPI {
+  total_QuocGia: number;
+  total_HoatDong: number;
+  total_NgungHoatDong: number;
+}
+

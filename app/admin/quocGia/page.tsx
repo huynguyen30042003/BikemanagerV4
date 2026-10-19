@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuocGia } from "@/hooks/QuocGia/useQuocGia";
-import { DM_QuocGia } from "@/types/quocGia";
+import { DM_QuocGia, QuocGiaKPI } from "@/types/quocGia";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { LocationNavTabs } from "@/components/Common/LocationNavTabs";
 import { Pagination } from "@/components/Common/Pagination";
@@ -60,6 +60,11 @@ export default function QuocGiaPage() {
     isFetching,
     refetch,
 
+    // KPI data
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
+
     openDelete,
     setOpenDelete,
     selectItemName,
@@ -71,7 +76,7 @@ export default function QuocGiaPage() {
     isSyncing,
   } = useQuocGia();
 
-  // Metrics
+  // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback lọc cục bộ)
   const activeCount = useMemo(
     () => items.filter((item) => item.trangThai === true).length,
     [items]
@@ -81,13 +86,24 @@ export default function QuocGiaPage() {
     [items]
   );
 
+  const kpi = kpiData as unknown as (QuocGiaKPI & { data?: QuocGiaKPI }) | undefined;
+
+  const total_QuocGia = kpi?.data?.total_QuocGia ?? kpi?.total_QuocGia ?? totalCount;
+  const total_HoatDong = kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
+  const total_NgungHoatDong = kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
+
+  const handleReload = () => {
+    refetch();
+    refetchKPI();
+  };
+
   // Dynamic KPI overview cards array mapped over via .map()
   const kpiCards = useMemo(
     () => [
       {
         id: "all",
         label: "Tổng số Quốc gia",
-        value: totalCount,
+        value: total_QuocGia,
         subtext: "Khai báo trong toàn hệ thống",
         icon: Globe,
         iconBg: "bg-blue-500/10",
@@ -96,12 +112,12 @@ export default function QuocGiaPage() {
         filterKey: "all",
         activeBorderClass:
           "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "active",
         label: "Đang áp dụng",
-        value: activeCount,
+        value: total_HoatDong,
         subtext: "Sẵn sàng liên kết xuất xứ sản phẩm",
         icon: CheckCircle2,
         iconBg: "bg-emerald-500/10",
@@ -110,12 +126,12 @@ export default function QuocGiaPage() {
         filterKey: "active",
         activeBorderClass:
           "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "inactive",
         label: "Tạm ngưng / Khóa",
-        value: inactiveCount,
+        value: total_NgungHoatDong,
         subtext: "Vô hiệu hóa trong biểu mẫu",
         icon: XCircle,
         iconBg: "bg-slate-500/10",
@@ -124,7 +140,7 @@ export default function QuocGiaPage() {
         filterKey: "inactive",
         activeBorderClass:
           "border-slate-500/50 bg-slate-500/5 shadow-xs ring-2 ring-slate-500/10",
-        isLoading: isLoading,
+        isLoading: isLoadingKPI && isLoading,
       },
       {
         id: "iso",
@@ -138,7 +154,7 @@ export default function QuocGiaPage() {
         isLoading: false,
       },
     ],
-    [totalCount, activeCount, inactiveCount, isLoading]
+    [total_QuocGia, total_HoatDong, total_NgungHoatDong, isLoadingKPI, isLoading]
   );
 
   const handleCopyCode = (code: string, e: React.MouseEvent) => {
@@ -340,7 +356,7 @@ export default function QuocGiaPage() {
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <LocationNavTabs activeTab="quocGia" total_QuocGia={totalCount} />
+            <LocationNavTabs activeTab="quocGia" total_QuocGia={total_QuocGia} />
           </div>
         </div>
       )}
@@ -435,7 +451,7 @@ export default function QuocGiaPage() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Tất cả ({totalCount})
+                Tất cả ({total_QuocGia})
               </button>
               <button
                 type="button"
@@ -449,7 +465,7 @@ export default function QuocGiaPage() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Sử dụng ({activeCount})
+                Sử dụng ({total_HoatDong})
               </button>
               <button
                 type="button"
@@ -463,7 +479,7 @@ export default function QuocGiaPage() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Khóa ({inactiveCount})
+                Khóa ({total_NgungHoatDong})
               </button>
             </div>
 
@@ -499,13 +515,15 @@ export default function QuocGiaPage() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => refetch()}
-              disabled={isFetching}
+              onClick={handleReload}
+              disabled={isFetching || isLoadingKPI}
               title="Tải lại dữ liệu"
               className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs active:scale-95"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+                className={`w-3.5 h-3.5 ${
+                  isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""
+                }`}
               />
             </Button>
           </div>
@@ -768,7 +786,7 @@ export default function QuocGiaPage() {
         defaultThuTu={
           items.length > 0 ? Math.max(...items.map((i) => i.thuTu ?? 0)) + 1 : 1
         }
-        onSuccess={() => refetch()}
+        onSuccess={handleReload}
       />
 
       {/* SlideOver: CẬP NHẬT QUỐC GIA */}
@@ -776,7 +794,7 @@ export default function QuocGiaPage() {
         open={Boolean(editingItem)}
         onClose={() => setEditingItem(null)}
         data={editingItem}
-        onSuccess={() => refetch()}
+        onSuccess={handleReload}
       />
 
       {/* Modal Xóa */}
