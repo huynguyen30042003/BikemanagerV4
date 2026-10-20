@@ -11,6 +11,8 @@ import { SearchSelect } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { ServiceNavTabs } from "@/components/Common/ServiceNavTabs";
 import { usePhieuSuaChuaHook } from "@/hooks/SuaChua/useSuaChua";
+import { useGetPhieuSuaChuaKPI } from "@/hooks/SuaChua/useSuaChuaApi";
+import { KpiRibbon } from "@/components/Common/KpiRibbon";
 import { SC_PhieuSuaChua } from "@/types/suaChua";
 import {
   Wrench,
@@ -27,6 +29,9 @@ import {
   User,
   Clock,
   Eye,
+  CheckCircle2,
+  Wallet,
+  AlertTriangle,
 } from "lucide-react";
 
 function formatCurrency(val: number | null | undefined): string {
@@ -113,6 +118,8 @@ function RepairTicketsContent() {
     selectedTicket,
     isSubmitting,
   } = usePhieuSuaChuaHook();
+
+  const { data: kpi, isLoading: isLoadingKPI } = useGetPhieuSuaChuaKPI();
 
   const columns: Column<SC_PhieuSuaChua>[] = [
     {
@@ -312,9 +319,63 @@ function RepairTicketsContent() {
         </div>
 
         <div className="pt-2">
-          <ServiceNavTabs activeTab="repairs" totalRepairs={totalCount} />
+          <ServiceNavTabs
+            activeTab="repairs"
+            totalRepairs={kpi?.total_PhieuSuaChua ?? totalCount}
+          />
         </div>
       </div>
+
+      {/* KPI */}
+      <KpiRibbon
+        isLoading={isLoadingKPI}
+        items={[
+          {
+            title: "Tổng phiếu sửa chữa",
+            value: kpi?.total_PhieuSuaChua ?? 0,
+            subtext: "Xe đã tiếp nhận vào xưởng",
+            icon: Wrench,
+          },
+          {
+            title: "Đang xử lý",
+            value: kpi?.total_DangXuLy ?? 0,
+            subtext: "Đang khám, sửa, chờ phụ tùng",
+            icon: Clock,
+            tone: "amber",
+          },
+          {
+            title: "Hoàn thành",
+            value: kpi?.total_HoanThanh ?? 0,
+            subtext: "Đã bàn giao xe",
+            icon: CheckCircle2,
+            tone: "emerald",
+          },
+          {
+            title: "Doanh thu",
+            value: formatCurrency(kpi?.total_DoanhThu),
+            subtext: "Tổng giá trị phiếu sửa chữa",
+            icon: DollarSign,
+            tone: "blue",
+            compact: true,
+          },
+          {
+            title: "Đã thu",
+            value: formatCurrency(kpi?.total_DaThanhToan),
+            subtext: "Khách đã thanh toán",
+            icon: Wallet,
+            tone: "emerald",
+            compact: true,
+          },
+          {
+            title: "Còn nợ",
+            value: formatCurrency(kpi?.total_ConNo),
+            subtext: `${kpi?.total_PhieuConNo ?? 0} phiếu chưa tất toán`,
+            icon: AlertTriangle,
+            tone: "rose",
+            compact: true,
+          },
+        ]}
+      />
 
       {/* Filter */}
       <div className="p-4 rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-2xs space-y-3">

@@ -36,3 +36,10 @@ export interface UpdateThuongHieuPayload extends CreateThuongHieuPayload {
   ThuongHieuID: string;
   XoaFile?: boolean;
 }
+
+export interface ThuongHieuKPI {
+  total_ThuongHieu: number;
+  total_HoatDong: number;
+  total_NgungHoatDong: number;
+  total_XuatXuQuocTe: number;
+}

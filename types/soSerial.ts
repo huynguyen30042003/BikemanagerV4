@@ -62,3 +62,11 @@ export interface ChuyenTrangThaiSerialPayload {
   TrangThaiID: number;
   GhiChu?: string;
 }
+
+export interface SoSerialKPI {
+  total_SoSerial: number;
+  total_TrongKho: number;
+  total_DaXuatBan: number;
+  total_BaoHanhXuong: number;
+}
+

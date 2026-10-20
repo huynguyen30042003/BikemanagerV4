@@ -40,3 +40,27 @@ export interface CreateKhoPayload {
 export interface UpdateKhoPayload extends CreateKhoPayload {
   KhoID: string;
 }
+
+export interface KHO_WarehouseNavTabs {
+  total_Kho?: number;
+  total_TonKho?: number;
+  total_PhieuChuyenKho?: number;
+  total_PhieuKiemKe?: number;
+  totalKho?: number;
+  totalTonKho?: number;
+  totalPhieuChuyenKho?: number;
+  totalPhieuKiemKe?: number;
+}
+
+export interface KHO_KhoKPI {
+  total_Kho?: number;
+  total_HoatDong?: number;
+  total_KhoMacDinh?: number;
+  total_NgungHoatDong?: number;
+  totalKho?: number;
+  totalHoatDong?: number;
+  totalKhoMacDinh?: number;
+  totalNgungHoatDong?: number;
+}
+
+

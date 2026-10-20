@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import { SP_HinhAnhSanPham, CreateHinhAnhPayload } from "@/types/hinhAnhSanPham";
+import { SP_HinhAnhSanPham } from "@/types/hinhAnhSanPham";
 import {
   useGetHinhAnhs,
+  useGetHinhAnhSanPhamKPI,
   useAddHinhAnh,
   useDeleteHinhAnh,
 } from "./useHinhAnhSanPhamApi";
@@ -14,7 +15,9 @@ import { useGetBienTheSanPham } from "../BienTheSanPham/useBienTheSanPhamApi";
 export * from "./useHinhAnhSanPhamApi";
 
 export function useHinhAnhSanPham(initialSanPhamId?: string) {
-  const [selectedSanPhamId, setSelectedSanPhamId] = useState<string>(initialSanPhamId ?? "");
+  const [selectedSanPhamId, setSelectedSanPhamId] = useState<string>(
+    initialSanPhamId ?? ""
+  );
   const [selectedBienTheId, setSelectedBienTheId] = useState<string>("");
 
   const [openAdd, setOpenAdd] = useState<boolean>(false);
@@ -30,10 +33,12 @@ export function useHinhAnhSanPham(initialSanPhamId?: string) {
 
   const productOptions = useMemo(() => {
     const list = dataProducts?.data ?? dataProducts?.items ?? [];
-    return list.map((p: { sanPhamID: string; tenSanPham: string; maSanPham: string }) => ({
-      value: p.sanPhamID,
-      label: `${p.tenSanPham} [${p.maSanPham}]`,
-    }));
+    return list.map(
+      (p: { sanPhamID: string; tenSanPham: string; maSanPham: string }) => ({
+        value: p.sanPhamID,
+        label: `${p.tenSanPham} [${p.maSanPham}]`,
+      })
+    );
   }, [dataProducts]);
 
   // Tự động chọn sản phẩm đầu tiên nếu chưa chọn
@@ -44,28 +49,42 @@ export function useHinhAnhSanPham(initialSanPhamId?: string) {
   }, [selectedSanPhamId, productOptions]);
 
   // Query biến thể theo sản phẩm đang chọn
-  const { data: dataVariants, isLoading: isLoadingVariants } = useGetBienTheSanPham({
-    SanPhamID: activeSanPhamId || undefined,
-    PageIndex: 1,
-    PageSize: 100,
-  });
+  const { data: dataVariants, isLoading: isLoadingVariants } =
+    useGetBienTheSanPham({
+      SanPhamID: activeSanPhamId || undefined,
+      PageIndex: 1,
+      PageSize: 100,
+    });
 
   const variantOptions = useMemo(() => {
     const list = dataVariants?.data ?? dataVariants?.items ?? [];
     return [
       { value: "", label: "Ảnh dùng chung cho sản phẩm" },
-      ...list.map((v: { bienTheSanPhamID: string; tenBienThe: string; maSKU: string }) => ({
-        value: v.bienTheSanPhamID,
-        label: `${v.tenBienThe} (${v.maSKU})`,
-      })),
+      ...list.map(
+        (v: {
+          bienTheSanPhamID: string;
+          tenBienThe: string;
+          maSKU: string;
+        }) => ({
+          value: v.bienTheSanPhamID,
+          label: `${v.tenBienThe} (${v.maSKU})`,
+        })
+      ),
     ];
   }, [dataVariants]);
 
-  // Query album ảnh
+  // Query album ảnh của sản phẩm đang chọn
   const { data, isLoading, isFetching, refetch } = useGetHinhAnhs({
     SanPhamID: activeSanPhamId,
     BienTheSanPhamID: selectedBienTheId || null,
   });
+
+  // Query KPI tổng quan bộ sưu tập ảnh
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetHinhAnhSanPhamKPI();
 
   const items: SP_HinhAnhSanPham[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
@@ -150,6 +169,10 @@ export function useHinhAnhSanPham(initialSanPhamId?: string) {
     isLoading,
     isFetching,
     refetch,
+
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     openAdd,
     setOpenAdd,

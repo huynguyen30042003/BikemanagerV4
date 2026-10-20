@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getDonNhapHangApi,
   getDonNhapHangByIdApi,
+  getDonNhapHangKPIApi,
   createDonNhapHangApi,
   updateDonNhapHangApi,
   chuyenTrangThaiDonNhapApi,
@@ -16,6 +17,7 @@ import {
   UpdateDonNhapHangPayload,
   ChuyenTrangThaiDonNhapPayload,
   ThanhToanDonNhapPayload,
+  DonNhapHangKPI,
 } from "@/types/donNhapHang";
 
 export const DON_NHAP_HANG_KEYS = {
@@ -23,6 +25,7 @@ export const DON_NHAP_HANG_KEYS = {
   list: (params?: object) => [...DON_NHAP_HANG_KEYS.all, "list", params] as const,
   detail: (id: string) => [...DON_NHAP_HANG_KEYS.all, "detail", id] as const,
   payments: (id: string) => [...DON_NHAP_HANG_KEYS.all, "payments", id] as const,
+  kpi: () => [...DON_NHAP_HANG_KEYS.all, "kpi"] as const,
 };
 
 export const useGetDonNhapHang = (params: DonNhapHangFilter) =>
@@ -31,6 +34,18 @@ export const useGetDonNhapHang = (params: DonNhapHangFilter) =>
     queryFn: () => getDonNhapHangApi(params),
     staleTime: 1000 * 60 * 5,
   });
+
+export const useGetDonNhapHangKPI = () =>
+  useQuery({
+    queryKey: DON_NHAP_HANG_KEYS.kpi(),
+    queryFn: async () => {
+      const res = await getDonNhapHangKPIApi();
+      return (res?.data ?? res) as DonNhapHangKPI;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 1000 * 30,
+  });
+
 
 export const useGetDonNhapHangById = (id?: string) =>
   useQuery({
@@ -54,6 +69,7 @@ export const useCreateDonNhapHang = () => {
     mutationFn: (body: CreateDonNhapHangPayload) => createDonNhapHangApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DON_NHAP_HANG_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
     },
   });
 };
@@ -64,6 +80,7 @@ export const useUpdateDonNhapHang = () => {
     mutationFn: (body: UpdateDonNhapHangPayload) => updateDonNhapHangApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DON_NHAP_HANG_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
     },
   });
 };
@@ -74,6 +91,7 @@ export const useChuyenTrangThaiDonNhap = () => {
     mutationFn: (body: ChuyenTrangThaiDonNhapPayload) => chuyenTrangThaiDonNhapApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DON_NHAP_HANG_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
     },
   });
 };
@@ -84,6 +102,7 @@ export const useXacNhanNhapKho = () => {
     mutationFn: (id: string) => xacNhanNhapKhoApi(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DON_NHAP_HANG_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
       qc.invalidateQueries({ queryKey: ["tonKho"] });
       qc.invalidateQueries({ queryKey: ["soSerial"] });
     },
@@ -96,6 +115,7 @@ export const useDeleteDonNhapHang = () => {
     mutationFn: (id: string) => deleteDonNhapHangApi(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DON_NHAP_HANG_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
     },
   });
 };
@@ -106,7 +126,11 @@ export const useAddLichSuThanhToanDonNhap = () => {
     mutationFn: (body: ThanhToanDonNhapPayload) => addLichSuThanhToanDonNhapApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DON_NHAP_HANG_KEYS.all });
+      qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
       qc.invalidateQueries({ queryKey: ["nhaCungCap"] });
     },
   });
 };
+
+export { useGetPurchaseNavTabs } from "../NhaCungCap/useNhaCungCapApi";
+

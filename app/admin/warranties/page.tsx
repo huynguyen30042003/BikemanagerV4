@@ -11,6 +11,8 @@ import { SearchSelect } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { ServiceNavTabs } from "@/components/Common/ServiceNavTabs";
 import { useBaoHanhHook } from "@/hooks/BaoHanh/useBaoHanh";
+import { useGetBaoHanhKPI } from "@/hooks/BaoHanh/useBaoHanhApi";
+import { KpiRibbon } from "@/components/Common/KpiRibbon";
 import { BH_BaoHanh } from "@/types/baoHanh";
 import {
   ShieldCheck,
@@ -24,6 +26,8 @@ import {
   Trash2,
   Clock,
   Sparkles,
+  BadgeCheck,
+  ShieldOff,
 } from "lucide-react";
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -65,6 +69,8 @@ function WarrantiesContent() {
     handleDelete,
     isSubmitting,
   } = useBaoHanhHook();
+
+  const { data: kpi, isLoading: isLoadingKPI } = useGetBaoHanhKPI();
 
   const columns: Column<BH_BaoHanh>[] = [
     {
@@ -204,9 +210,46 @@ function WarrantiesContent() {
         </div>
 
         <div className="pt-2">
-          <ServiceNavTabs activeTab="warranties" totalWarranties={totalCount} />
+          <ServiceNavTabs
+            activeTab="warranties"
+            totalWarranties={kpi?.total_BaoHanh ?? totalCount}
+          />
         </div>
       </div>
+
+      {/* KPI */}
+      <KpiRibbon
+        isLoading={isLoadingKPI}
+        items={[
+          {
+            title: "Tổng sổ bảo hành",
+            value: kpi?.total_BaoHanh ?? 0,
+            subtext: "Đã kích hoạt trên hệ thống",
+            icon: ShieldCheck,
+          },
+          {
+            title: "Đang hiệu lực",
+            value: kpi?.total_DangHieuLuc ?? 0,
+            subtext: "Còn trong thời hạn cam kết",
+            icon: BadgeCheck,
+            tone: "emerald",
+          },
+          {
+            title: "Sắp hết hạn",
+            value: kpi?.total_SapHetHan ?? 0,
+            subtext: "Cần nhắc khách gia hạn",
+            icon: Clock,
+            tone: "amber",
+          },
+          {
+            title: "Đã hết hạn",
+            value: kpi?.total_HetHan ?? 0,
+            subtext: "Không còn được bảo hành",
+            icon: ShieldOff,
+            tone: "rose",
+          },
+        ]}
+      />
 
       {/* Filter */}
       <div className="p-4 rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-2xs space-y-3">

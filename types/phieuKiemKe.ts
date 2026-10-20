@@ -72,3 +72,14 @@ export interface HuyKiemKePayload {
   PhieuKiemKeID: string;
   GhiChu?: string;
 }
+
+export interface KHO_PhieuKiemKeKPI {
+  total_PhieuKiemKe?: number;
+  total_DangKiemKe?: number;
+  total_DaCanBang?: number;
+  total_TongSoLuongLech?: number;
+  totalPhieuKiemKe?: number;
+  totalDangKiemKe?: number;
+  totalDaCanBang?: number;
+  totalTongSoLuongLech?: number;
+}

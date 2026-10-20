@@ -7,11 +7,13 @@ import {
   deleteThuongHieuApi,
   getThuongHieuApi,
   getThuongHieuByIdApi,
+  getThuongHieuKPIApi,
   updateThuongHieuApi,
 } from "@/shared/api/ThuongHieu";
 import {
   CreateThuongHieuPayload,
   ThuongHieuFilter,
+  ThuongHieuKPI,
   UpdateThuongHieuPayload,
 } from "@/types/thuongHieu";
 
@@ -21,6 +23,7 @@ export const THUONG_HIEU_QUERY_KEYS = {
   list: (params: ThuongHieuFilter) => [...THUONG_HIEU_QUERY_KEYS.lists(), params] as const,
   details: () => [...THUONG_HIEU_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...THUONG_HIEU_QUERY_KEYS.details(), id] as const,
+  kpi: () => [...THUONG_HIEU_QUERY_KEYS.all, "kpi"] as const,
 };
 
 export const useGetThuongHieu = (params: ThuongHieuFilter) => {
@@ -29,6 +32,18 @@ export const useGetThuongHieu = (params: ThuongHieuFilter) => {
     queryFn: () => getThuongHieuApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
+  });
+};
+
+export const useGetThuongHieuKPI = () => {
+  return useQuery({
+    queryKey: THUONG_HIEU_QUERY_KEYS.kpi(),
+    queryFn: async () => {
+      const res = await getThuongHieuKPIApi();
+      return (res?.data ?? res) as ThuongHieuKPI;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
   });
 };
 
@@ -46,7 +61,7 @@ export const useCreateThuongHieu = () => {
   return useMutation({
     mutationFn: (payload: CreateThuongHieuPayload) => createThuongHieuApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: THUONG_HIEU_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: THUONG_HIEU_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["productNavTabs"] });
       toast.success("Thêm mới thương hiệu thành công!");
     },
@@ -62,7 +77,7 @@ export const useUpdateThuongHieu = () => {
   return useMutation({
     mutationFn: (payload: UpdateThuongHieuPayload) => updateThuongHieuApi(payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: THUONG_HIEU_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: THUONG_HIEU_QUERY_KEYS.all });
       queryClient.invalidateQueries({
         queryKey: THUONG_HIEU_QUERY_KEYS.detail(variables.ThuongHieuID),
       });
@@ -80,7 +95,7 @@ export const useDeleteThuongHieu = () => {
   return useMutation({
     mutationFn: (id: string) => deleteThuongHieuApi(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: THUONG_HIEU_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: THUONG_HIEU_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["productNavTabs"] });
       toast.success("Xóa thương hiệu thành công!");
     },

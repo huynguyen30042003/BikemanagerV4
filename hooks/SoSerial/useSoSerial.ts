@@ -12,6 +12,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetSoSerial,
+  useGetSoSerialKPI,
   useCreateSoSerial,
   useKichHoatBaoHanh,
   useChuyenTrangThaiSerial,
@@ -158,6 +159,12 @@ export function useSoSerial(initialBienTheId?: string) {
 
   const { data, isLoading, isFetching, refetch } = useGetSoSerial(queryParams);
 
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetSoSerialKPI();
+
   const items: SP_SoSerial[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
@@ -292,6 +299,10 @@ export function useSoSerial(initialBienTheId?: string) {
     isLoading,
     isFetching,
     refetch,
+
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     open,
     setOpen,

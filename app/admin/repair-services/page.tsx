@@ -12,6 +12,8 @@ import { SearchSelect } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { ServiceNavTabs } from "@/components/Common/ServiceNavTabs";
 import { useDichVuHook } from "@/hooks/SuaChua/useSuaChua";
+import { useGetDichVuKPI } from "@/hooks/SuaChua/useSuaChuaApi";
+import { KpiRibbon } from "@/components/Common/KpiRibbon";
 import { SC_DichVu } from "@/types/suaChua";
 import {
   Sparkles,
@@ -24,6 +26,9 @@ import {
   Clock,
   DollarSign,
   Tag,
+  CheckCircle2,
+  PauseCircle,
+  Timer,
 } from "lucide-react";
 
 function formatCurrency(val: number | null | undefined): string {
@@ -66,6 +71,8 @@ function RepairServicesContent() {
     handleDelete,
     isSubmitting,
   } = useDichVuHook();
+
+  const { data: kpi, isLoading: isLoadingKPI } = useGetDichVuKPI();
 
   const columns: Column<SC_DichVu>[] = [
     {
@@ -218,9 +225,62 @@ function RepairServicesContent() {
         </div>
 
         <div className="pt-2">
-          <ServiceNavTabs activeTab="services" />
+          <ServiceNavTabs
+            activeTab="services"
+            totalServices={kpi?.total_DichVu ?? totalCount}
+          />
         </div>
       </div>
+
+      {/* KPI */}
+      <KpiRibbon
+        isLoading={isLoadingKPI}
+        items={[
+          {
+            title: "Tổng dịch vụ",
+            value: kpi?.total_DichVu ?? 0,
+            subtext: "Hạng mục trong danh mục",
+            icon: Sparkles,
+          },
+          {
+            title: "Đang kinh doanh",
+            value: kpi?.total_DangKinhDoanh ?? 0,
+            subtext: "Áp dụng cho phiếu sửa chữa",
+            icon: CheckCircle2,
+            tone: "emerald",
+          },
+          {
+            title: "Ngừng kinh doanh",
+            value: kpi?.total_NgungKinhDoanh ?? 0,
+            subtext: "Đã ẩn khỏi danh sách chọn",
+            icon: PauseCircle,
+            tone: "rose",
+          },
+          {
+            title: "Có khuyến mãi",
+            value: kpi?.total_CoKhuyenMai ?? 0,
+            subtext: "Đang giảm giá tiền công",
+            icon: Tag,
+            tone: "amber",
+          },
+          {
+            title: "Tiền công TB",
+            value: formatCurrency(kpi?.avg_GiaTienCong),
+            subtext: "Trung bình mỗi dịch vụ",
+            icon: DollarSign,
+            tone: "blue",
+            compact: true,
+          },
+          {
+            title: "Thời gian TB",
+            value: `${kpi?.avg_ThoiGianPhut ?? 0} phút`,
+            subtext: "Thời gian thi công dự kiến",
+            icon: Timer,
+            tone: "indigo",
+            compact: true,
+          },
+        ]}
+      />
 
       {/* Filter */}
       <div className="p-4 rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-2xs space-y-3">

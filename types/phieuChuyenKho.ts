@@ -79,3 +79,14 @@ export interface HuyPhieuChuyenPayload {
   PhieuChuyenKhoID: string;
   GhiChu?: string;
 }
+
+export interface KHO_PhieuChuyenKhoKPI {
+  total_PhieuChuyenKho?: number;
+  total_ChoXuatKho?: number;
+  total_DangVanChuyen?: number;
+  total_DaHoanTat?: number;
+  totalPhieuChuyenKho?: number;
+  totalChoXuatKho?: number;
+  totalDangVanChuyen?: number;
+  totalDaHoanTat?: number;
+}

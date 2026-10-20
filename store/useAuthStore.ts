@@ -1,6 +1,13 @@
 import { getUserInfo } from "@/shared/api/auth.api";
 import { UserProfile } from "@/types/auth";
-import { getAccessToken, clearAuthTokens } from "@/lib/auth";
+import {
+  getAccessToken,
+  getRefreshToken,
+  clearAuthTokens,
+  isAccessTokenExpired,
+  refreshAccessToken,
+  hasAuthSession,
+} from "@/lib/auth";
 import { create } from "zustand";
 
 export interface AuthState {
@@ -35,8 +42,22 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   fetchUser: async (force = false) => {
-    // 1. Nếu không có token đăng nhập trong Cookie thì bỏ qua, không gọi API /api/auth/me
-    const token = getAccessToken();
+    // 1. Kiểm tra Access Token hiện tại
+    let token = getAccessToken();
+
+    // Nếu không có token hoặc token đã hết hạn, kiểm tra xem có refresh token không để làm mới
+    if (!token || isAccessTokenExpired()) {
+      const hasSession = Boolean(getRefreshToken()) || hasAuthSession();
+
+      if (hasSession) {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          token = newToken;
+        }
+      }
+    }
+
+    // Nếu sau khi kiểm tra và thử refresh mà vẫn không có token hợp lệ
     if (!token) {
       set({ user: null, isLoading: false });
       return null;
@@ -61,11 +82,23 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         set({ user, isLoading: false, error: null });
         return user;
       } catch (error: any) {
+        // Nếu lỗi 401 Unauthorized (token hết hạn tại server), thử refresh lại 1 lần cuối
+        if (error?.response?.status === 401) {
+          try {
+            const refreshedToken = await refreshAccessToken();
+            if (refreshedToken) {
+              const retryUser = await getUserInfo();
+              set({ user: retryUser, isLoading: false, error: null });
+              return retryUser;
+            }
+          } catch {}
+        }
+
         const message =
           error?.response?.data?.message ||
           error?.message ||
           "Lỗi khi lấy thông tin người dùng";
-        set({ error: message, isLoading: false });
+        set({ user: null, error: message, isLoading: false });
         return null;
       } finally {
         inFlightFetchUserPromise = null;
@@ -94,3 +127,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     );
   },
 }));
+
+// Gắn vào window trong môi trường dev để thuận tiện test và debug từ Browser Console
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).useAuthStore = useAuthStore;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useState, useMemo } from "react";
+import React, { Suspense, useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SearchSelect } from "@/components/ui/selectSearch";
 import { OrderNavTabs } from "@/components/Common/OrderNavTabs";
 import { useDonHang } from "@/hooks/DonHang/useDonHang";
+import { CreateDonHangPayload } from "@/types/donHang";
 import {
   Store,
   ShoppingCart,
@@ -69,6 +70,18 @@ function SalesContent() {
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [registrationFee, setRegistrationFee] = useState(0);
   const [paymentMethodId, setPaymentMethodId] = useState("78"); // Mặc định tiền mặt
+
+  useEffect(() => {
+    if (!selectedKhoId && khoOptions.length > 0) {
+      setSelectedKhoId(String(khoOptions[0].value));
+    }
+  }, [khoOptions, selectedKhoId]);
+
+  useEffect(() => {
+    if (!selectedDiaDiemId && diaDiemOptions.length > 0) {
+      setSelectedDiaDiemId(String(diaDiemOptions[0].value));
+    }
+  }, [diaDiemOptions, selectedDiaDiemId]);
 
   const filteredVariants = useMemo(() => {
     if (!filterText.trim()) return variantOptions;
@@ -150,10 +163,18 @@ function SalesContent() {
       return;
     }
 
-    const payload = {
+    const khoId = selectedKhoId || (khoOptions[0]?.value as string) || "";
+    if (!khoId) {
+      toast.warning("Vui lòng chọn kho hàng xuất!");
+      return;
+    }
+
+    const diaDiemId = selectedDiaDiemId || (diaDiemOptions[0]?.value as string) || "";
+
+    const payload: CreateDonHangPayload = {
       KhachHangID: selectedCustomerId,
-      KhoXuatID: selectedKhoId || (khoOptions[0]?.value as string) || "",
-      DiaDiemID: selectedDiaDiemId || (diaDiemOptions[0]?.value as string) || "",
+      KhoXuatID: khoId,
+      DiaDiemID: diaDiemId,
       LoaiDonHangID: 87, // Bán lẻ tại quầy
       TrangThaiDonHangID: 72, // Hoàn thành ngay tại quầy
       TrangThaiThanhToanID: 83, // Đã thanh toán đủ
@@ -178,9 +199,10 @@ function SalesContent() {
       })),
     };
 
+    // Đồng bộ state và truyền trực tiếp payload vào handleSubmitCreate để tránh độ trễ setState bất đồng bộ
     setDataCreate(payload);
     try {
-      await handleSubmitCreate({ preventDefault: () => {} } as React.FormEvent);
+      await handleSubmitCreate(undefined, payload);
       setCart([]);
       setDiscountAmount(0);
       setDeliveryFee(0);
@@ -238,7 +260,11 @@ function SalesContent() {
                   placeholder="Kho xuất..."
                   options={khoOptions}
                   value={selectedKhoId}
-                  onChange={(val) => setSelectedKhoId(String(val))}
+                  onChange={(val) => {
+                    const idStr = String(val || "");
+                    setSelectedKhoId(idStr);
+                    setDataCreate((prev) => ({ ...prev, KhoXuatID: idStr }));
+                  }}
                   isLoading={isLoadingKhos}
                 />
               </div>
@@ -302,7 +328,11 @@ function SalesContent() {
                 placeholder="Chọn hoặc tìm khách hàng..."
                 options={customerOptions}
                 value={selectedCustomerId}
-                onChange={(val) => setSelectedCustomerId(String(val))}
+                onChange={(val) => {
+                  const idStr = String(val || "");
+                  setSelectedCustomerId(idStr);
+                  setDataCreate((prev) => ({ ...prev, KhachHangID: idStr }));
+                }}
                 isLoading={isLoadingCustomers}
               />
             </div>

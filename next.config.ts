@@ -27,7 +27,17 @@ const nextConfig = {
   experimental: {
     authInterrupts: true,
   },
-  reactStrictMode: true
+  reactStrictMode: true,
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/",
+          destination: "/admin",
+        },
+      ],
+    };
+  },
 };
 
 export default nextConfig;

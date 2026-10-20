@@ -3,6 +3,7 @@ import { APP_URL } from "../../constants/apiConstants";
 import { getAccessToken } from "@/lib/auth";
 import {
   ThongKeKhachHangFilter,
+  ThongKeKhachHangKPI,
   UpdateThongKeKhachHangPayload,
 } from "@/types/thongKeKhachHang";
 
@@ -71,3 +72,20 @@ export const updateThongKeKhachHangApi = async (payload: UpdateThongKeKhachHangP
 
   return response.data;
 };
+
+/**
+ * Lấy số liệu thống kê KPI Khách hàng
+ * POST /api/ThongKeKhachHangApi/GetKPI hoặc GET /api/ThongKeKhachHangApi/GetKPI
+ */
+export const getThongKeKhachHangKPIApi = async (): Promise<ThongKeKhachHangKPI> => {
+  const response = await api.post(
+    `${APP_URL}/ThongKeKhachHangApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+  return response.data;
+};
+

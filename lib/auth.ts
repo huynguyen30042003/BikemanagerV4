@@ -1,17 +1,29 @@
 /**
- * Lấy Access Token từ Cookie
+ * Lấy Access Token từ Cookie hoặc localStorage
  */
 export function getAccessToken(): string | null {
-  if (typeof document === "undefined" || !document.cookie) return null;
+  if (typeof window === "undefined") return null;
 
-  const match = document.cookie.match(/(?:^|;\s*)access_token=([^;]+)/);
-  if (match) {
-    try {
-      return decodeURIComponent(match[1]);
-    } catch {
-      return match[1];
+  // 1. Thử lấy từ Cookie
+  if (document.cookie) {
+    const match = document.cookie.match(/(?:^|;\s*)(?:access_token|accessToken)=([^;]+)/);
+    if (match) {
+      try {
+        return decodeURIComponent(match[1]);
+      } catch {
+        return match[1];
+      }
     }
   }
+
+  // 2. Fallback từ localStorage
+  try {
+    const localToken =
+      localStorage.getItem("access_token") ||
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("token");
+    if (localToken) return localToken;
+  } catch {}
 
   return null;
 }
@@ -21,19 +33,22 @@ export interface SaveTokenPayload {
   accessToken?: string | null;
   token?: string | null;
   refresh_token?: string | null;
+  refreshToken?: string | null;
   expires_in?: number | null;
   expiresIn?: number | null;
 }
 
 /**
- * Lưu Access Token vào Cookie (Client-side)
- * Refresh Token được lưu dạng HttpOnly Cookie từ Server Route Handler
+ * Lưu Access Token vào Cookie & localStorage (Client-side)
+ * Refresh Token được lưu dạng HttpOnly Cookie từ Server Route Handler và lưu thêm localStorage
  */
 export function setAuthTokens(payload?: SaveTokenPayload | null): void {
   if (typeof document === "undefined" || !payload) return;
 
   const accessToken =
     payload.access_token || payload.accessToken || payload.token;
+  const refreshToken =
+    payload.refresh_token || payload.refreshToken;
   const expiresIn =
     payload.expires_in ?? payload.expiresIn ?? 3600;
 
@@ -41,6 +56,18 @@ export function setAuthTokens(payload?: SaveTokenPayload | null): void {
     document.cookie = `access_token=${encodeURIComponent(
       accessToken
     )}; path=/; max-age=${expiresIn}; SameSite=Lax`;
+
+    try {
+      localStorage.setItem("access_token", accessToken);
+      localStorage.setItem("expires_at", String(Date.now() + expiresIn * 1000));
+      localStorage.setItem("has_session", "true");
+    } catch {}
+  }
+
+  if (refreshToken) {
+    try {
+      localStorage.setItem("refresh_token", refreshToken);
+    } catch {}
   }
 }
 
@@ -63,6 +90,7 @@ export function clearAuthTokens(): void {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("token");
       localStorage.removeItem("expires_at");
+      localStorage.removeItem("has_session");
       localStorage.removeItem("auth-storage");
       localStorage.removeItem("remembered_username");
     } catch {
@@ -72,21 +100,99 @@ export function clearAuthTokens(): void {
 }
 
 /**
- * Lấy Refresh Token từ Cookie (nếu có cookie phía client không httpOnly)
+ * Lấy Refresh Token từ Cookie hoặc localStorage
  */
 export function getRefreshToken(): string | null {
-  if (typeof document === "undefined" || !document.cookie) return null;
+  if (typeof window === "undefined") return null;
 
-  const match = document.cookie.match(/(?:^|;\s*)(?:refresh_token|refreshToken)=([^;]+)/);
-  if (match) {
-    try {
-      return decodeURIComponent(match[1]);
-    } catch {
-      return match[1];
+  // 1. Thử lấy từ Cookie
+  if (document.cookie) {
+    const match = document.cookie.match(/(?:^|;\s*)(?:refresh_token|refreshToken)=([^;]+)/);
+    if (match) {
+      try {
+        return decodeURIComponent(match[1]);
+      } catch {
+        return match[1];
+      }
     }
   }
 
+  // 2. Fallback từ localStorage
+  try {
+    const local =
+      localStorage.getItem("refresh_token") ||
+      localStorage.getItem("refreshToken");
+    if (local) return local;
+  } catch {}
+
   return null;
+}
+
+/**
+ * Kiểm tra xem người dùng có phiên đăng nhập trước đó hay không (dựa vào cookie hoặc localStorage)
+ */
+export function hasAuthSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return (
+      Boolean(getRefreshToken()) ||
+      Boolean(getAccessToken()) ||
+      localStorage.getItem("has_session") === "true" ||
+      Boolean(localStorage.getItem("expires_at"))
+    );
+  } catch {
+    return false;
+  }
+}
+
+// Singleton Promise để chống gọi trùng lặp song song nhiều request refresh cùng 1 lúc
+let inFlightRefreshPromise: Promise<string | null> | null = null;
+
+/**
+ * Gọi API refresh token để lấy Access Token mới
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  if (inFlightRefreshPromise) {
+    return inFlightRefreshPromise;
+  }
+
+  inFlightRefreshPromise = (async () => {
+    try {
+      const refreshToken = getRefreshToken();
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
+      });
+
+      if (!res.ok) {
+        throw new Error("Refresh token thất bại hoặc đã hết hạn");
+      }
+
+      const data = await res.json();
+      const newAccessToken =
+        data?.access_token ||
+        data?.accessToken;
+
+      if (!newAccessToken) {
+        throw new Error("Không tìm thấy access token mới trong kết quả trả về");
+      }
+
+      setAuthTokens(data);
+      return newAccessToken;
+    } catch (err) {
+      console.warn("[refreshAccessToken] Không thể làm mới token:", err);
+      clearAuthTokens();
+      return null;
+    } finally {
+      inFlightRefreshPromise = null;
+    }
+  })();
+
+  return inFlightRefreshPromise;
 }
 
 /**

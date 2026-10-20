@@ -15,6 +15,8 @@ import {
   TinhDuToanTraGopPayload,
   KetQuaDuToanTraGop,
   TG_NavTabs,
+  TG_DonViTraGopKPI,
+  TG_TraGopKPI,
 } from "@/types/traGop";
 
 
@@ -198,4 +200,53 @@ export const getTraGopNavTabsApi = async (): Promise<TG_NavTabs> => {
 
   return response.data?.data ?? response.data;
 };
+
+/**
+ * Lấy số liệu thống kê KPI Đơn vị trả góp
+ * POST /api/DonViTraGopApi/GetKPI
+ */
+export const getDonViTraGopKPIApi = async (): Promise<TG_DonViTraGopKPI> => {
+  try {
+    const res = await api.post(
+      `${APP_URL}/DonViTraGopApi/GetKPI`,
+      {},
+      {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      }
+    );
+    return res.data?.data ?? res.data;
+  } catch {
+    const res = await api.get(`${APP_URL}/DonViTraGopApi/GetKPI`, {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    });
+    return res.data?.data ?? res.data;
+  }
+};
+
+/**
+ * Lấy số liệu thống kê KPI Hợp đồng trả góp
+ * POST /api/TraGopApi/GetKPI
+ */
+export const getTraGopKPIApi = async (): Promise<TG_TraGopKPI> => {
+  try {
+    const res = await api.post(
+      `${APP_URL}/TraGopApi/GetKPI`,
+      {},
+      {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      }
+    );
+    return res.data?.data ?? res.data;
+  } catch {
+    const res = await api.get(`${APP_URL}/TraGopApi/GetKPI`, {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    });
+    return res.data?.data ?? res.data;
+  }
+};
+
 

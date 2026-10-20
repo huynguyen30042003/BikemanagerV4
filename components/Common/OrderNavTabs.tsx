@@ -22,11 +22,8 @@ export function OrderNavTabs({
 }: OrderNavTabsProps) {
   const { data: traGopNavData } = useGetTraGopNavTabs();
 
-  const countContracts =
-    totalContracts ?? traGopNavData?.total_HopDongTraGop;
-  const countProviders =
-    totalProviders ?? traGopNavData?.total_DonViTraGop;
-
+  const countContracts = totalContracts ?? traGopNavData?.total_HopDongTraGop;
+  const countProviders = totalProviders ?? traGopNavData?.total_DonViTraGop;
 
   const tabs = [
     {
@@ -42,22 +39,7 @@ export function OrderNavTabs({
       href: "/admin/sales",
       icon: Store,
     },
-    {
-      id: "contracts",
-      label: "Hợp Đồng Trả Góp",
-      href: "/admin/installment-contracts",
-      icon: CreditCard,
-      badge: countContracts,
-    },
-    {
-      id: "providers",
-      label: "Đối Tác Trả Góp",
-      href: "/admin/installment-providers",
-      icon: Building2,
-      badge: countProviders,
-    },
   ];
-
 
   return (
     <div className="flex items-center gap-1.5 border-b border-border/60 pb-2 overflow-x-auto scrollbar-none">
@@ -72,10 +54,15 @@ export function OrderNavTabs({
               "flex items-center gap-2 px-3.5 py-2 text-xs font-medium rounded-lg transition-all duration-150 whitespace-nowrap cursor-pointer",
               isActive
                 ? "bg-blue-600 text-white shadow-xs font-semibold"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/70",
             )}
           >
-            <Icon className={cn("w-4 h-4", isActive ? "text-white" : "text-muted-foreground")} />
+            <Icon
+              className={cn(
+                "w-4 h-4",
+                isActive ? "text-white" : "text-muted-foreground",
+              )}
+            />
             <span>{tab.label}</span>
             {tab.badge !== undefined && (
               <span
@@ -83,7 +70,7 @@ export function OrderNavTabs({
                   "ml-1 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full",
                   isActive
                     ? "bg-white/20 text-white"
-                    : "bg-muted text-muted-foreground border border-border/60"
+                    : "bg-muted text-muted-foreground border border-border/60",
                 )}
               >
                 {tab.badge}

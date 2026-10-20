@@ -11,6 +11,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetSanPham,
+  useGetSanPhamKPI,
   useCreateSanPham,
   useUpdateSanPham,
   useDeleteSanPham,
@@ -134,6 +135,12 @@ export function useSanPham(initialThuongHieuId?: string, initialDanhMucId?: numb
   }, [searchTerm, categoryFilter, brandFilter, page, pageSize, statusFilter]);
 
   const { data, isLoading, isFetching, refetch } = useGetSanPham(queryParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetSanPhamKPI();
 
   const items: SP_SanPham[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
@@ -293,6 +300,10 @@ export function useSanPham(initialThuongHieuId?: string, initialDanhMucId?: numb
     isLoading,
     isFetching,
     refetch,
+
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     open,
     setOpen,

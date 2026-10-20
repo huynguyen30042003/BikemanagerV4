@@ -165,3 +165,19 @@ export const deleteDonHangApi = async (id: string) => {
   });
   return response.data;
 };
+
+/**
+ * Lấy dữ liệu KPI thống kê đơn hàng
+ * POST /api/DonHangApi/GetKPI
+ */
+export const getDonHangKPIApi = async () => {
+  const response = await api.post(
+    `${APP_URL}/DonHangApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+  return response.data;
+};

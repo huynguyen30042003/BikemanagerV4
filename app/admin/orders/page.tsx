@@ -94,6 +94,9 @@ function OrdersContent() {
     isLoading,
     isFetching,
     refetch,
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     openCreate,
     setOpenCreate,
@@ -132,28 +135,64 @@ function OrdersContent() {
     handleDelete,
   } = useDonHang();
 
-  // Thống kê nhanh
-  const completedCount = useMemo(
-    () =>
-      items.filter((i) => {
-        const b = getOrderStatusBadge(i.trangThaiDonHangID);
-        return b.color === "emerald" || i.trangThaiDonHangID === 75;
-      }).length,
-    [items, getOrderStatusBadge]
-  );
+  // Thống kê KPI ưu tiên từ Backend API GetKPI
+  const totalOrders = kpiData?.total_DonHang ?? totalCount;
+  const pendingCount =
+    kpiData?.total_ChoXuLyVaGiao ??
+    items.filter((i) => {
+      const b = getOrderStatusBadge(i.trangThaiDonHangID);
+      return b.color === "amber" || i.trangThaiDonHangID === 72 || i.trangThaiDonHangID === 73;
+    }).length;
+  const completedCount =
+    kpiData?.total_HoanThanh ??
+    items.filter((i) => {
+      const b = getOrderStatusBadge(i.trangThaiDonHangID);
+      return b.color === "emerald" || i.trangThaiDonHangID === 75 || i.trangThaiDonHangID === 76;
+    }).length;
+  const totalRevenue =
+    kpiData?.total_DoanhThu ??
+    items.reduce((sum, i) => sum + (i.tongTien || 0), 0);
 
-  const pendingCount = useMemo(
-    () =>
-      items.filter((i) => {
-        const b = getOrderStatusBadge(i.trangThaiDonHangID);
-        return b.color === "amber" || i.trangThaiDonHangID === 72 || i.trangThaiDonHangID === 73;
-      }).length,
-    [items, getOrderStatusBadge]
-  );
-
-  const totalRevenue = useMemo(
-    () => items.reduce((sum, i) => sum + (i.tongTien || 0), 0),
-    [items]
+  const kpiConfigs = useMemo(
+    () => [
+      {
+        id: "total",
+        title: "Tổng đơn hàng",
+        subTitle: "Tất cả kênh bán",
+        value: totalOrders.toLocaleString("vi-VN"),
+        icon: ShoppingCart,
+        colorClass: "text-foreground",
+        iconBgClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      },
+      {
+        id: "pending",
+        title: "Chờ xử lý & Giao",
+        subTitle: "Cần xuất kho hoặc vận chuyển",
+        value: pendingCount.toLocaleString("vi-VN"),
+        icon: Clock,
+        colorClass: "text-amber-600 dark:text-amber-400",
+        iconBgClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      },
+      {
+        id: "completed",
+        title: "Hoàn thành",
+        subTitle: "Đã bàn giao xe cho khách",
+        value: completedCount.toLocaleString("vi-VN"),
+        icon: CheckCircle2,
+        colorClass: "text-emerald-600 dark:text-emerald-400",
+        iconBgClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      },
+      {
+        id: "revenue",
+        title: "Doanh thu tích lũy",
+        subTitle: "Giá trị tiền hàng thực tế",
+        value: formatCurrency(totalRevenue),
+        icon: DollarSign,
+        colorClass: "text-purple-600 dark:text-purple-400",
+        iconBgClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+      },
+    ],
+    [totalOrders, pendingCount, completedCount, totalRevenue]
   );
 
   const columns: Column<DH_DonHang>[] = [
@@ -365,12 +404,15 @@ function OrdersContent() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
+              onClick={() => {
+                refetch();
+                refetchKPI();
+              }}
+              disabled={isFetching || isLoadingKPI}
               className="h-9 px-3.5 flex items-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+                className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
               />
               <span className="text-xs font-medium">Làm mới</span>
             </Button>
@@ -393,58 +435,39 @@ function OrdersContent() {
       </div>
 
       {/* 2. KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Tổng đơn hàng</span>
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <ShoppingCart className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-foreground mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : totalCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Tất cả kênh bán</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Chờ xử lý & Giao</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : pendingCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Cần xuất kho hoặc vận chuyển</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Hoàn thành</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : completedCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Đã bàn giao xe cho khách</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Tổng doanh thu trang</span>
-            <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-xl font-bold text-foreground mt-2 truncate">
-            {isLoading ? <Skeleton className="h-7 w-24" /> : formatCurrency(totalRevenue)}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Giá trị tiền hàng thực tế</p>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        {kpiConfigs.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <Card
+              key={kpi.id}
+              className="p-3 sm:p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs transition-all hover:border-border"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground truncate">
+                  {kpi.title}
+                </span>
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${kpi.iconBgClass}`}
+                >
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div
+                className={`text-xl sm:text-2xl font-bold mt-2 truncate ${kpi.colorClass}`}
+              >
+                {isLoading || isLoadingKPI ? (
+                  <Skeleton className="h-7 w-16" />
+                ) : (
+                  kpi.value
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                {kpi.subTitle}
+              </p>
+            </Card>
+          );
+        })}
       </div>
 
       {/* 3. Filter Bar */}

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   getThongKeKhachHangApi,
   getThongKeKhachHangByIdApi,
+  getThongKeKhachHangKPIApi,
   updateThongKeKhachHangApi,
 } from "@/shared/api/ThongKeKhachHang";
 import {
@@ -14,6 +15,7 @@ import {
 
 export const THONG_KE_KH_QUERY_KEYS = {
   all: ["thongKeKhachHang"] as const,
+  kpi: () => [...THONG_KE_KH_QUERY_KEYS.all, "kpi"] as const,
   lists: () => [...THONG_KE_KH_QUERY_KEYS.all, "list"] as const,
   list: (params: ThongKeKhachHangFilter) => [...THONG_KE_KH_QUERY_KEYS.lists(), params] as const,
   details: () => [...THONG_KE_KH_QUERY_KEYS.all, "detail"] as const,
@@ -26,6 +28,15 @@ export const useGetThongKeKhachHang = (params: ThongKeKhachHangFilter) => {
     queryFn: () => getThongKeKhachHangApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
+  });
+};
+
+export const useGetThongKeKhachHangKPI = () => {
+  return useQuery({
+    queryKey: THONG_KE_KH_QUERY_KEYS.kpi(),
+    queryFn: () => getThongKeKhachHangKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
   });
 };
 
@@ -43,7 +54,7 @@ export const useUpdateThongKeKhachHang = () => {
   return useMutation({
     mutationFn: (payload: UpdateThongKeKhachHangPayload) => updateThongKeKhachHangApi(payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: THONG_KE_KH_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: THONG_KE_KH_QUERY_KEYS.all });
       queryClient.invalidateQueries({
         queryKey: THONG_KE_KH_QUERY_KEYS.detail(variables.KhachHangID),
       });
@@ -54,3 +65,4 @@ export const useUpdateThongKeKhachHang = () => {
     },
   });
 };
+

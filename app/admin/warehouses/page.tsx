@@ -13,6 +13,7 @@ import { SlideOver } from "@/components/ui/SlideOver";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { WarehouseNavTabs } from "@/components/Common/WarehouseNavTabs";
 import { useKho } from "@/hooks/Kho/useKho";
+import { useGetKhoKPI } from "@/hooks/Kho/useKhoApi";
 import { KHO_Kho } from "@/types/kho";
 import {
   Warehouse,
@@ -84,6 +85,8 @@ function WarehousesContent() {
     errors,
   } = useKho();
 
+  const { data: kpiData, isLoading: isLoadingKPI } = useGetKhoKPI();
+
   const activeCount = useMemo(
     () => items.filter((i) => i.trangThai === true).length,
     [items]
@@ -96,6 +99,41 @@ function WarehousesContent() {
     () => items.filter((i) => i.laKhoMacDinh === true).length,
     [items]
   );
+
+  const kpiCards = [
+    {
+      title: "Tổng số kho bãi",
+      value: kpiData?.total_Kho ?? kpiData?.totalKho ?? totalCount,
+      subtext: "Điểm lưu trữ toàn hệ thống",
+      icon: Warehouse,
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-500/10",
+    },
+    {
+      title: "Đang hoạt động",
+      value: kpiData?.total_HoatDong ?? kpiData?.totalHoatDong ?? activeCount,
+      subtext: "Sẵn sàng xuất nhập hàng",
+      icon: CheckCircle2,
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-500/10",
+    },
+    {
+      title: "Kho mặc định ưu tiên",
+      value: kpiData?.total_KhoMacDinh ?? kpiData?.totalKhoMacDinh ?? defaultWarehouseCount,
+      subtext: "Tự động chọn khi lập đơn bán",
+      icon: Star,
+      color: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-500/10",
+    },
+    {
+      title: "Tạm ngưng",
+      value: kpiData?.total_NgungHoatDong ?? kpiData?.totalNgungHoatDong ?? inactiveCount,
+      subtext: "Kho bảo trì hoặc dừng hoạt động",
+      icon: XCircle,
+      color: "text-slate-600 dark:text-slate-400",
+      bg: "bg-slate-500/10",
+    },
+  ];
 
   const columns: Column<KHO_Kho>[] = [
     {
@@ -324,57 +362,23 @@ function WarehousesContent() {
 
       {/* 2. KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Tổng số kho bãi</span>
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <Warehouse className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-foreground mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : totalCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Điểm lưu trữ toàn hệ thống</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Đang hoạt động</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : activeCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Sẵn sàng xuất nhập hàng</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Kho mặc định ưu tiên</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-              <Star className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : defaultWarehouseCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Tự động chọn khi lập đơn bán</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Tạm ngưng</span>
-            <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center">
-              <XCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-slate-600 dark:text-slate-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : inactiveCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Kho bảo trì hoặc dừng hoạt động</p>
-        </Card>
+        {kpiCards.map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <Card key={idx} className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+                <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.color} flex items-center justify-center`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div className={`text-2xl font-bold mt-2 ${card.color}`}>
+                {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{card.subtext}</p>
+            </Card>
+          );
+        })}
       </div>
 
       {/* 3. Filter Bar */}

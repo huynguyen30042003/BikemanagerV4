@@ -15,6 +15,8 @@ import {
   tinhDuToanTraGopApi,
   deleteHopDongTraGopApi,
   getTraGopNavTabsApi,
+  getDonViTraGopKPIApi,
+  getTraGopKPIApi,
 } from "@/shared/api/TraGop";
 import {
   DonViTraGopFilter,
@@ -32,11 +34,13 @@ export const TRA_GOP_KEYS = {
   donViAll: ["don-vi-tra-gop"] as const,
   donViList: (f: DonViTraGopFilter) => [...TRA_GOP_KEYS.donViAll, "list", f] as const,
   donViDetail: (id: string) => [...TRA_GOP_KEYS.donViAll, "detail", id] as const,
+  donViKpi: () => [...TRA_GOP_KEYS.donViAll, "kpi"] as const,
   hopDongAll: ["hop-dong-tra-gop"] as const,
   hopDongList: (f: HopDongTraGopFilter) => [...TRA_GOP_KEYS.hopDongAll, "list", f] as const,
   hopDongDetail: (id: string) => [...TRA_GOP_KEYS.hopDongAll, "detail", id] as const,
   hopDongByDonHang: (donHangID: string) =>
     [...TRA_GOP_KEYS.hopDongAll, "by-don-hang", donHangID] as const,
+  hopDongKpi: () => [...TRA_GOP_KEYS.hopDongAll, "kpi"] as const,
   navTabs: () => ["traGopNavTabs"] as const,
 };
 
@@ -48,6 +52,27 @@ export const useGetTraGopNavTabs = () => {
     refetchOnWindowFocus: true,
   });
 };
+
+export const useGetDonViTraGopKPI = () => {
+  return useQuery({
+    queryKey: TRA_GOP_KEYS.donViKpi(),
+    queryFn: () => getDonViTraGopKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useGetTraGopKPI = () => {
+  return useQuery({
+    queryKey: TRA_GOP_KEYS.hopDongKpi(),
+    queryFn: () => getTraGopKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
 
 /* ===== 1. ĐƠN VỊ TRẢ GÓP ===== */
 
@@ -74,6 +99,7 @@ export const useCreateDonViTraGop = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.donViAll });
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.navTabs() });
+      qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.donViKpi() });
     },
   });
 };
@@ -85,6 +111,7 @@ export const useUpdateDonViTraGop = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.donViAll });
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.navTabs() });
+      qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.donViKpi() });
     },
   });
 };
@@ -96,6 +123,7 @@ export const useDeleteDonViTraGop = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.donViAll });
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.navTabs() });
+      qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.donViKpi() });
     },
   });
 };
@@ -134,6 +162,7 @@ export const useCreateHopDongTraGop = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongAll });
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.navTabs() });
+      qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongKpi() });
     },
   });
 };
@@ -145,6 +174,7 @@ export const useUpdateHopDongTraGop = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongAll });
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.navTabs() });
+      qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongKpi() });
     },
   });
 };
@@ -157,6 +187,7 @@ export const useChuyenTrangThaiHopDong = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongAll });
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.navTabs() });
+      qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongKpi() });
     },
   });
 };
@@ -168,6 +199,7 @@ export const useXacNhanGiaiNgan = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongAll });
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.navTabs() });
+      qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongKpi() });
       qc.invalidateQueries({ queryKey: ["orders"] });
     },
   });
@@ -186,6 +218,7 @@ export const useDeleteHopDongTraGop = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongAll });
       qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.navTabs() });
+      qc.invalidateQueries({ queryKey: TRA_GOP_KEYS.hopDongKpi() });
     },
   });
 };

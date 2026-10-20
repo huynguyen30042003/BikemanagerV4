@@ -9,10 +9,12 @@ import {
   UpdateDonNhapHangPayload,
   ChuyenTrangThaiDonNhapPayload,
   ThanhToanDonNhapPayload,
+  DonNhapHangKPI,
 } from "@/types/donNhapHang";
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetDonNhapHang,
+  useGetDonNhapHangKPI,
   useGetDonNhapHangById,
   useGetLichSuThanhToanDonNhap,
   useCreateDonNhapHang,
@@ -286,6 +288,12 @@ export function useDonNhapHang() {
 
   const { data, isLoading, isFetching, refetch } = useGetDonNhapHang(queryParams);
 
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetDonNhapHangKPI();
+
   const items: NH_DonNhapHang[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
@@ -527,6 +535,9 @@ export function useDonNhapHang() {
     isLoading,
     isFetching,
     refetch,
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     openCreate,
     setOpenCreate,

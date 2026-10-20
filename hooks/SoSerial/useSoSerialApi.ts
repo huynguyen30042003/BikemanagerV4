@@ -7,6 +7,7 @@ import {
   createSoSerialApi,
   getSoSerialApi,
   getSoSerialByIdApi,
+  getSoSerialKPIApi,
   kichHoatBaoHanhApi,
   traCuuBaoHanhApi,
 } from "@/shared/api/SoSerial";
@@ -15,14 +16,17 @@ import {
   CreateSoSerialPayload,
   KichHoatBaoHanhPayload,
   SoSerialFilter,
+  SoSerialKPI,
 } from "@/types/soSerial";
 
 export const SO_SERIAL_QUERY_KEYS = {
   all: ["soSerial"] as const,
   lists: () => [...SO_SERIAL_QUERY_KEYS.all, "list"] as const,
-  list: (params: SoSerialFilter) => [...SO_SERIAL_QUERY_KEYS.lists(), params] as const,
+  list: (params: SoSerialFilter) =>
+    [...SO_SERIAL_QUERY_KEYS.lists(), params] as const,
   details: () => [...SO_SERIAL_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...SO_SERIAL_QUERY_KEYS.details(), id] as const,
+  kpi: () => [...SO_SERIAL_QUERY_KEYS.all, "kpi"] as const,
 };
 
 export const useGetSoSerial = (params: SoSerialFilter) => {
@@ -31,6 +35,18 @@ export const useGetSoSerial = (params: SoSerialFilter) => {
     queryFn: () => getSoSerialApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
+  });
+};
+
+export const useGetSoSerialKPI = () => {
+  return useQuery({
+    queryKey: SO_SERIAL_QUERY_KEYS.kpi(),
+    queryFn: async () => {
+      const res = await getSoSerialKPIApi();
+      return (res?.data ?? res) as SoSerialKPI;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
   });
 };
 
@@ -48,7 +64,7 @@ export const useCreateSoSerial = () => {
   return useMutation({
     mutationFn: (payload: CreateSoSerialPayload) => createSoSerialApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SO_SERIAL_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: SO_SERIAL_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["productNavTabs"] });
       toast.success("Đăng ký số Serial / Số Khung thành công!");
     },
@@ -62,9 +78,10 @@ export const useKichHoatBaoHanh = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: KichHoatBaoHanhPayload) => kichHoatBaoHanhApi(payload),
+    mutationFn: (payload: KichHoatBaoHanhPayload) =>
+      kichHoatBaoHanhApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SO_SERIAL_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: SO_SERIAL_QUERY_KEYS.all });
       toast.success("Kích hoạt bảo hành điện tử thành công!");
     },
     onError: (error: Error) => {
@@ -77,9 +94,10 @@ export const useChuyenTrangThaiSerial = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: ChuyenTrangThaiSerialPayload) => chuyenTrangThaiSerialApi(payload),
+    mutationFn: (payload: ChuyenTrangThaiSerialPayload) =>
+      chuyenTrangThaiSerialApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SO_SERIAL_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: SO_SERIAL_QUERY_KEYS.all });
       toast.success("Chuyển trạng thái thiết bị thành công!");
     },
     onError: (error: Error) => {

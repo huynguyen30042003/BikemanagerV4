@@ -10,7 +10,7 @@ const roboto = Roboto({
   subsets: ["latin", "vietnamese"],
 });
 export const metadata: Metadata = {
-  title: "Cửa hàng xe đạp Nhi Thơi",
+  title: "Cửa hàng xe đạp Nhi Thời",
   description: "Trang quản lí cửa hàng xe đạp Nhi Thời",
 };
 

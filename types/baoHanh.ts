@@ -142,3 +142,22 @@ export interface CreatePhieuBaoHanhPayload {
     GhiChu?: string | null;
   }>;
 }
+
+export type { DV_ServiceNavTabs, ServiceNavTabsData } from "./suaChua";
+
+/** POST/GET /api/BaoHanhApi/GetKPI */
+export interface BH_BaoHanhKPI {
+  total_BaoHanh?: number;
+  total_DangHieuLuc?: number;
+  total_SapHetHan?: number;
+  total_HetHan?: number;
+}
+
+/** POST/GET /api/BaoHanhApi/GetPhieuBaoHanhKPI */
+export interface BH_PhieuBaoHanhKPI {
+  total_PhieuBaoHanh?: number;
+  total_DangXuLy?: number;
+  total_HoanThanh?: number;
+  total_ChiPhiHangHoTro?: number;
+  total_ChiPhiKhachTra?: number;
+}

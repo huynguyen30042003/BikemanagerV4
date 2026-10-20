@@ -65,3 +65,10 @@ export interface SP_ProductNavTabs {
   totalHinhAnhSanPham?: number;
   totalSoSerial?: number;
 }
+
+export interface SanPhamKPI {
+  total_SanPham: number;
+  total_LaPhuongTien: number;
+  total_DaXuatBan: number;
+  total_HoatDong: number;
+}

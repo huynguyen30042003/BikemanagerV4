@@ -11,6 +11,8 @@ import { SearchSelect } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { ServiceNavTabs } from "@/components/Common/ServiceNavTabs";
 import { usePhieuBaoHanhHook } from "@/hooks/BaoHanh/useBaoHanh";
+import { useGetPhieuBaoHanhKPI } from "@/hooks/BaoHanh/useBaoHanhApi";
+import { KpiRibbon } from "@/components/Common/KpiRibbon";
 import { BH_PhieuBaoHanh } from "@/types/baoHanh";
 import {
   FileText,
@@ -25,6 +27,9 @@ import {
   Trash2,
   CheckCircle2,
   Eye,
+  Clock,
+  HandCoins,
+  Wallet,
 } from "lucide-react";
 
 function formatCurrency(val: number | null | undefined): string {
@@ -82,6 +87,8 @@ function WarrantyClaimsContent() {
     handleDelete,
     isSubmitting,
   } = usePhieuBaoHanhHook();
+
+  const { data: kpi, isLoading: isLoadingKPI } = useGetPhieuBaoHanhKPI();
 
   const columns: Column<BH_PhieuBaoHanh>[] = [
     {
@@ -241,9 +248,55 @@ function WarrantyClaimsContent() {
         </div>
 
         <div className="pt-2">
-          <ServiceNavTabs activeTab="claims" totalClaims={totalCount} />
+          <ServiceNavTabs
+            activeTab="claims"
+            totalClaims={kpi?.total_PhieuBaoHanh ?? totalCount}
+          />
         </div>
       </div>
+
+      {/* KPI */}
+      <KpiRibbon
+        isLoading={isLoadingKPI}
+        items={[
+          {
+            title: "Tổng phiếu tiếp nhận",
+            value: kpi?.total_PhieuBaoHanh ?? 0,
+            subtext: "Yêu cầu bảo hành đã lập",
+            icon: FileText,
+          },
+          {
+            title: "Đang xử lý",
+            value: kpi?.total_DangXuLy ?? 0,
+            subtext: "Đang kiểm tra, sửa chữa",
+            icon: Clock,
+            tone: "amber",
+          },
+          {
+            title: "Hoàn thành",
+            value: kpi?.total_HoanThanh ?? 0,
+            subtext: "Đã trả xe cho khách",
+            icon: CheckCircle2,
+            tone: "emerald",
+          },
+          {
+            title: "Hãng hỗ trợ",
+            value: formatCurrency(kpi?.total_ChiPhiHangHoTro),
+            subtext: "Chi phí hãng chi trả",
+            icon: HandCoins,
+            tone: "indigo",
+            compact: true,
+          },
+          {
+            title: "Khách trả",
+            value: formatCurrency(kpi?.total_ChiPhiKhachTra),
+            subtext: "Phần ngoài phạm vi bảo hành",
+            icon: Wallet,
+            tone: "blue",
+            compact: true,
+          },
+        ]}
+      />
 
       {/* Filter */}
       <div className="p-4 rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-2xs space-y-3">

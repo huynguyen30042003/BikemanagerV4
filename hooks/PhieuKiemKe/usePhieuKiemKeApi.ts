@@ -9,6 +9,7 @@ import {
   getPhieuKiemKeApi,
   getPhieuKiemKeByIdApi,
   huyPhieuKiemKeApi,
+  getPhieuKiemKeKPIApi,
 } from "@/shared/api/PhieuKiemKe";
 import {
   CanBangPayload,
@@ -24,7 +25,19 @@ export const KIEM_KE_QUERY_KEYS = {
   list: (params: PhieuKiemKeFilter) => [...KIEM_KE_QUERY_KEYS.lists(), params] as const,
   details: () => [...KIEM_KE_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...KIEM_KE_QUERY_KEYS.details(), id] as const,
+  kpi: () => [...KIEM_KE_QUERY_KEYS.all, "kpi"] as const,
 };
+
+export const useGetPhieuKiemKeKPI = () => {
+  return useQuery({
+    queryKey: KIEM_KE_QUERY_KEYS.kpi(),
+    queryFn: () => getPhieuKiemKeKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
 
 export const useGetPhieuKiemKe = (params: PhieuKiemKeFilter) => {
   return useQuery({
@@ -50,6 +63,8 @@ export const useCreatePhieuKiemKe = () => {
     mutationFn: (payload: CreatePhieuKiemKePayload) => createPhieuKiemKeApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: KIEM_KE_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
+      queryClient.invalidateQueries({ queryKey: KIEM_KE_QUERY_KEYS.kpi() });
       toast.success("Khởi tạo phiếu kiểm kê kho thành công!");
     },
     onError: (error: Error) => {
@@ -86,6 +101,8 @@ export const useCanBangKiemKe = () => {
       queryClient.invalidateQueries({
         queryKey: KIEM_KE_QUERY_KEYS.detail(variables.PhieuKiemKeID),
       });
+      queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
+      queryClient.invalidateQueries({ queryKey: KIEM_KE_QUERY_KEYS.kpi() });
       toast.success("Cân bằng kho thành công! Giao dịch điều chỉnh tồn kho đã được ghi nhận.");
     },
     onError: (error: Error) => {
@@ -104,6 +121,8 @@ export const useHuyPhieuKiemKe = () => {
       queryClient.invalidateQueries({
         queryKey: KIEM_KE_QUERY_KEYS.detail(variables.PhieuKiemKeID),
       });
+      queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
+      queryClient.invalidateQueries({ queryKey: KIEM_KE_QUERY_KEYS.kpi() });
       toast.success("Đã hủy phiếu kiểm kê kho!");
     },
     onError: (error: Error) => {

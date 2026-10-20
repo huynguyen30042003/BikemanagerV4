@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
-import { getUserInfo, loginApi, registerApi } from "@/shared/api/auth.api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  getUserInfo,
+  loginApi,
+  login2FAApi,
+  sendLoginCodeApi,
+  get2FAStatusApi,
+  sendSetupCodeApi,
+  enable2FAApi,
+  disable2FAApi,
+  registerApi,
+} from "@/shared/api/auth.api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
@@ -12,6 +22,7 @@ import {
   setAuthTokens,
   clearAuthTokens,
 } from "@/lib/auth";
+import { AuthLoginResponse } from "@/types/auth";
 
 export * from "@/lib/auth";
 export { useAuthStore } from "@/store/useAuthStore";
@@ -22,7 +33,12 @@ export const useLogin = (callbackUrl?: string) => {
 
   return useMutation({
     mutationFn: loginApi,
-    onSuccess: async (data: any) => {
+    onSuccess: async (data: AuthLoginResponse) => {
+      // Nếu yêu cầu xác thực 2 bước (2FA), không setAuthTokens và không redirect
+      if (data.requiresTwoFactor || data.requires2FA || (!data.access_token && data.twoFactorToken)) {
+        return;
+      }
+
       setAuthTokens(data);
       await fetchUser();
       const target =
@@ -32,6 +48,93 @@ export const useLogin = (callbackUrl?: string) => {
           ? callbackUrl
           : "/admin";
       router.push(target);
+    },
+  });
+};
+
+/**
+ * Mutation hook đăng nhập bước 2 bằng mã OTP qua SMS
+ */
+export const useLogin2FA = (callbackUrl?: string) => {
+  const router = useRouter();
+  const { fetchUser } = useAuthStore();
+
+  return useMutation({
+    mutationFn: login2FAApi,
+    onSuccess: async (data: AuthLoginResponse) => {
+      setAuthTokens(data);
+      await fetchUser();
+      const target =
+        callbackUrl &&
+        callbackUrl.startsWith("/") &&
+        !callbackUrl.startsWith("/login")
+          ? callbackUrl
+          : "/admin";
+      router.push(target);
+    },
+  });
+};
+
+/**
+ * Mutation hook gửi lại mã OTP trong phiên đăng nhập 2FA
+ */
+export const useSendLoginCode = () => {
+  return useMutation({
+    mutationFn: sendLoginCodeApi,
+  });
+};
+
+/**
+ * Query hook kiểm tra trạng thái 2FA của tài khoản hiện tại
+ */
+export const use2FAStatus = () => {
+  return useQuery({
+    queryKey: ["auth", "2fa", "status"],
+    queryFn: get2FAStatusApi,
+    retry: false,
+    staleTime: 1000 * 60 * 3, // 3 phút
+  });
+};
+
+/**
+ * Mutation hook gửi mã OTP để thiết lập bật 2FA
+ */
+export const useSendSetupCode = () => {
+  return useMutation({
+    mutationFn: sendSetupCodeApi,
+  });
+};
+
+/**
+ * Mutation hook xác thực mã OTP và kích hoạt 2FA
+ */
+export const useEnable2FA = () => {
+  const queryClient = useQueryClient();
+  const { fetchUser } = useAuthStore();
+
+  return useMutation({
+    mutationFn: enable2FAApi,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth", "2fa", "status"] });
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      await fetchUser();
+    },
+  });
+};
+
+/**
+ * Mutation hook tắt tính năng 2FA bằng mật khẩu
+ */
+export const useDisable2FA = () => {
+  const queryClient = useQueryClient();
+  const { fetchUser } = useAuthStore();
+
+  return useMutation({
+    mutationFn: disable2FAApi,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth", "2fa", "status"] });
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      await fetchUser();
     },
   });
 };

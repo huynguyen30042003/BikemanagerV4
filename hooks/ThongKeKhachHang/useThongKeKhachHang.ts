@@ -8,6 +8,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetThongKeKhachHang,
+  useGetThongKeKhachHangKPI,
   useUpdateThongKeKhachHang,
 } from "./useThongKeKhachHangApi";
 
@@ -48,6 +49,13 @@ export function useThongKeKhachHang() {
   }, [searchTerm, tierFilter, page, pageSize]);
 
   const { data, isLoading, isFetching, refetch } = useGetThongKeKhachHang(queryParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetThongKeKhachHangKPI();
+
 
   const items: KH_ThongKeKhachHang[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
@@ -106,6 +114,10 @@ export function useThongKeKhachHang() {
     isFetching,
     refetch,
 
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
+
     openUpdate,
     setOpenUpdate,
     selectedItem,
@@ -116,3 +128,4 @@ export function useThongKeKhachHang() {
     isUpdating: updateMutation.isPending,
   };
 }
+

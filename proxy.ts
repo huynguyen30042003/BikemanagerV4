@@ -40,11 +40,17 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
 
+  // Đã đăng nhập khi truy cập trang chủ "/" -> rewrite sang "/admin" để hiển thị cùng view và layout quản trị
+  if (pathname === "/") {
+    return NextResponse.rewrite(new URL("/admin", req.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/admin/:path*",
     "/login",

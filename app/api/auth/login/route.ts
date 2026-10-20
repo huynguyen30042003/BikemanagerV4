@@ -20,15 +20,42 @@ export async function POST(req: NextRequest) {
         password: body.password,
       }),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
+
+    // Kiểm tra nếu tài khoản yêu cầu xác thực 2 bước (2FA qua SMS)
+    const requires2FA =
+      data.requiresTwoFactor ||
+      data.requires2FA ||
+      data.RequiresTwoFactor ||
+      data.TwoFactorRequired ||
+      (!data.access_token && !data.accessToken && (data.twoFactorToken || data.TwoFactorToken));
+
+    if (requires2FA) {
+      return NextResponse.json({
+        success: true,
+        requiresTwoFactor: true,
+        twoFactorToken: data.twoFactorToken || data.TwoFactorToken,
+        phoneNumber:
+          data.phoneNumber ||
+          data.PhoneNumber ||
+          data.phone ||
+          data.Phone ||
+          null,
+        message:
+          data.message ||
+          data.Message ||
+          "Tài khoản yêu cầu xác thực 2 bước. Mã OTP bảo mật đã được gửi qua SMS.",
+      });
+    }
 
     if (!response.ok) {
       return NextResponse.json(
         {
           message: data.message || "Login failed",
+          errors: data.errors,
         },
         {
-          status: 401,
+          status: response.status || 401,
         },
       );
     }

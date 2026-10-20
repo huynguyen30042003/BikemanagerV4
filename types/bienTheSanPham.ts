@@ -49,3 +49,10 @@ export interface UpdateBienThePayload extends CreateBienThePayload {
   BienTheSanPhamID: string;
   XoaFile?: boolean;
 }
+
+export interface BienTheSanPhamKPI {
+  total_BienTheSanPham: number;
+  total_QuanLyTheoSerial: number;
+  total_GiaBanCaoNhat: number;
+  total_HoatDong: number;
+}

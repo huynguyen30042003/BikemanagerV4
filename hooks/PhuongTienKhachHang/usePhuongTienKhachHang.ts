@@ -11,6 +11,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetPhuongTienKhachHang,
+  useGetPhuongTienKhachHangKPI,
   useCreatePhuongTien,
   useUpdatePhuongTien,
   useDeletePhuongTien,
@@ -109,6 +110,12 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
   }, [khachHangFilter, searchTerm, page, pageSize, statusFilter]);
 
   const { data, isLoading, isFetching, refetch } = useGetPhuongTienKhachHang(queryParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetPhuongTienKhachHangKPI();
 
   const items: KH_PhuongTienKhachHang[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
@@ -257,6 +264,10 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
     isLoading,
     isFetching,
     refetch,
+
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     open,
     setOpen,

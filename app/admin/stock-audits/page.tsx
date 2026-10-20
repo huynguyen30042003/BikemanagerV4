@@ -10,6 +10,7 @@ import { SearchSelect } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { WarehouseNavTabs } from "@/components/Common/WarehouseNavTabs";
 import { usePhieuKiemKe } from "@/hooks/PhieuKiemKe/usePhieuKiemKe";
+import { useGetPhieuKiemKeKPI } from "@/hooks/PhieuKiemKe/usePhieuKiemKeApi";
 import { KHO_PhieuKiemKe } from "@/types/phieuKiemKe";
 import {
   ClipboardCheck,
@@ -53,6 +54,8 @@ function formatDate(dateStr: string | null | undefined): string {
 }
 
 function StockAuditsContent() {
+  const { data: auditKpi, isLoading: isLoadingKPI } = useGetPhieuKiemKeKPI();
+
   const {
     page,
     setPage,
@@ -332,80 +335,67 @@ function StockAuditsContent() {
 
           {/* Tab Navigation */}
           <div className="pt-2">
-            <WarehouseNavTabs activeTab="audits" totalAudits={totalCount} />
+            <WarehouseNavTabs activeTab="audits" totalAudits={auditKpi?.total_PhieuKiemKe ?? auditKpi?.totalPhieuKiemKe ?? totalCount} />
           </div>
         </div>
       )}
 
       {/* 2. KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Đợt kiểm kê
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <ClipboardCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-foreground mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : totalCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Biên bản đã lập
-          </p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Đang kiểm đếm
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : inProgressCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Chưa duyệt cân bằng kho
-          </p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Đã cân bằng
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : balancedCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Tồn kho đã được điều chỉnh
-          </p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Tổng sai lệch SL
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : totalDiscrepancy}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Chênh lệch giữa đếm và sổ sách
-          </p>
-        </Card>
+        {[
+          {
+            title: "Đợt kiểm kê",
+            value: auditKpi?.total_PhieuKiemKe ?? auditKpi?.totalPhieuKiemKe ?? totalCount,
+            subtext: "Biên bản đã lập",
+            icon: ClipboardCheck,
+            color: "text-foreground",
+            iconColor: "text-blue-600",
+            bg: "bg-blue-500/10",
+          },
+          {
+            title: "Đang kiểm đếm",
+            value: auditKpi?.total_DangKiemKe ?? auditKpi?.totalDangKiemKe ?? inProgressCount,
+            subtext: "Chưa duyệt cân bằng kho",
+            icon: Clock,
+            color: "text-amber-600 dark:text-amber-400",
+            iconColor: "text-amber-600",
+            bg: "bg-amber-500/10",
+          },
+          {
+            title: "Đã cân bằng",
+            value: auditKpi?.total_DaCanBang ?? auditKpi?.totalDaCanBang ?? balancedCount,
+            subtext: "Tồn kho đã được điều chỉnh",
+            icon: CheckCircle2,
+            color: "text-emerald-600 dark:text-emerald-400",
+            iconColor: "text-emerald-600",
+            bg: "bg-emerald-500/10",
+          },
+          {
+            title: "Tổng sai lệch SL",
+            value: auditKpi?.total_TongSoLuongLech ?? auditKpi?.totalTongSoLuongLech ?? totalDiscrepancy,
+            subtext: "Chênh lệch giữa đếm và sổ sách",
+            icon: AlertTriangle,
+            color: "text-rose-600 dark:text-rose-400",
+            iconColor: "text-rose-600",
+            bg: "bg-rose-500/10",
+          },
+        ].map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <Card key={idx} className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+                <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div className={`text-2xl font-bold mt-2 ${card.color}`}>
+                {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{card.subtext}</p>
+            </Card>
+          );
+        })}
       </div>
 
       {/* 3. Filter Bar */}

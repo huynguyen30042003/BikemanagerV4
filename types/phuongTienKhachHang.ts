@@ -46,3 +46,11 @@ export interface CreatePhuongTienPayload {
 export interface UpdatePhuongTienPayload extends CreatePhuongTienPayload {
   ID: string;
 }
+
+export interface PhuongTienKhachHangKPI {
+  total_PhuongTienKhachHang: number;
+  total_HoatDong: number;
+  total_NgungHoatDong: number;
+  total_KM: number;
+}
+

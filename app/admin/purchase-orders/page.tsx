@@ -93,6 +93,9 @@ function PurchaseOrdersContent() {
     isLoading,
     isFetching,
     refetch,
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     openCreate,
     setOpenCreate,
@@ -136,26 +139,84 @@ function PurchaseOrdersContent() {
     isDeleting,
   } = useDonNhapHang();
   
-  // Thống kê nhanh theo trạng thái động từ DM_DanhMucChiTiet
-  const pendingCount = useMemo(
-    () =>
-      items.filter((i) => {
-        const b = getOrderStatusBadge(i.trangThaiID);
-        return b.color === "amber" || i.trangThaiID === 66 || i.trangThaiID === 67;
-      }).length,
-    [items, getOrderStatusBadge]
-  );
-  const completedCount = useMemo(
-    () =>
-      items.filter((i) => {
-        const b = getOrderStatusBadge(i.trangThaiID);
-        return b.color === "emerald" || i.trangThaiID === 70;
-      }).length,
-    [items, getOrderStatusBadge]
-  );
-  const totalDebt = useMemo(
-    () => items.reduce((sum, i) => sum + (i.conNo || 0), 0),
-    [items]
+  // Thống kê KPI ưu tiên từ Backend API GetKPI
+  const totalPurchaseOrders =
+    kpiData?.total_DonNhapHang ?? kpiData?.totalDonNhapHang ?? totalCount;
+  const pendingCount =
+    kpiData?.total_ChoDuyet ??
+    kpiData?.totalChoDuyet ??
+    items.filter((i) => {
+      const b = getOrderStatusBadge(i.trangThaiID);
+      return b.color === "amber" || i.trangThaiID === 66 || i.trangThaiID === 67;
+    }).length;
+  const completedCount =
+    kpiData?.total_DaNhapKho ??
+    kpiData?.totalDaNhapKho ??
+    items.filter((i) => {
+      const b = getOrderStatusBadge(i.trangThaiID);
+      return b.color === "emerald" || i.trangThaiID === 70;
+    }).length;
+  const totalDebt =
+    kpiData?.total_ConNo ??
+    kpiData?.totalConNo ??
+    items.reduce((sum, i) => sum + (i.conNo || 0), 0);
+
+  const kpiConfigs = useMemo(
+    () => [
+      {
+        id: "total",
+        title: "Tổng đơn nhập",
+        subTitle: "Đã tạo trong hệ thống",
+        value: totalPurchaseOrders.toLocaleString("vi-VN"),
+        icon: FileSpreadsheet,
+        colorClass: "text-foreground",
+        iconBgClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+        isActive: statusFilter === null,
+        onClick: () => {
+          setStatusFilter(null);
+          setPage(1);
+        },
+      },
+      {
+        id: "pending",
+        title: "Chờ duyệt & Đang tạo",
+        subTitle: "Cần phê duyệt đơn hàng",
+        value: pendingCount.toLocaleString("vi-VN"),
+        icon: Clock,
+        colorClass: "text-amber-600 dark:text-amber-400",
+        iconBgClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+        isActive: statusFilter === 66 || statusFilter === 67,
+        onClick: () => {
+          setStatusFilter(66);
+          setPage(1);
+        },
+      },
+      {
+        id: "completed",
+        title: "Đã nhập kho",
+        subTitle: "Đã tăng tồn kho thực tế",
+        value: completedCount.toLocaleString("vi-VN"),
+        icon: CheckCircle2,
+        colorClass: "text-emerald-600 dark:text-emerald-400",
+        iconBgClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        isActive: statusFilter === 70,
+        onClick: () => {
+          setStatusFilter(70);
+          setPage(1);
+        },
+      },
+      {
+        id: "debt",
+        title: "Còn nợ đơn nhập",
+        subTitle: "Tổng nợ cần trả NCC",
+        value: formatCurrency(totalDebt),
+        icon: DollarSign,
+        colorClass: "text-rose-600 dark:text-rose-400",
+        iconBgClass: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+        isActive: false,
+      },
+    ],
+    [totalPurchaseOrders, pendingCount, completedCount, totalDebt, statusFilter, setStatusFilter, setPage]
   );
 
   const columns: Column<NH_DonNhapHang>[] = [
@@ -348,12 +409,15 @@ function PurchaseOrdersContent() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
+              onClick={() => {
+                refetch();
+                refetchKPI();
+              }}
+              disabled={isFetching || isLoadingKPI}
               className="h-9 px-3.5 flex items-center gap-1.5 border-border/80 text-muted-foreground hover:text-foreground cursor-pointer shadow-2xs"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+                className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
               />
               <span className="text-xs font-medium">Làm mới</span>
             </Button>
@@ -371,63 +435,49 @@ function PurchaseOrdersContent() {
 
         {/* Tab Navigation */}
         <div className="pt-2">
-          <PurchaseNavTabs activeTab="orders" totalOrders={totalCount} />
+          <PurchaseNavTabs activeTab="orders" totalOrders={totalPurchaseOrders} />
         </div>
       </div>
 
       {/* 2. KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Tổng đơn nhập</span>
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <FileSpreadsheet className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-foreground mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : totalCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Đã tạo trong hệ thống</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Chờ duyệt & Đang tạo</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : pendingCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Cần phê duyệt đơn hàng</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Đã nhập kho</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : completedCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Đã tăng tồn kho thực tế</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Còn nợ đơn nhập</span>
-            <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-xl font-bold text-rose-600 dark:text-rose-400 mt-2 truncate">
-            {isLoading ? <Skeleton className="h-7 w-20" /> : formatCurrency(totalDebt)}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Tổng nợ cần trả NCC</p>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        {kpiConfigs.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <Card
+              key={kpi.id}
+              onClick={kpi.onClick}
+              className={`p-3 sm:p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs transition-all ${
+                kpi.onClick ? "cursor-pointer hover:border-primary/40 active:scale-[0.99]" : ""
+              } ${
+                kpi.isActive ? "border-primary/50 bg-primary/5 shadow-xs ring-2 ring-primary/10" : ""
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground truncate">
+                  {kpi.title}
+                </span>
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${kpi.iconBgClass}`}
+                >
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div
+                className={`text-xl sm:text-2xl font-bold mt-2 truncate ${kpi.colorClass}`}
+              >
+                {isLoading || isLoadingKPI ? (
+                  <Skeleton className="h-7 w-16" />
+                ) : (
+                  kpi.value
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                {kpi.subTitle}
+              </p>
+            </Card>
+          );
+        })}
       </div>
 
       {/* 3. Filter Bar */}

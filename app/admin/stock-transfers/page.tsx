@@ -10,6 +10,7 @@ import { SearchSelect } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { WarehouseNavTabs } from "@/components/Common/WarehouseNavTabs";
 import { usePhieuChuyenKho } from "@/hooks/PhieuChuyenKho/usePhieuChuyenKho";
+import { useGetPhieuChuyenKhoKPI } from "@/hooks/PhieuChuyenKho/usePhieuChuyenKhoApi";
 import { KHO_PhieuChuyenKho, KHO_ChiTietChuyenKho } from "@/types/phieuChuyenKho";
 import {
   ArrowLeftRight,
@@ -108,6 +109,8 @@ function StockTransfersContent() {
     getTransferStatusLabel,
     isLoadingStatusList,
   } = usePhieuChuyenKho();
+
+  const { data: transferKpi, isLoading: isLoadingKPI } = useGetPhieuChuyenKhoKPI();
 
   // Thống kê nhanh theo trạng thái động từ DM_DanhMucChiTiet
   const waitingCount = useMemo(
@@ -346,57 +349,60 @@ function StockTransfersContent() {
 
       {/* 2. KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Tổng phiếu chuyển</span>
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <ArrowLeftRight className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-foreground mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : totalCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Đã khởi tạo trong hệ thống</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Chờ xuất kho</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : waitingCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Chờ thủ kho xuất hàng</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Đang vận chuyển</span>
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <Truck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : inTransitCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Hàng đang đi trên đường</p>
-        </Card>
-
-        <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Đã hoàn tất</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-            {isLoading ? <Skeleton className="h-7 w-12" /> : completedCount}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Kho đích đã nhận đủ hàng</p>
-        </Card>
+        {[
+          {
+            title: "Tổng phiếu chuyển",
+            value: transferKpi?.total_PhieuChuyenKho ?? transferKpi?.totalPhieuChuyenKho ?? totalCount,
+            subtext: "Đã khởi tạo trong hệ thống",
+            icon: ArrowLeftRight,
+            color: "text-foreground",
+            iconColor: "text-blue-600",
+            bg: "bg-blue-500/10",
+          },
+          {
+            title: "Chờ xuất kho",
+            value: transferKpi?.total_ChoXuatKho ?? transferKpi?.totalChoXuatKho ?? waitingCount,
+            subtext: "Chờ thủ kho xuất hàng",
+            icon: Clock,
+            color: "text-amber-600 dark:text-amber-400",
+            iconColor: "text-amber-600",
+            bg: "bg-amber-500/10",
+          },
+          {
+            title: "Đang vận chuyển",
+            value: transferKpi?.total_DangVanChuyen ?? transferKpi?.totalDangVanChuyen ?? inTransitCount,
+            subtext: "Hàng đang đi trên đường",
+            icon: Truck,
+            color: "text-blue-600 dark:text-blue-400",
+            iconColor: "text-blue-600",
+            bg: "bg-blue-500/10",
+          },
+          {
+            title: "Đã hoàn tất",
+            value: transferKpi?.total_DaHoanTat ?? transferKpi?.totalDaHoanTat ?? completedCount,
+            subtext: "Kho đích đã nhận đủ hàng",
+            icon: CheckCircle2,
+            color: "text-emerald-600 dark:text-emerald-400",
+            iconColor: "text-emerald-600",
+            bg: "bg-emerald-500/10",
+          },
+        ].map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <Card key={idx} className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+                <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div className={`text-2xl font-bold mt-2 ${card.color}`}>
+                {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{card.subtext}</p>
+            </Card>
+          );
+        })}
       </div>
 
       {/* 3. Filter Bar */}

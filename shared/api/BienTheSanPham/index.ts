@@ -242,3 +242,38 @@ export const deleteHinhAnhApi = async (hinhAnhId: string) => {
 
   return response.data;
 };
+
+/**
+ * Lấy số liệu KPI tổng quan biến thể sản phẩm
+ * POST /api/BienTheSanPhamApi/GetKPI
+ */
+export const getBienTheSanPhamKPIApi = async () => {
+  const response = await api.post(
+    `${APP_URL}/BienTheSanPhamApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Lấy số liệu KPI tổng quan bộ sưu tập hình ảnh sản phẩm
+ * POST /api/HinhAnhSanPhamApi/GetKPI
+ */
+export const getHinhAnhSanPhamKPIApi = async () => {
+  const response = await api.post(
+    `${APP_URL}/HinhAnhSanPhamApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
+

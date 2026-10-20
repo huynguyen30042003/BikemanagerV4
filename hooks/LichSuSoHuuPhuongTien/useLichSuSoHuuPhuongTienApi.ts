@@ -7,6 +7,7 @@ import {
   createLichSuSoHuuApi,
   getLichSuSoHuuApi,
   getLichSuSoHuuByIdApi,
+  getLichSuSoHuuKPIApi,
 } from "@/shared/api/LichSuSoHuuPhuongTien";
 import {
   ChuyenQuyenSoHuuPayload,
@@ -17,6 +18,7 @@ import { PHUONG_TIEN_QUERY_KEYS } from "../PhuongTienKhachHang/usePhuongTienKhac
 
 export const LICHSU_SOHUU_QUERY_KEYS = {
   all: ["lichSuSoHuuPhuongTien"] as const,
+  kpi: () => [...LICHSU_SOHUU_QUERY_KEYS.all, "kpi"] as const,
   lists: () => [...LICHSU_SOHUU_QUERY_KEYS.all, "list"] as const,
   list: (params: LichSuSoHuuFilter) => [...LICHSU_SOHUU_QUERY_KEYS.lists(), params] as const,
   details: () => [...LICHSU_SOHUU_QUERY_KEYS.all, "detail"] as const,
@@ -29,6 +31,15 @@ export const useGetLichSuSoHuu = (params: LichSuSoHuuFilter) => {
     queryFn: () => getLichSuSoHuuApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
+  });
+};
+
+export const useGetLichSuSoHuuKPI = () => {
+  return useQuery({
+    queryKey: LICHSU_SOHUU_QUERY_KEYS.kpi(),
+    queryFn: () => getLichSuSoHuuKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
   });
 };
 
@@ -46,7 +57,7 @@ export const useCreateLichSuSoHuu = () => {
   return useMutation({
     mutationFn: (payload: CreateLichSuSoHuuPayload) => createLichSuSoHuuApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LICHSU_SOHUU_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: LICHSU_SOHUU_QUERY_KEYS.all });
       toast.success("Thêm mới lịch sử sở hữu thành công!");
     },
     onError: (error: Error) => {
@@ -61,8 +72,8 @@ export const useChuyenQuyenSoHuu = () => {
   return useMutation({
     mutationFn: (payload: ChuyenQuyenSoHuuPayload) => chuyenQuyenSoHuuApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LICHSU_SOHUU_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: PHUONG_TIEN_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: LICHSU_SOHUU_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: PHUONG_TIEN_QUERY_KEYS.all });
       toast.success("Chuyển quyền sở hữu / Sang tên xe thành công!");
     },
     onError: (error: Error) => {
@@ -70,3 +81,4 @@ export const useChuyenQuyenSoHuu = () => {
     },
   });
 };
+

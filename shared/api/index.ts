@@ -9,6 +9,7 @@ import {
   clearAuthTokens,
   getAccessToken,
   isAccessTokenExpired,
+  refreshAccessToken,
 } from "@/lib/auth";
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -20,7 +21,6 @@ const AUTH_WHITELIST_URLS = ["/auth/login", "/auth/refresh", "/auth/register"];
 
 class Api {
   public instance: AxiosInstance;
-  private refreshPromise: Promise<string> | null = null;
 
   constructor() {
     this.instance = axios.create({
@@ -39,55 +39,23 @@ class Api {
   }
 
   /**
-   * Refresh Token dùng chung 1 Promise (Singleton in-flight request)
+   * Refresh Token dùng chung 1 Promise Singleton từ lib/auth
    * Chống gọi lặp lại /api/auth/refresh nhiều lần khi có nhiều API đồng thời
    */
   private async refreshToken(): Promise<string> {
-    if (this.refreshPromise) {
-      return this.refreshPromise;
+    const newAccessToken = await refreshAccessToken();
+    if (!newAccessToken) {
+      if (typeof window !== "undefined") {
+        const currentPath = window.location.pathname + window.location.search;
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;
+        }
+      }
+      throw new Error("Không tìm thấy access token mới từ API refresh");
     }
 
-    this.refreshPromise = (async () => {
-      try {
-        const response = await axios.post(
-          "/api/auth/refresh",
-          {},
-          {
-            withCredentials: true,
-          },
-        );
-
-        const newAccessToken =
-          response.data?.access_token ||
-          response.data?.accessToken ||
-          response.data?.data?.accessToken;
-
-        if (!newAccessToken) {
-          throw new Error("Không tìm thấy access token mới từ API refresh");
-        }
-
-        setAuthTokens(response.data);
-
-        // Cập nhật authorization header mặc định cho instance
-        this.instance.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
-
-        return newAccessToken;
-      } catch (error) {
-        clearAuthTokens();
-
-        if (typeof window !== "undefined") {
-          const currentPath = window.location.pathname + window.location.search;
-          if (!window.location.pathname.startsWith("/login")) {
-            window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;
-          }
-        }
-        throw error;
-      } finally {
-        this.refreshPromise = null;
-      }
-    })();
-
-    return this.refreshPromise;
+    this.instance.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
+    return newAccessToken;
   }
 
   // =========================

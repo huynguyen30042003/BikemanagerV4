@@ -11,6 +11,7 @@ import { SearchSelect } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { WarehouseNavTabs } from "@/components/Common/WarehouseNavTabs";
 import { useTonKho } from "@/hooks/TonKho/useTonKho";
+import { useGetTonKhoKPI } from "@/hooks/TonKho/useTonKhoApi";
 import { KHO_TonKho, KHO_GiaoDichTonKho, KHO_LoChiPhiTonKho } from "@/types/tonKho";
 import {
   Layers,
@@ -109,6 +110,8 @@ function InventoryContent() {
     isLoadingTheKho,
     handleOpenTheKho,
   } = useTonKho(initialKhoId);
+
+  const { data: tonKhoKpi, isLoading: isLoadingKPI } = useGetTonKhoKPI();
 
   // Thống kê nhanh
   const lowStockCount = useMemo(
@@ -696,57 +699,60 @@ function InventoryContent() {
       {/* 3. KPI Cards - Only on Stock Tab */}
       {activeTab === "stock" && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Mặt hàng tồn (SKU)</span>
-              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                <Package className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground mt-2">
-              {isLoading ? <Skeleton className="h-7 w-12" /> : totalCount}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Phiên bản / Mã hàng quản lý</p>
-          </Card>
-
-          <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Tổng tồn khả dụng</span>
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-              {isLoading ? <Skeleton className="h-7 w-12" /> : totalAvailable}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Số lượng sẵn sàng bán ra</p>
-          </Card>
-
-          <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Sắp hết hàng</span>
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
-              {isLoading ? <Skeleton className="h-7 w-12" /> : lowStockCount}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Dưới ngưỡng an toàn tối thiểu</p>
-          </Card>
-
-          <Card className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Hết hàng</span>
-              <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center">
-                <XCircle className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-2">
-              {isLoading ? <Skeleton className="h-7 w-12" /> : outOfStockCount}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Cần lập đơn mua / nhập kho gấp</p>
-          </Card>
+          {[
+            {
+              title: "Mặt hàng tồn (SKU)",
+              value: tonKhoKpi?.total_TonKho ?? tonKhoKpi?.totalTonKho ?? totalCount,
+              subtext: "Phiên bản / Mã hàng quản lý",
+              icon: Package,
+              color: "text-foreground",
+              iconColor: "text-blue-600",
+              bg: "bg-blue-500/10",
+            },
+            {
+              title: "Tổng tồn khả dụng",
+              value: tonKhoKpi?.total_TonKhaDung ?? tonKhoKpi?.totalTonKhaDung ?? totalAvailable,
+              subtext: "Số lượng sẵn sàng bán ra",
+              icon: CheckCircle2,
+              color: "text-emerald-600 dark:text-emerald-400",
+              iconColor: "text-emerald-600",
+              bg: "bg-emerald-500/10",
+            },
+            {
+              title: "Sắp hết hàng",
+              value: tonKhoKpi?.total_SapHetHang ?? tonKhoKpi?.totalSapHetHang ?? lowStockCount,
+              subtext: "Dưới ngưỡng an toàn tối thiểu",
+              icon: AlertTriangle,
+              color: "text-amber-600 dark:text-amber-400",
+              iconColor: "text-amber-600",
+              bg: "bg-amber-500/10",
+            },
+            {
+              title: "Hết hàng",
+              value: tonKhoKpi?.total_HetHang ?? tonKhoKpi?.totalHetHang ?? outOfStockCount,
+              subtext: "Cần lập đơn mua / nhập kho gấp",
+              icon: XCircle,
+              color: "text-rose-600 dark:text-rose-400",
+              iconColor: "text-rose-600",
+              bg: "bg-rose-500/10",
+            },
+          ].map((card, idx) => {
+            const Icon = card.icon;
+            return (
+              <Card key={idx} className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+                  <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className={`text-2xl font-bold mt-2 ${card.color}`}>
+                  {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{card.subtext}</p>
+              </Card>
+            );
+          })}
         </div>
       )}
 

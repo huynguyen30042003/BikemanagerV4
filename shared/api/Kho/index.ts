@@ -1,7 +1,13 @@
 import api from "..";
-import { APP_URL } from "../../constants/apiConstants";
+import { APP_URL, BE_URL } from "../../constants/apiConstants";
 import { getAccessToken } from "@/lib/auth";
-import { CreateKhoPayload, KhoFilter, UpdateKhoPayload } from "@/types/kho";
+import {
+  CreateKhoPayload,
+  KhoFilter,
+  UpdateKhoPayload,
+  KHO_WarehouseNavTabs,
+  KHO_KhoKPI,
+} from "@/types/kho";
 
 const getAuthHeaders = () => {
   const token = getAccessToken();
@@ -102,3 +108,77 @@ export const deleteKhoApi = async (id: string) => {
 
   return response.data;
 };
+
+/**
+ * Lấy số lượng thống kê cho các tabs quản lý kho bãi (Danh sách kho, Tồn kho & Thẻ kho, Điều chuyển kho, Kiểm kê kho)
+ * GET / POST /api/KhoApi/NavTabs
+ */
+export const getWarehouseNavTabsApi = async (): Promise<KHO_WarehouseNavTabs> => {
+  const endpoints = [
+    `${APP_URL}/KhoApi/NavTabs`,
+    `${BE_URL}/api/v1/KhoApi/NavTabs`,
+    `${APP_URL}/TonKhoApi/NavTabs`,
+    `${APP_URL}/PhieuChuyenKhoApi/NavTabs`,
+    `${APP_URL}/PhieuKiemKeApi/NavTabs`,
+    `/api/KhoApi/NavTabs`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.get(url, {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      });
+      if (response?.data) {
+        return response.data?.data ?? response.data;
+      }
+    } catch {
+      try {
+        const response = await api.post(
+          url,
+          {},
+          {
+            headers: getAuthHeaders(),
+            withCredentials: true,
+          }
+        );
+        if (response?.data) {
+          return response.data?.data ?? response.data;
+        }
+      } catch {
+        // Thử endpoint tiếp theo
+      }
+    }
+  }
+
+  const fallback = await api.get(`${APP_URL}/KhoApi/NavTabs`, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
+  return fallback.data?.data ?? fallback.data;
+};
+
+/**
+ * Lấy số liệu thống kê KPI Kho bãi
+ * POST /api/KhoApi/GetKPI
+ */
+export const getKhoKPIApi = async (): Promise<KHO_KhoKPI> => {
+  try {
+    const res = await api.post(
+      `${APP_URL}/KhoApi/GetKPI`,
+      {},
+      {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      }
+    );
+    return res.data?.data ?? res.data;
+  } catch {
+    const res = await api.get(`${APP_URL}/KhoApi/GetKPI`, {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    });
+    return res.data?.data ?? res.data;
+  }
+};
+

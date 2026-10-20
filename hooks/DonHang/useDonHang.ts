@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import {
   useGetDonHang,
+  useGetDonHangKPI,
   useCreateDonHang,
   useChuyenTrangThaiDonHang,
   useHoanThanhVaGiaoXeDonHang,
@@ -17,6 +18,7 @@ import {
   ChuyenTrangThaiDonHangPayload,
   AddLichSuThanhToanPayload,
   ThanhToanDonHangPayload,
+  DonHangKPI,
 } from "@/types/donHang";
 import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
 import { DANH_MUC_CHUNG } from "@/constants/danhMuc";
@@ -217,6 +219,12 @@ export const useDonHang = () => {
 
   const { data, isLoading, isFetching, refetch } = useGetDonHang(queryParams);
 
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetDonHangKPI();
+
   const items: DH_DonHang[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
@@ -304,32 +312,46 @@ export const useDonHang = () => {
     });
   };
 
-  const handleSubmitCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!dataCreate.KhachHangID) {
+  const handleSubmitCreate = async (
+    e?: React.FormEvent,
+    customPayload?: CreateDonHangPayload
+  ) => {
+    if (e?.preventDefault) e.preventDefault();
+    const targetData = customPayload || dataCreate;
+
+    if (!targetData.KhachHangID) {
       toast.warning("Vui lòng chọn khách hàng mua!");
       return;
     }
-    if (!dataCreate.KhoXuatID) {
+    if (!targetData.KhoXuatID) {
       toast.warning("Vui lòng chọn kho hàng xuất!");
       return;
     }
-    if (dataCreate.ChiTiets.length === 0 || !dataCreate.ChiTiets[0].BienTheSanPhamID) {
+    if (!targetData.ChiTiets || targetData.ChiTiets.length === 0 || !targetData.ChiTiets[0].BienTheSanPhamID) {
       toast.warning("Vui lòng chọn ít nhất một sản phẩm bán!");
       return;
     }
 
     try {
-      const subTotal = dataCreate.ChiTiets.reduce((sum, item) => sum + (item.SoLuong || 0) * (item.DonGiaBan || 0), 0);
-      const vatTotal = dataCreate.ChiTiets.reduce((sum, item) => sum + (item.TienThueVAT || 0), 0);
-      const total = dataCreate.ChiTiets.reduce((sum, item) => sum + (item.ThanhTien || 0), 0) + (dataCreate.PhiVanChuyen || 0) + (dataCreate.PhiDichVuBienSo || 0) - (dataCreate.TienGiamGia || 0);
+      const subTotal =
+        targetData.TamTinh ??
+        targetData.ChiTiets.reduce((sum, item) => sum + (item.SoLuong || 0) * (item.DonGiaBan || 0), 0);
+      const vatTotal =
+        targetData.TienThueVAT ??
+        targetData.ChiTiets.reduce((sum, item) => sum + (item.TienThueVAT || 0), 0);
+      const total =
+        targetData.TongTien ??
+        (targetData.ChiTiets.reduce((sum, item) => sum + (item.ThanhTien || 0), 0) +
+          (targetData.PhiVanChuyen || 0) +
+          (targetData.PhiDichVuBienSo || 0) -
+          (targetData.TienGiamGia || 0));
 
       const sanitizedPayload = {
-        ...dataCreate,
+        ...targetData,
         TamTinh: subTotal,
         TienThueVAT: vatTotal,
         TongTien: total,
-        ChiTiets: dataCreate.ChiTiets.map((ct) => ({
+        ChiTiets: targetData.ChiTiets.map((ct) => ({
           ...ct,
           SoLuong: Number(ct.SoLuong) || 1,
           DonGiaBan: Number(ct.DonGiaBan) || 0,
@@ -339,12 +361,14 @@ export const useDonHang = () => {
         })),
       };
 
-      await createMutation.mutateAsync(sanitizedPayload);
+      const result = await createMutation.mutateAsync(sanitizedPayload);
       toast.success("Tạo đơn hàng thành công!");
       setOpenCreate(false);
       refetch();
+      return result;
     } catch {
       toast.error("Không thể tạo đơn hàng. Vui lòng kiểm tra lại!");
+      throw new Error("Không thể tạo đơn hàng");
     }
   };
 
@@ -481,6 +505,9 @@ export const useDonHang = () => {
     isLoading,
     isFetching,
     refetch,
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     openCreate,
     setOpenCreate,

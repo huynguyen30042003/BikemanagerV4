@@ -195,5 +195,31 @@ export interface TG_NavTabs {
   total_HopDongTraGop?: number;
 }
 
+export interface TG_DonViTraGopKPI {
+  total_DonViTraGop?: number;
+  total_DangHoatDong?: number;
+  total_NgungHoatDong?: number;
+  total_TichHopAPI?: number;
+  totalDonViTraGop?: number;
+  totalDangHoatDong?: number;
+  totalNgungHoatDong?: number;
+  totalTichHopAPI?: number;
+}
+
+export interface TG_TraGopKPI {
+  total_HopDongTraGop?: number;
+  total_ChoDuyet?: number;
+  total_DaDuyet?: number;
+  total_DaGiaiNgan?: number;
+  total_TongSoTienVay?: number;
+  total_SoTienGiaiNganThucTe?: number;
+  totalHopDongTraGop?: number;
+  totalChoDuyet?: number;
+  totalDaDuyet?: number;
+  totalDaGiaiNgan?: number;
+  totalTongSoTienVay?: number;
+  totalSoTienGiaiNganThucTe?: number;
+}
+
 
 

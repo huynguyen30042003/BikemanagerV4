@@ -68,3 +68,19 @@ export interface UpdateNhaCungCapPayload {
   GhiChu?: string;
   TrangThai?: boolean;
 }
+
+export interface NhaCungCapKPI {
+  total_NhaCungCap: number;
+  total_HoatDong: number;
+  total_CoCongNo: number;
+  total_CongNoHienTai: number;
+}
+
+export interface NH_PurchaseNavTabs {
+  total_NhaCungCap?: number;
+  total_DonNhapHang?: number;
+  totalNhaCungCap?: number;
+  totalDonNhapHang?: number;
+}
+
+

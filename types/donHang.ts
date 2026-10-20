@@ -183,3 +183,10 @@ export interface AddLichSuThanhToanPayload {
 }
 
 export type ThanhToanDonHangPayload = AddLichSuThanhToanPayload;
+
+export interface DonHangKPI {
+  total_DonHang: number;
+  total_ChoXuLyVaGiao: number;
+  total_HoanThanh: number;
+  total_DoanhThu: number;
+}

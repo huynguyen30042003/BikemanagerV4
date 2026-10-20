@@ -92,3 +92,14 @@ export interface GiaoDichFilter {
   PageIndex?: number;
   PageSize?: number;
 }
+
+export interface KHO_TonKhoKPI {
+  total_TonKho?: number;
+  total_TonKhaDung?: number;
+  total_SapHetHang?: number;
+  total_HetHang?: number;
+  totalTonKho?: number;
+  totalTonKhaDung?: number;
+  totalSapHetHang?: number;
+  totalHetHang?: number;
+}

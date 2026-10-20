@@ -38,3 +38,11 @@ export interface ChuyenQuyenSoHuuPayload {
   LyDo: string; // SangTen, ThuCuDoiMoi, BanLai...
   GhiChu?: string;
 }
+
+export interface LichSuSoHuuPhuongTienKPI {
+  total_LichSuSoHuuPhuongTien: number;
+  total_ChuSoHuuHienTai: number;
+  total_SangTen: number;
+  total_ThuCuDoiMoi: number;
+}
+

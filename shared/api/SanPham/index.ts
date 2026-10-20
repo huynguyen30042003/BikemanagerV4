@@ -170,3 +170,20 @@ export const getProductNavTabsApi = async (): Promise<SP_ProductNavTabs> => {
 
   return response.data?.data ?? response.data;
 };
+
+/**
+ * Lấy số liệu KPI tổng quan sản phẩm
+ * POST /api/SanPhamApi/GetKPI
+ */
+export const getSanPhamKPIApi = async () => {
+  const response = await api.post(
+    `${APP_URL}/SanPhamApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};

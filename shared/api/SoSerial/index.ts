@@ -126,3 +126,21 @@ export const chuyenTrangThaiSerialApi = async (payload: ChuyenTrangThaiSerialPay
 
   return response.data;
 };
+
+/**
+ * Lấy số liệu KPI tổng quan số serial / số khung xe
+ * POST /api/SoSerialApi/GetKPI
+ */
+export const getSoSerialKPIApi = async () => {
+  const response = await api.post(
+    `${APP_URL}/SoSerialApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
+

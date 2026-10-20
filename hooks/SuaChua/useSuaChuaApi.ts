@@ -15,6 +15,9 @@ import {
   addLichSuThanhToanSuaChuaApi,
   thanhToanSuaChuaApi,
   deletePhieuSuaChuaApi,
+  getServiceNavTabsApi,
+  getDichVuKPIApi,
+  getPhieuSuaChuaKPIApi,
 } from "@/shared/api/SuaChua";
 import {
   DichVuFilter,
@@ -27,6 +30,7 @@ import {
 } from "@/types/suaChua";
 
 export const SUA_CHUA_KEYS = {
+  navTabs: () => ["serviceNavTabs"] as const,
   dichVuAll: ["sc-dich-vu"] as const,
   dichVuList: (f: DichVuFilter) => [...SUA_CHUA_KEYS.dichVuAll, "list", f] as const,
   dichVuDetail: (id: string) => [...SUA_CHUA_KEYS.dichVuAll, "detail", id] as const,
@@ -34,6 +38,40 @@ export const SUA_CHUA_KEYS = {
   phieuList: (f: PhieuSuaChuaFilter) => [...SUA_CHUA_KEYS.phieuAll, "list", f] as const,
   phieuDetail: (id: string) => [...SUA_CHUA_KEYS.phieuAll, "detail", id] as const,
   phieuPayments: (id: string) => [...SUA_CHUA_KEYS.phieuAll, "payments", id] as const,
+  // KPI nằm dưới prefix *All → mọi mutation invalidate *All sẽ tự làm mới KPI
+  dichVuKpi: () => [...SUA_CHUA_KEYS.dichVuAll, "kpi"] as const,
+  phieuKpi: () => [...SUA_CHUA_KEYS.phieuAll, "kpi"] as const,
+};
+
+/* ===== KPI ===== */
+export const useGetDichVuKPI = () => {
+  return useQuery({
+    queryKey: SUA_CHUA_KEYS.dichVuKpi(),
+    queryFn: () => getDichVuKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useGetPhieuSuaChuaKPI = () => {
+  return useQuery({
+    queryKey: SUA_CHUA_KEYS.phieuKpi(),
+    queryFn: () => getPhieuSuaChuaKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+/* ===== Thống kê Tabs Dịch vụ & Sửa chữa / Bảo hành ===== */
+export const useGetServiceNavTabs = () => {
+  return useQuery({
+    queryKey: SUA_CHUA_KEYS.navTabs(),
+    queryFn: () => getServiceNavTabsApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 1000 * 30,
+  });
 };
 
 /* ===== Danh mục Dịch vụ ===== */
@@ -57,7 +95,10 @@ export const useCreateDichVu = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateDichVuPayload) => createDichVuApi(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.dichVuAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.dichVuAll });
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.navTabs() });
+    },
   });
 };
 
@@ -73,7 +114,10 @@ export const useDeleteDichVu = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteDichVuApi(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.dichVuAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.dichVuAll });
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.navTabs() });
+    },
   });
 };
 
@@ -106,7 +150,10 @@ export const useCreatePhieuSuaChua = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreatePhieuSuaChuaPayload) => createPhieuSuaChuaApi(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.phieuAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.phieuAll });
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.navTabs() });
+    },
   });
 };
 
@@ -153,6 +200,9 @@ export const useDeletePhieuSuaChua = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deletePhieuSuaChuaApi(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.phieuAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.phieuAll });
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.navTabs() });
+    },
   });
 };

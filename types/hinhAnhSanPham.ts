@@ -24,3 +24,11 @@ export interface CreateHinhAnhPayload {
   LaAnhDaiDien: boolean;
   file: File;
 }
+
+export interface HinhAnhSanPhamKPI {
+  total_HinhAnhSanPham: number;
+  total_AnhDaiDien: number;
+  total_AnhBienThe: number;
+  total_AnhChung: number;
+}
+

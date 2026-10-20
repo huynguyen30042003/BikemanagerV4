@@ -11,6 +11,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetNhaCungCap,
+  useGetNhaCungCapKPI,
   useCreateNhaCungCap,
   useUpdateNhaCungCap,
   useDeleteNhaCungCap,
@@ -162,6 +163,12 @@ export function useNhaCungCap() {
   }, [searchTerm, quocGiaFilter, coCongNoFilter, page, pageSize, statusFilter]);
 
   const { data, isLoading, isFetching, refetch } = useGetNhaCungCap(queryParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetNhaCungCapKPI();
 
   const items: NH_NhaCungCap[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
@@ -329,6 +336,9 @@ export function useNhaCungCap() {
     isLoading,
     isFetching,
     refetch,
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     open,
     setOpen,

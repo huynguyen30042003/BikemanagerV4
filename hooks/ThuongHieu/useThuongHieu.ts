@@ -11,6 +11,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetThuongHieu,
+  useGetThuongHieuKPI,
   useCreateThuongHieu,
   useUpdateThuongHieu,
   useDeleteThuongHieu,
@@ -97,6 +98,12 @@ export function useThuongHieu() {
   }, [searchTerm, page, pageSize, statusFilter]);
 
   const { data, isLoading, isFetching, refetch } = useGetThuongHieu(queryParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetThuongHieuKPI();
 
   const items: SP_ThuongHieu[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
@@ -237,6 +244,10 @@ export function useThuongHieu() {
     isLoading,
     isFetching,
     refetch,
+
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     open,
     setOpen,

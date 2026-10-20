@@ -7,10 +7,12 @@ import {
   deleteBienTheApi,
   getBienTheByIdApi,
   getBienTheSanPhamApi,
+  getBienTheSanPhamKPIApi,
   updateBienTheApi,
 } from "@/shared/api/BienTheSanPham";
 import {
   BienTheFilter,
+  BienTheSanPhamKPI,
   CreateBienThePayload,
   UpdateBienThePayload,
 } from "@/types/bienTheSanPham";
@@ -21,6 +23,7 @@ export const BIEN_THE_QUERY_KEYS = {
   list: (params: BienTheFilter) => [...BIEN_THE_QUERY_KEYS.lists(), params] as const,
   details: () => [...BIEN_THE_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...BIEN_THE_QUERY_KEYS.details(), id] as const,
+  kpi: () => [...BIEN_THE_QUERY_KEYS.all, "kpi"] as const,
 };
 
 export const useGetBienTheSanPham = (params: BienTheFilter) => {
@@ -29,6 +32,18 @@ export const useGetBienTheSanPham = (params: BienTheFilter) => {
     queryFn: () => getBienTheSanPhamApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
+  });
+};
+
+export const useGetBienTheSanPhamKPI = () => {
+  return useQuery({
+    queryKey: BIEN_THE_QUERY_KEYS.kpi(),
+    queryFn: async () => {
+      const res = await getBienTheSanPhamKPIApi();
+      return (res?.data ?? res) as BienTheSanPhamKPI;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
   });
 };
 
@@ -46,7 +61,7 @@ export const useCreateBienThe = () => {
   return useMutation({
     mutationFn: (payload: CreateBienThePayload) => createBienTheApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BIEN_THE_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: BIEN_THE_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["productNavTabs"] });
       toast.success("Thêm mới biến thể sản phẩm thành công!");
     },
@@ -62,7 +77,7 @@ export const useUpdateBienThe = () => {
   return useMutation({
     mutationFn: (payload: UpdateBienThePayload) => updateBienTheApi(payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: BIEN_THE_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: BIEN_THE_QUERY_KEYS.all });
       queryClient.invalidateQueries({
         queryKey: BIEN_THE_QUERY_KEYS.detail(variables.BienTheSanPhamID),
       });
@@ -80,7 +95,7 @@ export const useDeleteBienThe = () => {
   return useMutation({
     mutationFn: (id: string) => deleteBienTheApi(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BIEN_THE_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: BIEN_THE_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["productNavTabs"] });
       toast.success("Xóa biến thể sản phẩm thành công!");
     },

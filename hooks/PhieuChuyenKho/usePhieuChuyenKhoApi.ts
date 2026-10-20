@@ -9,6 +9,7 @@ import {
   huyPhieuChuyenKhoApi,
   nhanHangChuyenKhoApi,
   xuatKhoChuyenKhoApi,
+  getPhieuChuyenKhoKPIApi,
 } from "@/shared/api/PhieuChuyenKho";
 import {
   CreatePhieuChuyenPayload,
@@ -24,7 +25,19 @@ export const CHUYEN_KHO_QUERY_KEYS = {
   list: (params: PhieuChuyenFilter) => [...CHUYEN_KHO_QUERY_KEYS.lists(), params] as const,
   details: () => [...CHUYEN_KHO_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...CHUYEN_KHO_QUERY_KEYS.details(), id] as const,
+  kpi: () => [...CHUYEN_KHO_QUERY_KEYS.all, "kpi"] as const,
 };
+
+export const useGetPhieuChuyenKhoKPI = () => {
+  return useQuery({
+    queryKey: CHUYEN_KHO_QUERY_KEYS.kpi(),
+    queryFn: () => getPhieuChuyenKhoKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
 
 export const useGetPhieuChuyenKho = (params: PhieuChuyenFilter) => {
   return useQuery({
@@ -50,6 +63,8 @@ export const useCreatePhieuChuyenKho = () => {
     mutationFn: (payload: CreatePhieuChuyenPayload) => createPhieuChuyenKhoApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CHUYEN_KHO_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
+      queryClient.invalidateQueries({ queryKey: CHUYEN_KHO_QUERY_KEYS.kpi() });
       toast.success("Tạo phiếu điều chuyển kho thành công!");
     },
     onError: (error: Error) => {
@@ -68,6 +83,7 @@ export const useXuatKhoChuyenKho = () => {
       queryClient.invalidateQueries({
         queryKey: CHUYEN_KHO_QUERY_KEYS.detail(variables.PhieuChuyenKhoID),
       });
+      queryClient.invalidateQueries({ queryKey: CHUYEN_KHO_QUERY_KEYS.kpi() });
       toast.success("Xuất kho điều chuyển thành công! Hàng đang được vận chuyển.");
     },
     onError: (error: Error) => {
@@ -86,6 +102,8 @@ export const useNhanHangChuyenKho = () => {
       queryClient.invalidateQueries({
         queryKey: CHUYEN_KHO_QUERY_KEYS.detail(variables.PhieuChuyenKhoID),
       });
+      queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
+      queryClient.invalidateQueries({ queryKey: CHUYEN_KHO_QUERY_KEYS.kpi() });
       toast.success("Xác nhận nhận hàng tại kho đích thành công! Tồn kho đã được cập nhật.");
     },
     onError: (error: Error) => {
@@ -104,6 +122,8 @@ export const useHuyPhieuChuyenKho = () => {
       queryClient.invalidateQueries({
         queryKey: CHUYEN_KHO_QUERY_KEYS.detail(variables.PhieuChuyenKhoID),
       });
+      queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
+      queryClient.invalidateQueries({ queryKey: CHUYEN_KHO_QUERY_KEYS.kpi() });
       toast.success("Đã hủy phiếu điều chuyển kho!");
     },
     onError: (error: Error) => {

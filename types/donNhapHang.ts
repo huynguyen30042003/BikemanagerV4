@@ -160,3 +160,16 @@ export interface ThanhToanDonNhapPayload {
   SoTien: number;
   GhiChu?: string;
 }
+
+export interface DonNhapHangKPI {
+  total_DonNhapHang: number;
+  total_ChoDuyet: number;
+  total_DaNhapKho: number;
+  total_ConNo: number;
+  totalDonNhapHang?: number;
+  totalChoDuyet?: number;
+  totalDaNhapKho?: number;
+  totalConNo?: number;
+}
+
+

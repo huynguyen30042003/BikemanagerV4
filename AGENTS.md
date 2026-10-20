@@ -545,8 +545,15 @@ Mỗi khi thêm một trang hoặc module mới (ví dụ: `/admin/reports` ho�
    - khi view ra danh sách để xem thì không hiển thị số thứ tự (thứ tự hiển thị nếu cần thì view ra khi add hoặc update)
 5. **UI & UX Standard**:
    - Hỗ trợ chế độ xem kép Grid & Table nếu là module phân loại/danh mục.
-   - Kiểm tra tương phản màu đạt chuẩn WCAG AA. Không dùng ký tự `—` (em-dash).
-6. **Kiểm tra Build**:
+   - Kiểm tra tương phản màu đạt chuẩn WCAG AA. Không dùng ký tự `-` (em-dash).
+6. **Quy chuẩn Responsive Mobile (BẮT BUỘC 100% - MANDATORY REQUIREMENT)**:
+   - Mọi trang và component khi tạo mới hoặc cập nhật **BẮT BUỘC PHẢI RESPONSIVE HOÀN HẢO** trên tất cả độ phân giải:
+     - Desktop lớn (1440px - 1920px)
+     - Laptop & Tablet (768px - 1024px)
+     - Mobile (375px - 428px, đặc biệt chuẩn kích thước iPhone Xs Max: 414px và iPhone 12/13/14 Pro Max: 428px).
+   - Tuyệt đối cấm để giao diện bị vỡ bố cục, tràn viền ngang (horizontal page blowout), đè chữ hoặc nút bấm bị cắt xén.
+   - Kiểm tra đầy đủ: Nút 3 gạch (`Menu`) thu gọn bộ lọc, dải Tab cuộn ngang mượt mà, bảng dữ liệu bọc `overflow-x-auto min-w-[...]`, thẻ KPI chia 2 cột cân đối.
+7. **Kiểm tra Build**:
    - Chạy `npx tsc --noEmit` đạt 0 lỗi.
    - Kiểm tra không thiếu `<Suspense>` bọc ngoài `useSearchParams()`.
 
@@ -569,6 +576,112 @@ Mỗi khi thêm một trang hoặc module mới (ví dụ: `/admin/reports` ho�
    - Chỉ được phép dùng `??` khi gán một giá trị mặc định cụ thể (literal value như chuỗi, số, mảng rỗng) cho một biến đã xác định rõ tên.
    - **Hợp lệ:** `const total = total_DanhMuc ?? 0;` hoặc `const name = diaDiem ?? "Chưa cập nhật";`.
    - Không được dùng `return response.data?.data ?? response.data` chỉ dùng `return response.data;`
-4. **Phải làm responsive chính là cho chủ người dùng chủ yếu là desktop và mobi (iphone XsMax và 12Pro Max)**
-   - Các nút trên mobile thì thu gọn vào nút hình 3 gạch (khi chưa có nút cụ thể thì tạo nút 3 gạch để chứa các nút con)
-   - Khi click vào nút 3 gạch thì hiển thị các nút con, khi click lần nữa thì thu gọn vào nút 3 gạch
+4. **BẮT BUỘC 100% GIAO DIỆN PHẢI RESPONSIVE (Desktop & Mobile-First: iPhone Xs Max, 12 Pro Max):**
+   - Không một trang nào được phép chỉ hỗ trợ Desktop mà bỏ quên Mobile.
+   - Các nút chức năng, bộ lọc trên mobile **bắt buộc thu gọn vào nút hình 3 gạch (`Menu`)**.
+   - Khi click vào nút 3 gạch thì mở rộng danh sách các nút con/bộ lọc, khi click lần nữa thì thu gọn lại (tiết kiệm không gian dọc).
+   - Dải Tab điều hướng con bắt buộc cuộn ngang (`overflow-x-auto whitespace-nowrap`), tuyệt đối không để rớt dòng làm xấu layout.
+   - Mọi bảng dữ liệu `Table` bắt buộc phải có container chống tràn bề ngang trang web.
+
+---
+
+## 14. Quy chuẩn Kiến trúc Tách Component, Render bằng .map() & Responsive Toàn Hệ Thống (Universal Page Architecture & Responsive Pattern)
+
+> [!CAUTION]
+> **YÊU CẦU BẮT BUỘC KHÔNG THỂ THAY THẾ (NON-NEGOTIABLE MANDATE):**
+> Bất kỳ component hay page nào được viết ra mà **KHÔNG ĐẠT CHUẨN RESPONSIVE** trên mobile (bị vỡ khung hình, bị tràn ngang trang web, nút bấm chồng chéo, chữ bị cắt cụt hoặc thiếu nút 3 gạch thu gọn) đều bị coi là **KHÔNG ĐẠT CHUẨN KỸ THUẬT** và bắt buộc phải viết lại.
+
+> [!IMPORTANT]
+> **Quy chuẩn bắt buộc cho TOÀN BỘ các trang trong hệ thống** (bao gồm Quản trị Sản phẩm, Đơn hàng, Bán hàng, Kho bãi, Khách hàng, Danh mục, Tổng quan Dashboard, v.v.). Mọi trang mới hoặc trang được nâng cấp/refactor đều phải tuân thủ nghiêm ngặt 3 nguyên tắc dưới đây.
+
+### 14.1. Nguyên tắc "Trang Nhạc Trưởng" (Universal Orchestrator Page Pattern)
+
+- ❌ **CẤM**: Viết dồn toàn bộ mã giao diện, logic form, bảng dữ liệu, thanh tìm kiếm, dải lọc và modal vào một file `page.tsx` duy nhất (> 200 - 300 dòng). Không viết code "monolith" (nguyên khối).
+- ✅ **BẮT BUỘC**: `page.tsx` chỉ đóng vai trò **nhạc trưởng (Orchestrator)** điều phối luồng dữ liệu:
+  - Quản lý state URL query / searchParams, phân trang (`page`, `pageSize`), bộ lọc (`filter`).
+  - Gọi các TanStack React Query hooks (`useQuery`, `useMutation`).
+  - Quản lý trạng thái mở/đóng modal (`openCreate`, `editingItem`, `openConfirm`).
+  - Phân bổ dữ liệu xuống các feature component con chuyên biệt đặt tại `components/<FeatureName>/`:
+    - `...FilterBar.tsx`: Thanh tiêu đề, thông tin chào mừng/hướng dẫn, tìm kiếm, chọn chi nhánh/kho và lọc trạng thái.
+    - `...KpiGrid.tsx` / `...Ribbon.tsx`: Dải thẻ KPI thống kê tóm tắt đầu trang (render bằng `.map()`).
+    - `...Table.tsx`: Bảng dữ liệu chính kèm phân trang, bọc trong container chống tràn ngang.
+    - `...Grid.tsx` / `...CardList.tsx`: Chế độ xem dạng thẻ card (nếu hỗ trợ Dual View).
+    - `Create...SlideOver.tsx` & `Update...SlideOver.tsx`: Form thêm/sửa độc lập theo Mục 11 (cô lập form state chống re-render).
+    - `...Utils.ts` (nếu cần): Các hàm format tiền tệ, ngày tháng, mapping enum dùng riêng cho feature.
+
+### 14.2. Quy tắc Render Danh sách / Thẻ Card bằng `.map()` (Universal Data-Driven UI Pattern)
+
+- ❌ **CẤM**: Copy-paste lặp đi lặp lại khối JSX của các thẻ Card tĩnh, nút bấm bộ lọc, hàng thống kê, hoặc các khối giao diện lặp lại (Hardcoded UI Duplication).
+- ✅ **BẮT BUỘC**:
+  1. Định nghĩa mảng cấu hình có kiểu dữ liệu TypeScript rõ ràng (`interface ConfigItem`).
+  2. Sử dụng `useMemo` bọc mảng cấu hình khi phụ thuộc vào props/state dữ liệu từ API.
+  3. Render toàn bộ qua hàm `.map()` với `key` ổn định (`item.id`, không dùng index nếu danh sách có thêm/xóa/sắp xếp).
+  4. Mỗi item cấu hình bao gồm: `id`, `title`/`label`, `icon`, `colorClass`/`gradientClass`, `value`, `subText`, `footer`/`actions`.
+
+```tsx
+// ✅ Mẫu chuẩn render mảng cấu hình qua .map()
+interface KpiCardConfig {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+  iconBgClass: string;
+  iconColorClass: string;
+  gradientClass: string;
+  value: React.ReactNode;
+  subText: React.ReactNode;
+  footer: React.ReactNode;
+}
+
+// Render qua .map()
+<div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3 lg:gap-4">
+  {kpiCards.map((card) => {
+    const Icon = card.icon;
+    return (
+      <Card key={card.id} className={card.gradientClass}>
+        <div className="flex items-center justify-between">
+          <span>{card.title}</span>
+          <div className={card.iconBgClass}>
+            <Icon className={card.iconColorClass} />
+          </div>
+        </div>
+        <div>{card.value}</div>
+        <div>{card.subText}</div>
+        <div>{card.footer}</div>
+      </Card>
+    );
+  })}
+</div>;
+```
+
+### 14.3. Quy chuẩn Responsive Toàn Diện Trên Màn Hình Nhỏ (Universal Mobile-First: iPhone Xs Max & 12 Pro Max)
+
+Tất cả các trang trong hệ thống phải đảm bảo trải nghiệm hoàn hảo trên Desktop lẫn Mobile (đặc biệt chuẩn màn hình iPhone Xs Max: 414px, iPhone 12/13/14 Pro Max: 428px, và các thiết bị từ 375px trở lên):
+
+1. **Quy tắc Nút 3 gạch (`Menu`) Thu gọn Bộ lọc & Hành động Phụ trên Mobile**:
+   - Trên màn hình nhỏ (`lg:hidden` hoặc `sm:hidden`), **CẤM** để hàng loạt dropdown, ô chọn ngày, nút bấm trải dài làm tràn ngập màn hình trước khi xem được dữ liệu chính.
+   - **BẮT BUỘC**:
+     - Thu gọn toàn bộ bộ lọc chi tiết và nút thao tác phụ vào nút "Bộ lọc" với biểu tượng 3 gạch (`Menu` / `X`).
+     - Khi người dùng click nút 3 gạch: mở rộng khối bộ lọc con (`isMobileMenuOpen = true`). Click lần nữa thì đóng gọn lại.
+     - Luôn giữ nút Tìm kiếm chính hoặc nút Làm mới / Nút Thêm mới ở vị trí trực quan, dễ thao tác bằng 1 tay.
+2. **Dải Tabs & Bộ chọn ngang (Horizontal Scrolling Navigation)**:
+   - Tất cả các thanh điều hướng tab con (ví dụ `CategoryNavTabs`, `ProductNavTabs`, `OrderNavTabs`, Preset thời gian...) **bắt buộc** bọc container có `overflow-x-auto whitespace-nowrap`.
+   - Tuyệt đối không để các tab bị gãy dòng (line-wrap) làm đội giao diện lên 3-4 dòng trên mobile.
+3. **Lưới Thẻ Card & Ribbon Thống Kê (Responsive Grids)**:
+   - Dải KPI Ribbon / Thẻ thống kê: dùng `grid-cols-2 md:grid-cols-3 xl:grid-cols-6` hoặc `grid-cols-2 lg:grid-cols-4`.
+   - Trên mobile luôn hiển thị đúng **2 cột cân đối**, chữ số co giãn (`text-sm sm:text-base lg:text-xl`), không để 1 cột quá to hoặc 3 cột bị chèn vỡ chữ.
+4. **BẮT BUỘC 100% GIAO DIỆN PHẢI RESPONSIVE (Desktop & Mobile-First: iPhone Xs Max, 12 Pro Max):**
+   - Không một trang nào được phép chỉ hỗ trợ Desktop mà bỏ quên Mobile.
+   - Các nút chức năng, bộ lọc trên mobile **bắt buộc thu gọn vào nút hình 3 gạch (`Menu`)**.
+   - Khi click vào nút 3 gạch thì mở rộng danh sách các nút con/bộ lọc, khi click lần nữa thì thu gọn lại (tiết kiệm không gian dọc).
+   - Dải Tab điều hướng con bắt buộc cuộn ngang (`overflow-x-auto whitespace-nowrap`), tuyệt đối không để rớt dòng làm xấu layout.
+   - Mọi bảng dữ liệu `Table` bắt buộc phải có container chống tràn bề ngang trang web.
+
+5. **Biểu đồ & Khối Trực quan**:
+   - Container biểu đồ luôn có `min-w-[340px]` kết hợp cuộn ngang để các cột đồ thị không bị nén về 0px trên màn hình nhỏ.
+6. **Quy chuẩn Responsive Mobile (BẮT BUỘC 100% - MANDATORY REQUIREMENT)**:
+   - Mọi trang và component khi tạo mới hoặc cập nhật **BẮT BUỘC PHẢI RESPONSIVE HOÀN HẢO** trên tất cả độ phân giải:
+     - Desktop lớn (1440px - 1920px)
+     - Laptop & Tablet (768px - 1024px)
+     - Mobile (375px - 428px, đặc biệt chuẩn kích thước iPhone Xs Max: 414px và iPhone 12/13/14 Pro Max: 428px).
+   - Tuyệt đối cấm để giao diện bị vỡ bố cục, tràn viền ngang (horizontal page blowout), đè chữ hoặc nút bấm bị cắt xén.
+   - Kiểm tra đầy đủ: Nút 3 gạch (`Menu`) thu gọn bộ lọc, dải Tab cuộn ngang mượt mà, bảng dữ liệu bọc `overflow-x-auto min-w-[...]`, thẻ KPI chia 2 cột cân đối.

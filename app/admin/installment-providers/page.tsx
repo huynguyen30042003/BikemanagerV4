@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { InstallmentNavTabs } from "@/components/Common/InstallmentNavTabs";
 import { useDonViTraGopHook } from "@/hooks/TraGop/useTraGop";
+import { useGetDonViTraGopKPI } from "@/hooks/TraGop/useTraGopApi";
 
 import { DonViTraGop } from "@/types/traGop";
 import {
@@ -26,9 +27,14 @@ import {
   User,
   Globe,
   Key,
+  CheckCircle2,
+  AlertCircle,
+  Cpu,
 } from "lucide-react";
 
 function InstallmentProvidersContent() {
+  const { data: providerKpi, isLoading: isLoadingKPI } = useGetDonViTraGopKPI();
+
   const {
     page,
     setPage,
@@ -228,9 +234,70 @@ function InstallmentProvidersContent() {
         </div>
 
         <div className="pt-2">
-          <InstallmentNavTabs activeTab="providers" />
+          <InstallmentNavTabs
+            activeTab="providers"
+            totalProviders={providerKpi?.total_DonViTraGop ?? providerKpi?.totalDonViTraGop ?? totalCount}
+          />
         </div>
 
+      </div>
+
+      {/* 2. KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          {
+            title: "Tổng đối tác",
+            value: providerKpi?.total_DonViTraGop ?? providerKpi?.totalDonViTraGop ?? totalCount,
+            subtext: "Tổ chức tài chính liên kết",
+            icon: Building2,
+            color: "text-foreground",
+            iconColor: "text-blue-600",
+            bg: "bg-blue-500/10",
+          },
+          {
+            title: "Đang hợp tác",
+            value: providerKpi?.total_DangHoatDong ?? providerKpi?.totalDangHoatDong ?? (statusFilter === "active" ? totalCount : 0),
+            subtext: "Sẵn sàng nhận hồ sơ vay",
+            icon: CheckCircle2,
+            color: "text-emerald-600 dark:text-emerald-400",
+            iconColor: "text-emerald-600",
+            bg: "bg-emerald-500/10",
+          },
+          {
+            title: "Tạm ngưng",
+            value: providerKpi?.total_NgungHoatDong ?? providerKpi?.totalNgungHoatDong ?? 0,
+            subtext: "Tạm dừng xử lý hồ sơ",
+            icon: AlertCircle,
+            color: "text-rose-600 dark:text-rose-400",
+            iconColor: "text-rose-600",
+            bg: "bg-rose-500/10",
+          },
+          {
+            title: "Tích hợp API",
+            value: providerKpi?.total_TichHopAPI ?? providerKpi?.totalTichHopAPI ?? 0,
+            subtext: "Đồng bộ hồ sơ tự động",
+            icon: Cpu,
+            color: "text-indigo-600 dark:text-indigo-400",
+            iconColor: "text-indigo-600",
+            bg: "bg-indigo-500/10",
+          },
+        ].map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <Card key={idx} className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+                <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div className={`text-2xl font-bold mt-2 ${card.color}`}>
+                {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{card.subtext}</p>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Filter */}

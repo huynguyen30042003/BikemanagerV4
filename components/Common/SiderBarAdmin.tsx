@@ -44,7 +44,9 @@ import {
   Sparkles,
   LogOut,
   LayoutDashboard,
+  KeyRound,
 } from "lucide-react";
+import TwoFactorSecurityModal from "./TwoFactorSecurityModal";
 
 export type MenuItem = {
   title: string;
@@ -68,16 +70,29 @@ export type MenuSection = {
 };
 
 export const MENU_SECTIONS: MenuSection[] = [
-
   {
     label: "Tổng quan",
-    roles: ["Administrator", "AdminAccess", "SaleAccess", "WarehouseAccess", "TechnicalAccess", "PurchaseAccess"],
+    roles: [
+      "Administrator",
+      "AdminAccess",
+      "SaleAccess",
+      "WarehouseAccess",
+      "TechnicalAccess",
+      "PurchaseAccess",
+    ],
     groups: [
       {
         title: "Bảng điều khiển",
         href: "/admin",
         icon: LayoutDashboard,
-        roles: ["Administrator", "AdminAccess", "SaleAccess", "WarehouseAccess", "TechnicalAccess", "PurchaseAccess"],
+        roles: [
+          "Administrator",
+          "AdminAccess",
+          "SaleAccess",
+          "WarehouseAccess",
+          "TechnicalAccess",
+          "PurchaseAccess",
+        ],
       },
     ],
   },
@@ -313,13 +328,23 @@ export const MENU_SECTIONS: MenuSection[] = [
         title: "Bảo hành xe",
         href: "/admin/warranties",
         icon: ShieldCheck,
-        roles: ["Administrator", "AdminAccess", "TechnicalAccess", "SaleAccess"],
+        roles: [
+          "Administrator",
+          "AdminAccess",
+          "TechnicalAccess",
+          "SaleAccess",
+        ],
         items: [
           {
             title: "Sổ bảo hành điện tử",
             href: "/admin/warranties",
             icon: ShieldCheck,
-            roles: ["Administrator", "AdminAccess", "TechnicalAccess", "SaleAccess"],
+            roles: [
+              "Administrator",
+              "AdminAccess",
+              "TechnicalAccess",
+              "SaleAccess",
+            ],
           },
           {
             title: "Phiếu tiếp nhận BH",
@@ -355,14 +380,14 @@ export const MENU_SECTIONS: MenuSection[] = [
 
 export const hasRequiredRole = (
   requiredRoles: string[] | undefined,
-  userRoles: string[]
+  userRoles: string[],
 ): boolean => {
   if (!requiredRoles || requiredRoles.length === 0) return true;
   if (!userRoles || userRoles.length === 0) return false;
 
   const normalizedUserRoles = userRoles.map((r) => r.toLowerCase().trim());
   return requiredRoles.some((role) =>
-    normalizedUserRoles.includes(role.toLowerCase().trim())
+    normalizedUserRoles.includes(role.toLowerCase().trim()),
   );
 };
 
@@ -403,12 +428,18 @@ export default function SiderBarAdmin() {
   const [sidebarWidth, setSidebarWidth] = useState(270);
   const [isResizing, setIsResizing] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isOpen2FAModal, setIsOpen2FAModal] = useState(false);
 
   // Hợp nhất dữ liệu user từ Zustand store (API /auth/me) và JWT Token
   const currentUser = user || tokenUser;
-  const userRoles = useMemo(() => currentUser?.roles ?? [], [currentUser?.roles]);
-  const activeRole = userRoles.length > 0 ? userRoles[0] : (primaryTokenRole || "Quản trị viên");
-  const displayName = currentUser?.fullName || currentUser?.username || "Quản trị viên";
+  const userRoles = useMemo(
+    () => currentUser?.roles ?? [],
+    [currentUser?.roles],
+  );
+  const activeRole =
+    userRoles.length > 0 ? userRoles[0] : primaryTokenRole || "Quản trị viên";
+  const displayName =
+    currentUser?.fullName || currentUser?.username || "Quản trị viên";
   const userInitials = getUserInitials(displayName);
 
   const handleLogout = async () => {
@@ -425,6 +456,8 @@ export default function SiderBarAdmin() {
   // Lọc MENU_SECTIONS theo đúng role của user
   const filteredSections = useMemo(() => {
     return MENU_SECTIONS.map((section) => {
+      console.log("section", section);
+
       if (!hasRequiredRole(section.roles, userRoles)) {
         return null;
       }
@@ -437,7 +470,7 @@ export default function SiderBarAdmin() {
 
           if (group.items && group.items.length > 0) {
             const visibleItems = group.items.filter((item) =>
-              hasRequiredRole(item.roles, userRoles)
+              hasRequiredRole(item.roles, userRoles),
             );
             if (visibleItems.length === 0) return null;
 
@@ -460,19 +493,17 @@ export default function SiderBarAdmin() {
     }).filter((s): s is MenuSection => s !== null);
   }, [userRoles]);
 
-
   // Danh sách phẳng tất cả groups để tính activeParentTitle
   const allGroups = useMemo(
     () => filteredSections.flatMap((s) => s.groups),
-    [filteredSections]
+    [filteredSections],
   );
 
   // Nhận diện group đang active từ pathname
   const activeParentTitle =
     allGroups.find((group) =>
-      group?.items?.some((item) => pathname.startsWith(item.href))
+      group?.items?.some((item) => pathname.startsWith(item.href)),
     )?.title ?? null;
-
 
   const [toggledMenu, setToggledMenu] = useState<string | null>(null);
 
@@ -534,7 +565,6 @@ export default function SiderBarAdmin() {
         ${!isResizing ? "transition-[width] duration-300 ease-in-out" : ""}
       `}
     >
-
       {/* 1. Header & Brand Identity */}
       <div
         className={`h-16 px-4 border-b border-border/70 flex items-center shrink-0 transition-all duration-300 ${
@@ -599,7 +629,9 @@ export default function SiderBarAdmin() {
             <div className="space-y-0.5">
               {section.groups.map((group) => {
                 const GroupIcon = group.icon;
-                const hasChildren = Boolean(group.items && group.items.length > 0);
+                const hasChildren = Boolean(
+                  group.items && group.items.length > 0,
+                );
 
                 // Menu mở nếu người dùng mở nó hoặc nó là parent của route hiện tại
                 const isOpen =
@@ -699,7 +731,9 @@ export default function SiderBarAdmin() {
                                           : "text-muted-foreground group-hover/sub:text-foreground"
                                       }`}
                                     />
-                                    <span className="truncate">{subItem.title}</span>
+                                    <span className="truncate">
+                                      {subItem.title}
+                                    </span>
                                   </Link>
                                 );
                               })}
@@ -780,7 +814,9 @@ export default function SiderBarAdmin() {
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 truncate max-w-[130px]">
                   <ShieldCheck className="w-3 h-3 shrink-0 text-blue-600 dark:text-blue-400" />
-                  <span className="truncate">{formatRoleLabel(activeRole)}</span>
+                  <span className="truncate">
+                    {formatRoleLabel(activeRole)}
+                  </span>
                 </span>
               </div>
 
@@ -794,6 +830,16 @@ export default function SiderBarAdmin() {
               )}
             </div>
 
+            {/* Nút Cài đặt 2FA SMS */}
+            {/* <button
+              type="button"
+              onClick={() => setIsOpen2FAModal(true)}
+              className="w-8 h-8 rounded-lg text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
+              title="Bật / Tắt tính năng xác thực 2 bước (2FA SMS)"
+            >
+              <KeyRound className="w-4 h-4" />
+            </button> */}
+
             {/* Nút Đăng xuất */}
             <button
               type="button"
@@ -802,7 +848,9 @@ export default function SiderBarAdmin() {
               className="w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer shrink-0 disabled:opacity-50"
               title="Đăng xuất khỏi hệ thống"
             >
-              <LogOut className={`w-4 h-4 ${isLoggingOut ? "animate-spin" : ""}`} />
+              <LogOut
+                className={`w-4 h-4 ${isLoggingOut ? "animate-spin" : ""}`}
+              />
             </button>
           </div>
         </div>
@@ -858,13 +906,26 @@ export default function SiderBarAdmin() {
                 </div>
               )}
 
+              {/* Nút 2FA trong Flyout */}
+              {/* <button
+                type="button"
+                onClick={() => setIsOpen2FAModal(true)}
+                className="w-full mt-2.5 py-1.5 px-3 rounded-lg text-xs font-medium text-blue-600 hover:bg-blue-500/10 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-blue-500/20"
+                title="Bật hoặc Tắt tính năng yêu cầu OTP SMS khi đăng nhập"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Bật / Tắt 2FA SMS</span>
+              </button> */}
+
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full mt-2.5 py-1.5 px-3 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="w-full mt-2 py-1.5 px-3 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                <LogOut className={`w-3.5 h-3.5 ${isLoggingOut ? "animate-spin" : ""}`} />
+                <LogOut
+                  className={`w-3.5 h-3.5 ${isLoggingOut ? "animate-spin" : ""}`}
+                />
                 <span>Đăng xuất hệ thống</span>
               </button>
             </div>
@@ -908,6 +969,12 @@ export default function SiderBarAdmin() {
           hover:bg-blue-500/80 active:bg-blue-600 transition-colors z-20
         "
         title="Kéo để thay đổi kích thước sidebar"
+      />
+
+      {/* 5. Two-Factor Authentication Modal */}
+      <TwoFactorSecurityModal
+        isOpen={isOpen2FAModal}
+        onClose={() => setIsOpen2FAModal(false)}
       />
     </aside>
   );

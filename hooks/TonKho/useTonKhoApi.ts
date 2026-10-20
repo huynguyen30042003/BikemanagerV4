@@ -7,6 +7,7 @@ import {
   getTonKhoApi,
   getTonKhoDetailApi,
   updateDinhMucTonKhoApi,
+  getTonKhoKPIApi,
 } from "@/shared/api/TonKho";
 import { GiaoDichFilter, TonKhoFilter, UpdateDinhMucPayload } from "@/types/tonKho";
 
@@ -18,7 +19,19 @@ export const TON_KHO_QUERY_KEYS = {
     [...TON_KHO_QUERY_KEYS.all, "detail", khoId, bienTheId] as const,
   giaoDichs: (params: GiaoDichFilter) =>
     [...TON_KHO_QUERY_KEYS.all, "giaoDichs", params] as const,
+  kpi: () => [...TON_KHO_QUERY_KEYS.all, "kpi"] as const,
 };
+
+export const useGetTonKhoKPI = () => {
+  return useQuery({
+    queryKey: TON_KHO_QUERY_KEYS.kpi(),
+    queryFn: () => getTonKhoKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
 
 export const useGetTonKho = (params: TonKhoFilter) => {
   return useQuery({
@@ -52,6 +65,7 @@ export const useUpdateDinhMucTonKho = () => {
     mutationFn: (payload: UpdateDinhMucPayload) => updateDinhMucTonKhoApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TON_KHO_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: TON_KHO_QUERY_KEYS.kpi() });
       toast.success("Cập nhật định mức tồn kho & vị trí lưu trữ thành công!");
     },
     onError: (error: Error) => {
@@ -67,4 +81,7 @@ export const useGetLoChiPhiTonKho = (params: { KhoID?: string | null; BienTheSan
     enabled: true,
   });
 };
+
+export { useGetWarehouseNavTabs } from "../Kho/useKhoApi";
+
 

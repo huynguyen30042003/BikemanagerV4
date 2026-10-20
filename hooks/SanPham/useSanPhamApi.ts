@@ -8,11 +8,13 @@ import {
   getProductNavTabsApi,
   getSanPhamApi,
   getSanPhamByIdApi,
+  getSanPhamKPIApi,
   updateSanPhamApi,
 } from "@/shared/api/SanPham";
 import {
   CreateSanPhamPayload,
   SanPhamFilter,
+  SanPhamKPI,
   UpdateSanPhamPayload,
 } from "@/types/sanPham";
 
@@ -22,6 +24,7 @@ export const SAN_PHAM_QUERY_KEYS = {
   list: (params: SanPhamFilter) => [...SAN_PHAM_QUERY_KEYS.lists(), params] as const,
   details: () => [...SAN_PHAM_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...SAN_PHAM_QUERY_KEYS.details(), id] as const,
+  kpi: () => [...SAN_PHAM_QUERY_KEYS.all, "kpi"] as const,
   navTabs: () => ["productNavTabs"] as const,
 };
 
@@ -43,6 +46,18 @@ export const useGetSanPham = (params: SanPhamFilter) => {
   });
 };
 
+export const useGetSanPhamKPI = () => {
+  return useQuery({
+    queryKey: SAN_PHAM_QUERY_KEYS.kpi(),
+    queryFn: async () => {
+      const res = await getSanPhamKPIApi();
+      return (res?.data ?? res) as SanPhamKPI;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+  });
+};
+
 export const useGetSanPhamById = (id?: string) => {
   return useQuery({
     queryKey: SAN_PHAM_QUERY_KEYS.detail(id || ""),
@@ -57,7 +72,7 @@ export const useCreateSanPham = () => {
   return useMutation({
     mutationFn: (payload: CreateSanPhamPayload) => createSanPhamApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.navTabs() });
       toast.success("Thêm mới sản phẩm thành công!");
     },
@@ -73,7 +88,7 @@ export const useUpdateSanPham = () => {
   return useMutation({
     mutationFn: (payload: UpdateSanPhamPayload) => updateSanPhamApi(payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.navTabs() });
       queryClient.invalidateQueries({
         queryKey: SAN_PHAM_QUERY_KEYS.detail(variables.SanPhamID),
@@ -92,7 +107,7 @@ export const useDeleteSanPham = () => {
   return useMutation({
     mutationFn: (id: string) => deleteSanPhamApi(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: SAN_PHAM_QUERY_KEYS.navTabs() });
       toast.success("Xóa sản phẩm thành công!");
     },

@@ -1,7 +1,7 @@
 import api from "..";
 import { APP_URL } from "../../constants/apiConstants";
 import { getAccessToken } from "@/lib/auth";
-import { GiaoDichFilter, TonKhoFilter, UpdateDinhMucPayload } from "@/types/tonKho";
+import { GiaoDichFilter, TonKhoFilter, UpdateDinhMucPayload, KHO_TonKhoKPI } from "@/types/tonKho";
 
 const getAuthHeaders = () => {
   const token = getAccessToken();
@@ -122,3 +122,28 @@ export const getLoChiPhiTonKhoApi = async (
 
   return response.data;
 };
+
+/**
+ * Lấy số liệu thống kê KPI Tồn kho
+ * POST /api/TonKhoApi/GetKPI
+ */
+export const getTonKhoKPIApi = async (): Promise<KHO_TonKhoKPI> => {
+  try {
+    const res = await api.post(
+      `${APP_URL}/TonKhoApi/GetKPI`,
+      {},
+      {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      }
+    );
+    return res.data?.data ?? res.data;
+  } catch {
+    const res = await api.get(`${APP_URL}/TonKhoApi/GetKPI`, {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    });
+    return res.data?.data ?? res.data;
+  }
+};
+

@@ -12,6 +12,9 @@ import {
   AddLichSuThanhToanSuaChuaPayload,
   ThanhToanSuaChuaPayload,
   SC_LichSuThanhToan,
+  DV_ServiceNavTabs,
+  SC_DichVuKPI,
+  SC_PhieuSuaChuaKPI,
 } from "@/types/suaChua";
 
 const getAuthHeaders = () => {
@@ -214,3 +217,78 @@ export const deletePhieuSuaChuaApi = async (id: string) => {
   });
   return response.data;
 };
+
+/**
+ * Lấy số lượng thống kê tabs Dịch vụ, Sửa chữa & Bảo hành
+ * POST /api/DichVuApi/NavTabs
+ */
+export const getServiceNavTabsApi = async (): Promise<DV_ServiceNavTabs> => {
+  const endpoints = [
+    `${APP_URL}/DichVuApi/NavTabs`,
+    `${APP_URL}/BaoHanhApi/NavTabs`,
+    `${APP_URL}/PhieuBaoHanhApi/NavTabs`,
+    `${APP_URL}/PhieuSuaChuaApi/NavTabs`,
+    `/api/v1/DichVuApi/NavTabs`,
+    `/api/DichVuApi/NavTabs`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.post(
+        url,
+        {},
+        {
+          headers: getAuthHeaders(),
+          withCredentials: true,
+        }
+      );
+      if (response?.data) {
+        return response.data?.data ?? response.data;
+      }
+    } catch {
+      try {
+        const response = await api.get(url, {
+          headers: getAuthHeaders(),
+          withCredentials: true,
+        });
+        if (response?.data) {
+          return response.data?.data ?? response.data;
+        }
+      } catch {
+        // Thử endpoint tiếp theo
+      }
+    }
+  }
+
+  const fallback = await api.post(
+    `${APP_URL}/DichVuApi/NavTabs`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+  return fallback.data?.data ?? fallback.data;
+};
+
+/** Gọi KPI (backend chỉ hỗ trợ POST) */
+const fetchKPI = async <T,>(path: string): Promise<T> => {
+  const res = await api.post(`${APP_URL}${path}`, {}, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
+  return (res.data?.data ?? res.data) as T;
+};
+
+/**
+ * KPI Danh mục dịch vụ sửa chữa
+ * POST /api/DichVuApi/GetKPI
+ */
+export const getDichVuKPIApi = () => fetchKPI<SC_DichVuKPI>("/DichVuApi/GetKPI");
+
+/**
+ * KPI Phiếu sửa chữa
+ * POST /api/PhieuSuaChuaApi/GetKPI
+ */
+export const getPhieuSuaChuaKPIApi = () =>
+  fetchKPI<SC_PhieuSuaChuaKPI>("/PhieuSuaChuaApi/GetKPI");

@@ -166,3 +166,38 @@ export interface ThanhToanSuaChuaPayload {
 }
 
 export type AddLichSuThanhToanSuaChuaPayload = ThanhToanSuaChuaPayload;
+
+export interface DV_ServiceNavTabs {
+  total_BaoHanh?: number;
+  total_PhieuBaoHanh?: number;
+  total_PhieuSuaChua?: number;
+  total_DichVu?: number;
+  // Aliases hỗ trợ linh hoạt
+  totalBaoHanh?: number;
+  totalPhieuBaoHanh?: number;
+  totalPhieuSuaChua?: number;
+  totalDichVu?: number;
+}
+
+export type ServiceNavTabsData = DV_ServiceNavTabs;
+
+/** POST/GET /api/DichVuApi/GetKPI */
+export interface SC_DichVuKPI {
+  total_DichVu?: number;
+  total_DangKinhDoanh?: number;
+  total_NgungKinhDoanh?: number;
+  total_CoKhuyenMai?: number;
+  avg_GiaTienCong?: number;
+  avg_ThoiGianPhut?: number;
+}
+
+/** POST/GET /api/PhieuSuaChuaApi/GetKPI */
+export interface SC_PhieuSuaChuaKPI {
+  total_PhieuSuaChua?: number;
+  total_DangXuLy?: number;
+  total_HoanThanh?: number;
+  total_DoanhThu?: number;
+  total_DaThanhToan?: number;
+  total_ConNo?: number;
+  total_PhieuConNo?: number;
+}

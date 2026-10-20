@@ -1,11 +1,12 @@
 import api from "@/shared/api";
-import { APP_URL } from "@/shared/constants/apiConstants";
+import { APP_URL, BE_URL } from "@/shared/constants/apiConstants";
 import { getAccessToken } from "@/lib/auth";
 import {
   NH_NhaCungCap,
   NhaCungCapFilter,
   CreateNhaCungCapPayload,
   UpdateNhaCungCapPayload,
+  NH_PurchaseNavTabs,
 } from "@/types/nhaCungCap";
 
 const getAuthHeaders = () => {
@@ -14,6 +15,7 @@ const getAuthHeaders = () => {
     Authorization: token ? `Bearer ${token}` : "",
   };
 };
+
 
 /**
  * Lấy danh sách nhà cung cấp (phân trang, lọc quốc gia, công nợ, tìm kiếm)
@@ -102,3 +104,73 @@ export const deleteNhaCungCapApi = async (id: string) => {
   );
   return response.data;
 };
+
+/**
+ * Lấy số liệu KPI tổng quan nhà cung cấp
+ * POST /api/NhaCungCapApi/GetKPI
+ */
+export const getNhaCungCapKPIApi = async () => {
+  const response = await api.post(
+    `${APP_URL}/NhaCungCapApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+  return response.data;
+};
+
+/**
+ * Lấy số lượng thống kê cho các tabs nhập hàng (Nhà cung cấp, Đơn nhập hàng & Nhập kho)
+ * POST /api/v1/NhaCungCapApi/NavTabs
+ */
+export const getPurchaseNavTabsApi = async (): Promise<NH_PurchaseNavTabs> => {
+  const endpoints = [
+    `${BE_URL}/api/v1/NhaCungCapApi/NavTabs`,
+    `${APP_URL}/NhaCungCapApi/NavTabs`,
+    `${APP_URL}/DonNhapHangApi/NavTabs`,
+    `/api/v1/NhaCungCapApi/NavTabs`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.post(
+        url,
+        {},
+        {
+          headers: getAuthHeaders(),
+          withCredentials: true,
+        }
+      );
+      if (response?.data) {
+        return response.data?.data ?? response.data;
+      }
+    } catch {
+      try {
+        const response = await api.get(url, {
+          headers: getAuthHeaders(),
+          withCredentials: true,
+        });
+        if (response?.data) {
+          return response.data?.data ?? response.data;
+        }
+      } catch {
+        // Thử endpoint tiếp theo
+      }
+    }
+  }
+
+  const fallback = await api.post(
+    `${BE_URL}/api/v1/NhaCungCapApi/NavTabs`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+  return fallback.data?.data ?? fallback.data;
+};
+
+
+

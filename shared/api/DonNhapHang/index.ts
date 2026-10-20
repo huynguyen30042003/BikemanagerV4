@@ -1,5 +1,5 @@
 import api from "@/shared/api";
-import { APP_URL } from "@/shared/constants/apiConstants";
+import { APP_URL, BE_URL } from "@/shared/constants/apiConstants";
 import { getAccessToken } from "@/lib/auth";
 import {
   NH_DonNhapHang,
@@ -169,3 +169,51 @@ export const addLichSuThanhToanDonNhapApi = async (payload: ThanhToanDonNhapPayl
   );
   return response.data;
 };
+
+/**
+ * Lấy dữ liệu KPI thống kê đơn nhập hàng
+ * POST /api/DonNhapHangApi/GetKPI
+ */
+export const getDonNhapHangKPIApi = async () => {
+  const endpoints = [
+    `${APP_URL}/DonNhapHangApi/GetKPI`,
+    `${BE_URL}/api/v1/DonNhapHangApi/GetKPI`,
+    `/api/DonNhapHangApi/GetKPI`,
+    `/api/v1/DonNhapHangApi/GetKPI`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const response = await api.post(
+        url,
+        {},
+        {
+          headers: getAuthHeaders(),
+          withCredentials: true,
+        }
+      );
+      if (response?.data) return response.data;
+    } catch {
+      try {
+        const response = await api.get(url, {
+          headers: getAuthHeaders(),
+          withCredentials: true,
+        });
+        if (response?.data) return response.data;
+      } catch {
+        // Thử endpoint tiếp theo
+      }
+    }
+  }
+
+  const fallback = await api.post(
+    `${APP_URL}/DonNhapHangApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+  return fallback.data;
+};
+

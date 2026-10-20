@@ -7,6 +7,7 @@ import {
   deletePhuongTienApi,
   getPhuongTienByIdApi,
   getPhuongTienKhachHangApi,
+  getPhuongTienKhachHangKPIApi,
   updatePhuongTienApi,
 } from "@/shared/api/PhuongTienKhachHang";
 import {
@@ -17,6 +18,7 @@ import {
 
 export const PHUONG_TIEN_QUERY_KEYS = {
   all: ["phuongTienKhachHang"] as const,
+  kpi: () => [...PHUONG_TIEN_QUERY_KEYS.all, "kpi"] as const,
   lists: () => [...PHUONG_TIEN_QUERY_KEYS.all, "list"] as const,
   list: (params: PhuongTienFilter) => [...PHUONG_TIEN_QUERY_KEYS.lists(), params] as const,
   details: () => [...PHUONG_TIEN_QUERY_KEYS.all, "detail"] as const,
@@ -32,6 +34,15 @@ export const useGetPhuongTienKhachHang = (params: PhuongTienFilter) => {
   });
 };
 
+export const useGetPhuongTienKhachHangKPI = () => {
+  return useQuery({
+    queryKey: PHUONG_TIEN_QUERY_KEYS.kpi(),
+    queryFn: () => getPhuongTienKhachHangKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+  });
+};
+
 export const useGetPhuongTienById = (id?: string) => {
   return useQuery({
     queryKey: PHUONG_TIEN_QUERY_KEYS.detail(id || ""),
@@ -40,13 +51,14 @@ export const useGetPhuongTienById = (id?: string) => {
   });
 };
 
+
 export const useCreatePhuongTien = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: CreatePhuongTienPayload) => createPhuongTienApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PHUONG_TIEN_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: PHUONG_TIEN_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["khachHangNavTabs"] });
       toast.success("Thêm mới phương tiện xe của khách thành công!");
     },
@@ -62,7 +74,7 @@ export const useUpdatePhuongTien = () => {
   return useMutation({
     mutationFn: (payload: UpdatePhuongTienPayload) => updatePhuongTienApi(payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: PHUONG_TIEN_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: PHUONG_TIEN_QUERY_KEYS.all });
       queryClient.invalidateQueries({
         queryKey: PHUONG_TIEN_QUERY_KEYS.detail(variables.ID),
       });
@@ -81,7 +93,7 @@ export const useDeletePhuongTien = () => {
   return useMutation({
     mutationFn: (id: string) => deletePhuongTienApi(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PHUONG_TIEN_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: PHUONG_TIEN_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["khachHangNavTabs"] });
       toast.success("Xóa phương tiện thành công!");
     },
@@ -90,3 +102,4 @@ export const useDeletePhuongTien = () => {
     },
   });
 };
+

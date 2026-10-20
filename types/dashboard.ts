@@ -103,3 +103,9 @@ export interface DashboardApiResponse {
   message?: string;
   data: DashboardOverviewData;
 }
+
+// Aliases for compatibility
+export type DashboardKPI = DashboardKpi;
+export type DashboardKpiDto = DashboardKpi;
+export type DashboardOverviewResponse = DashboardOverviewData;
+export type DashboardTongQuanDto = DashboardOverviewData;

@@ -7,6 +7,7 @@ import {
   CreatePhieuKiemKePayload,
   HuyKiemKePayload,
   PhieuKiemKeFilter,
+  KHO_PhieuKiemKeKPI,
 } from "@/types/phieuKiemKe";
 
 const getAuthHeaders = () => {
@@ -124,3 +125,28 @@ export const huyPhieuKiemKeApi = async (payload: HuyKiemKePayload) => {
 
   return response.data;
 };
+
+/**
+ * Lấy số liệu thống kê KPI Phiếu kiểm kê kho
+ * POST /api/PhieuKiemKeApi/GetKPI
+ */
+export const getPhieuKiemKeKPIApi = async (): Promise<KHO_PhieuKiemKeKPI> => {
+  try {
+    const res = await api.post(
+      `${APP_URL}/PhieuKiemKeApi/GetKPI`,
+      {},
+      {
+        headers: getAuthHeaders(),
+        withCredentials: true,
+      }
+    );
+    return res.data?.data ?? res.data;
+  } catch {
+    const res = await api.get(`${APP_URL}/PhieuKiemKeApi/GetKPI`, {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    });
+    return res.data?.data ?? res.data;
+  }
+};
+

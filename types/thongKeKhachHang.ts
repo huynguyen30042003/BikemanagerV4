@@ -31,3 +31,12 @@ export interface UpdateThongKeKhachHangPayload {
   DiemTichLuy: number;
   CongNoHienTai: number;
 }
+
+export interface ThongKeKhachHangKPI {
+  total_ThongKeKhachHang: number;
+  total_HoiVienVip: number;
+  total_TongTienDaChi: number;
+  total_CongNoHienTai: number;
+  total_KhachCoCongNo: number;
+}
+

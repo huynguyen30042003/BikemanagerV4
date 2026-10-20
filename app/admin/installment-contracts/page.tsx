@@ -23,6 +23,7 @@ import {
   getTrangThaiHopDongBadge,
   getTrangThaiGiaiNganBadge,
 } from "@/hooks/TraGop/useTraGop";
+import { useGetTraGopKPI } from "@/hooks/TraGop/useTraGopApi";
 
 import { HopDongTraGop } from "@/types/traGop";
 import {
@@ -53,6 +54,8 @@ function formatCurrency(val: number | null | undefined): string {
 }
 
 function InstallmentContractsContent() {
+  const { data: contractKpi, isLoading: isLoadingKPI } = useGetTraGopKPI();
+
   const {
     page,
     setPage,
@@ -337,9 +340,90 @@ function InstallmentContractsContent() {
         </div>
 
         <div className="pt-2">
-          <InstallmentNavTabs activeTab="contracts" totalContracts={totalCount} />
+          <InstallmentNavTabs
+            activeTab="contracts"
+            totalContracts={contractKpi?.total_HopDongTraGop ?? contractKpi?.totalHopDongTraGop ?? totalCount}
+          />
         </div>
 
+      </div>
+
+      {/* 2. KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          {
+            title: "Tổng hợp đồng",
+            value: contractKpi?.total_HopDongTraGop ?? contractKpi?.totalHopDongTraGop ?? totalCount,
+            subtext: "Hồ sơ vay trong hệ thống",
+            icon: CreditCard,
+            color: "text-foreground",
+            iconColor: "text-blue-600",
+            bg: "bg-blue-500/10",
+          },
+          {
+            title: "Chờ thẩm định",
+            value: contractKpi?.total_ChoDuyet ?? contractKpi?.totalChoDuyet ?? 0,
+            subtext: "Chờ đối tác duyệt hồ sơ",
+            icon: Clock,
+            color: "text-amber-600 dark:text-amber-400",
+            iconColor: "text-amber-600",
+            bg: "bg-amber-500/10",
+          },
+          {
+            title: "Đã duyệt vay",
+            value: contractKpi?.total_DaDuyet ?? contractKpi?.totalDaDuyet ?? 0,
+            subtext: "Đủ điều kiện nhận xe",
+            icon: CheckCircle2,
+            color: "text-emerald-600 dark:text-emerald-400",
+            iconColor: "text-emerald-600",
+            bg: "bg-emerald-500/10",
+          },
+          {
+            title: "Đã giải ngân",
+            value: contractKpi?.total_DaGiaiNgan ?? contractKpi?.totalDaGiaiNgan ?? 0,
+            subtext: "Tiền đã về shop",
+            icon: BadgeCheck,
+            color: "text-indigo-600 dark:text-indigo-400",
+            iconColor: "text-indigo-600",
+            bg: "bg-indigo-500/10",
+          },
+          {
+            title: "Tổng tiền vay",
+            value: formatCurrency(contractKpi?.total_TongSoTienVay ?? contractKpi?.totalTongSoTienVay ?? 0),
+            subtext: "Tổng hạn mức đề nghị",
+            icon: DollarSign,
+            color: "text-blue-600 dark:text-blue-400",
+            iconColor: "text-blue-600",
+            bg: "bg-blue-500/10",
+            isCurrency: true,
+          },
+          {
+            title: "Giải ngân thực tế",
+            value: formatCurrency(contractKpi?.total_SoTienGiaiNganThucTe ?? contractKpi?.totalSoTienGiaiNganThucTe ?? 0),
+            subtext: "Thực nhận sau phí",
+            icon: DollarSign,
+            color: "text-emerald-600 dark:text-emerald-400",
+            iconColor: "text-emerald-600",
+            bg: "bg-emerald-500/10",
+            isCurrency: true,
+          },
+        ].map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <Card key={idx} className="p-3.5 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground truncate">{card.title}</span>
+                <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center shrink-0`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div className={`font-bold mt-2 truncate ${card.isCurrency ? "text-base lg:text-lg" : "text-2xl"} ${card.color}`}>
+                {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{card.subtext}</p>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Filter Toolbar */}

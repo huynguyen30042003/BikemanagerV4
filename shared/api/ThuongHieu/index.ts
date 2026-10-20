@@ -144,3 +144,20 @@ export const deleteThuongHieuApi = async (id: string) => {
 
   return response.data;
 };
+
+/**
+ * Lấy số liệu KPI tổng quan thương hiệu
+ * POST /api/ThuongHieuApi/GetKPI
+ */
+export const getThuongHieuKPIApi = async () => {
+  const response = await api.post(
+    `${APP_URL}/ThuongHieuApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};

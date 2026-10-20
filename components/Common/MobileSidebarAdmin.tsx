@@ -21,7 +21,9 @@ import {
   LogOut,
   RefreshCw,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react";
+import TwoFactorSecurityModal from "./TwoFactorSecurityModal";
 
 export function MobileSidebarAdmin() {
   const pathname = usePathname();
@@ -32,12 +34,18 @@ export function MobileSidebarAdmin() {
   const [isOpen, setIsOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isOpen2FAModal, setIsOpen2FAModal] = useState(false);
 
   // Hợp nhất dữ liệu user
   const currentUser = user || tokenUser;
-  const userRoles = useMemo(() => currentUser?.roles ?? [], [currentUser?.roles]);
-  const activeRole = userRoles.length > 0 ? userRoles[0] : (primaryTokenRole || "Quản trị viên");
-  const displayName = currentUser?.fullName || currentUser?.username || "Quản trị viên";
+  const userRoles = useMemo(
+    () => currentUser?.roles ?? [],
+    [currentUser?.roles],
+  );
+  const activeRole =
+    userRoles.length > 0 ? userRoles[0] : primaryTokenRole || "Quản trị viên";
+  const displayName =
+    currentUser?.fullName || currentUser?.username || "Quản trị viên";
   const userInitials = getUserInitials(displayName);
 
   // Lọc MENU_SECTIONS theo role của user
@@ -55,7 +63,7 @@ export function MobileSidebarAdmin() {
 
           if (group.items && group.items.length > 0) {
             const visibleItems = group.items.filter((item) =>
-              hasRequiredRole(item.roles, userRoles)
+              hasRequiredRole(item.roles, userRoles),
             );
             if (visibleItems.length === 0) return null;
 
@@ -85,7 +93,10 @@ export function MobileSidebarAdmin() {
 
     filteredSections.forEach((section) => {
       section.groups.forEach((group) => {
-        if (group.items && group.items.some((item) => pathname.startsWith(item.href))) {
+        if (
+          group.items &&
+          group.items.some((item) => pathname.startsWith(item.href))
+        ) {
           if (!newOpenGroups[group.title]) {
             newOpenGroups[group.title] = true;
             hasChanges = true;
@@ -184,7 +195,7 @@ export function MobileSidebarAdmin() {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 p-1 pl-2 rounded-xl bg-muted/60 hover:bg-muted border border-border/70 transition-colors cursor-pointer group"
+          className="flex items-center gap-2 p-1 rounded-xl bg-muted/60 hover:bg-muted border border-border/70 transition-colors cursor-pointer group"
           title={`Đang đăng nhập: ${displayName}`}
         >
           <span className="text-xs font-semibold text-foreground max-w-[100px] truncate hidden xs:inline-block">
@@ -222,7 +233,13 @@ export function MobileSidebarAdmin() {
                 className="flex items-center gap-2.5"
               >
                 <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 flex items-center justify-center border border-blue-500/25 shadow-xs">
-                  <Image src={bike} alt="logo" width={22} height={22} priority />
+                  <Image
+                    src={bike}
+                    alt="logo"
+                    width={22}
+                    height={22}
+                    priority
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
@@ -267,6 +284,16 @@ export function MobileSidebarAdmin() {
                     </span>
                   </div>
                 </div>
+
+                {/* Nút Cài đặt Bật/Tắt 2FA SMS */}
+                {/* <button
+                  type="button"
+                  onClick={() => setIsOpen2FAModal(true)}
+                  className="w-8 h-8 rounded-lg text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 border border-border/70 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                  title="Bật / Tắt tính năng xác thực 2 bước (2FA SMS)"
+                >
+                  <KeyRound className="w-4 h-4" />
+                </button> */}
               </div>
             </div>
 
@@ -283,7 +310,9 @@ export function MobileSidebarAdmin() {
                       const Icon = group.icon;
                       const hasItems = group.items && group.items.length > 0;
                       const isGroupActive = hasItems
-                        ? group.items!.some((item) => pathname.startsWith(item.href))
+                        ? group.items!.some((item) =>
+                            pathname.startsWith(item.href),
+                          )
                         : pathname === group.href;
                       const isExpanded = Boolean(openGroups[group.title]);
 
@@ -347,7 +376,9 @@ export function MobileSidebarAdmin() {
                                     }`}
                                   >
                                     <SubIcon className="w-3.5 h-3.5 shrink-0" />
-                                    <span className="truncate">{subItem.title}</span>
+                                    <span className="truncate">
+                                      {subItem.title}
+                                    </span>
                                   </Link>
                                 );
                               })}
@@ -374,7 +405,9 @@ export function MobileSidebarAdmin() {
                 ) : (
                   <LogOut className="w-3.5 h-3.5" />
                 )}
-                <span>{isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất tài khoản"}</span>
+                <span>
+                  {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất tài khoản"}
+                </span>
               </button>
 
               <div className="text-[10px] text-center text-muted-foreground/60 font-mono">
@@ -384,6 +417,12 @@ export function MobileSidebarAdmin() {
           </div>
         </div>
       )}
+
+      {/* Modal Cài đặt Xác thực 2 bước (2FA SMS) */}
+      <TwoFactorSecurityModal
+        isOpen={isOpen2FAModal}
+        onClose={() => setIsOpen2FAModal(false)}
+      />
     </>
   );
 }

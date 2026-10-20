@@ -11,6 +11,8 @@ import {
   updatePhieuBaoHanhApi,
   chuyenTrangThaiPhieuBaoHanhApi,
   deletePhieuBaoHanhApi,
+  getBaoHanhKPIApi,
+  getPhieuBaoHanhKPIApi,
 } from "@/shared/api/BaoHanh";
 import {
   BaoHanhFilter,
@@ -26,6 +28,30 @@ export const BAO_HANH_KEYS = {
   phieuBaoHanhAll: ["phieu-bao-hanh"] as const,
   phieuBaoHanhList: (f: PhieuBaoHanhFilter) => [...BAO_HANH_KEYS.phieuBaoHanhAll, "list", f] as const,
   phieuBaoHanhDetail: (id: string) => [...BAO_HANH_KEYS.phieuBaoHanhAll, "detail", id] as const,
+  // KPI nằm dưới prefix *All → mọi mutation invalidate *All sẽ tự làm mới KPI
+  soBaoHanhKpi: () => [...BAO_HANH_KEYS.soBaoHanhAll, "kpi"] as const,
+  phieuBaoHanhKpi: () => [...BAO_HANH_KEYS.phieuBaoHanhAll, "kpi"] as const,
+};
+
+/* ===== KPI ===== */
+export const useGetBaoHanhKPI = () => {
+  return useQuery({
+    queryKey: BAO_HANH_KEYS.soBaoHanhKpi(),
+    queryFn: () => getBaoHanhKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useGetPhieuBaoHanhKPI = () => {
+  return useQuery({
+    queryKey: BAO_HANH_KEYS.phieuBaoHanhKpi(),
+    queryFn: () => getPhieuBaoHanhKPIApi(),
+    placeholderData: (prev) => prev,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
 };
 
 /* ===== Sổ bảo hành ===== */
@@ -49,7 +75,10 @@ export const useCreateBaoHanh = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateBaoHanhPayload) => createBaoHanhApi(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: BAO_HANH_KEYS.soBaoHanhAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: BAO_HANH_KEYS.soBaoHanhAll });
+      qc.invalidateQueries({ queryKey: ["serviceNavTabs"] });
+    },
   });
 };
 
@@ -66,7 +95,10 @@ export const useDeleteBaoHanh = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteBaoHanhApi(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: BAO_HANH_KEYS.soBaoHanhAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: BAO_HANH_KEYS.soBaoHanhAll });
+      qc.invalidateQueries({ queryKey: ["serviceNavTabs"] });
+    },
   });
 };
 
@@ -91,7 +123,10 @@ export const useCreatePhieuBaoHanh = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreatePhieuBaoHanhPayload) => createPhieuBaoHanhApi(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: BAO_HANH_KEYS.phieuBaoHanhAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: BAO_HANH_KEYS.phieuBaoHanhAll });
+      qc.invalidateQueries({ queryKey: ["serviceNavTabs"] });
+    },
   });
 };
 
@@ -117,6 +152,12 @@ export const useDeletePhieuBaoHanh = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deletePhieuBaoHanhApi(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: BAO_HANH_KEYS.phieuBaoHanhAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: BAO_HANH_KEYS.phieuBaoHanhAll });
+      qc.invalidateQueries({ queryKey: ["serviceNavTabs"] });
+    },
   });
 };
+
+export { useGetServiceNavTabs } from "../SuaChua/useSuaChuaApi";
+

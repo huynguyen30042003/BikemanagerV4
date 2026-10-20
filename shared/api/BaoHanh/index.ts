@@ -8,6 +8,8 @@ import {
   BH_PhieuBaoHanh,
   PhieuBaoHanhFilter,
   CreatePhieuBaoHanhPayload,
+  BH_BaoHanhKPI,
+  BH_PhieuBaoHanhKPI,
 } from "@/types/baoHanh";
 
 const getAuthHeaders = () => {
@@ -180,3 +182,27 @@ export const deletePhieuBaoHanhApi = async (id: string) => {
   });
   return response.data;
 };
+
+export { getServiceNavTabsApi } from "../SuaChua";
+
+/** Gọi KPI (backend chỉ hỗ trợ POST) */
+const fetchKPI = async <T,>(path: string): Promise<T> => {
+  const res = await api.post(`${APP_URL}${path}`, {}, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
+  return (res.data?.data ?? res.data) as T;
+};
+
+/**
+ * KPI Sổ bảo hành điện tử
+ * POST /api/BaoHanhApi/GetKPI
+ */
+export const getBaoHanhKPIApi = () => fetchKPI<BH_BaoHanhKPI>("/BaoHanhApi/GetKPI");
+
+/**
+ * KPI Phiếu tiếp nhận bảo hành
+ * POST /api/BaoHanhApi/GetPhieuBaoHanhKPI
+ */
+export const getPhieuBaoHanhKPIApi = () =>
+  fetchKPI<BH_PhieuBaoHanhKPI>("/BaoHanhApi/GetPhieuBaoHanhKPI");

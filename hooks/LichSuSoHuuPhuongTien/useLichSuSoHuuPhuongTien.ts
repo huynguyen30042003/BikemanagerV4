@@ -10,6 +10,7 @@ import {
 import { useDebounceSearch } from "../useDebounceSearch";
 import {
   useGetLichSuSoHuu,
+  useGetLichSuSoHuuKPI,
   useChuyenQuyenSoHuu,
 } from "./useLichSuSoHuuPhuongTienApi";
 import { useGetPhuongTienKhachHang } from "../PhuongTienKhachHang/usePhuongTienKhachHangApi";
@@ -92,6 +93,12 @@ export function useLichSuSoHuuPhuongTien(initialPhuongTienId?: string, initialKh
   }, [vehicleFilter, customerFilter, searchTerm, page, pageSize]);
 
   const { data, isLoading, isFetching, refetch } = useGetLichSuSoHuu(queryParams);
+
+  const {
+    data: kpiData,
+    isLoading: isLoadingKPI,
+    refetch: refetchKPI,
+  } = useGetLichSuSoHuuKPI();
 
   const rawItems: KH_LichSuSoHuuPhuongTien[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
@@ -179,6 +186,10 @@ export function useLichSuSoHuuPhuongTien(initialPhuongTienId?: string, initialKh
     isLoading,
     isFetching,
     refetch,
+
+    kpiData,
+    isLoadingKPI,
+    refetchKPI,
 
     openTransfer,
     setOpenTransfer,
