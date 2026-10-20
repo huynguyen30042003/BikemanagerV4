@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Tags,
   Plus,
@@ -16,7 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProductNavTabs } from "@/components/Common/ProductNavTabs";
 
-interface BrandsFilterBarProps {
+export type ViewMode = "grid" | "table";
+
+export interface BrandsFilterBarProps {
   totalThuongHieu: number;
   activeCount: number;
   inactiveCount: number;
@@ -24,8 +26,8 @@ interface BrandsFilterBarProps {
   onSearch: (val: string) => void;
   statusFilter: string;
   onStatusFilterChange: (val: string) => void;
-  viewMode: "grid" | "table";
-  onViewModeChange: (mode: "grid" | "table") => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
   onOpenAdd: () => void;
   onRefresh: () => void;
   isFetching: boolean;
@@ -52,6 +54,49 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
   hasActiveFilters,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Cấu hình danh sách trạng thái lọc để dùng .map() cho cả Desktop và Mobile
+  const statusOptions = useMemo(
+    () => [
+      {
+        id: "all",
+        label: "Tất cả",
+        count: totalThuongHieu,
+        desktopActiveClass:
+          "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold",
+        mobileActiveClass:
+          "bg-blue-500/10 border-blue-500/30 text-blue-600 font-semibold",
+      },
+      {
+        id: "active",
+        label: "Sử dụng",
+        count: activeCount,
+        desktopActiveClass:
+          "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold",
+        mobileActiveClass:
+          "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 font-semibold",
+      },
+      {
+        id: "inactive",
+        label: "Khóa",
+        count: inactiveCount,
+        desktopActiveClass:
+          "bg-background shadow-xs text-zinc-700 dark:text-zinc-300 font-semibold",
+        mobileActiveClass:
+          "bg-zinc-500/10 border-zinc-500/30 text-zinc-700 dark:text-zinc-300 font-semibold",
+      },
+    ],
+    [totalThuongHieu, activeCount, inactiveCount]
+  );
+
+  // Cấu hình các chế độ hiển thị (Grid / Table) để dùng .map()
+  const viewModeOptions = useMemo(
+    () => [
+      { id: "grid" as const, title: "Chế độ xem lưới", icon: LayoutGrid },
+      { id: "table" as const, title: "Chế độ xem bảng", icon: List },
+    ],
+    []
+  );
 
   return (
     <div className="space-y-4">
@@ -136,7 +181,7 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
             )}
           </div>
 
-          {/* Mobile Status Menu Button */}
+          {/* Mobile Status Menu Button & View Mode */}
           <div className="sm:hidden flex items-center justify-between gap-2 pt-1 border-t border-border/40">
             <Button
               type="button"
@@ -153,150 +198,94 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
               <span>Lọc trạng thái</span>
             </Button>
 
-            {/* View Mode on Mobile */}
+            {/* View Mode on Mobile (.map based) */}
             <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 shrink-0">
-              <button
-                type="button"
-                onClick={() => onViewModeChange("grid")}
-                title="Chế độ xem lưới"
-                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                  viewMode === "grid"
-                    ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onViewModeChange("table")}
-                title="Chế độ xem bảng"
-                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                  viewMode === "table"
-                    ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
+              {viewModeOptions.map((mode) => {
+                const IconComponent = mode.icon;
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => onViewModeChange(mode.id)}
+                    title={mode.title}
+                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                      viewMode === mode.id
+                        ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Desktop Filter & Switcher Controls */}
           <div className="hidden sm:flex items-center gap-2">
-            {/* Status Filter Segment */}
+            {/* Status Filter Segment (.map based) */}
             <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
               <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("all")}
-                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "all"
-                    ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Tất cả ({totalThuongHieu})
-              </button>
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("active")}
-                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "active"
-                    ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Sử dụng ({activeCount})
-              </button>
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("inactive")}
-                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "inactive"
-                    ? "bg-background shadow-xs text-zinc-700 dark:text-zinc-300 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Khóa ({inactiveCount})
-              </button>
+              {statusOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => onStatusFilterChange(opt.id)}
+                  className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                    statusFilter === opt.id
+                      ? opt.desktopActiveClass
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {opt.label} ({opt.count})
+                </button>
+              ))}
             </div>
 
-            {/* View Mode Switcher */}
+            {/* View Mode Switcher (.map based) */}
             <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 shrink-0">
-              <button
-                type="button"
-                onClick={() => onViewModeChange("grid")}
-                title="Chế độ xem lưới thương hiệu"
-                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                  viewMode === "grid"
-                    ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onViewModeChange("table")}
-                title="Chế độ xem bảng dữ liệu"
-                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                  viewMode === "table"
-                    ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
+              {viewModeOptions.map((mode) => {
+                const IconComponent = mode.icon;
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => onViewModeChange(mode.id)}
+                    title={mode.title}
+                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                      viewMode === mode.id
+                        ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Mobile expanded status options */}
+        {/* Mobile expanded status options (.map based) */}
         {isMobileMenuOpen && (
           <div className="sm:hidden pt-2 border-t border-border/60 grid grid-cols-3 gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                onStatusFilterChange("all");
-                setIsMobileMenuOpen(false);
-              }}
-              className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all ${
-                statusFilter === "all"
-                  ? "bg-blue-500/10 border-blue-500/30 text-blue-600 font-semibold"
-                  : "border-border/60 bg-muted/40 text-muted-foreground"
-              }`}
-            >
-              Tất cả ({totalThuongHieu})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onStatusFilterChange("active");
-                setIsMobileMenuOpen(false);
-              }}
-              className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all ${
-                statusFilter === "active"
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 font-semibold"
-                  : "border-border/60 bg-muted/40 text-muted-foreground"
-              }`}
-            >
-              Sử dụng ({activeCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onStatusFilterChange("inactive");
-                setIsMobileMenuOpen(false);
-              }}
-              className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all ${
-                statusFilter === "inactive"
-                  ? "bg-zinc-500/10 border-zinc-500/30 text-zinc-700 dark:text-zinc-300 font-semibold"
-                  : "border-border/60 bg-muted/40 text-muted-foreground"
-              }`}
-            >
-              Khóa ({inactiveCount})
-            </button>
+            {statusOptions.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => {
+                  onStatusFilterChange(opt.id);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all ${
+                  statusFilter === opt.id
+                    ? opt.mobileActiveClass
+                    : "border-border/60 bg-muted/40 text-muted-foreground"
+                }`}
+              >
+                {opt.label} ({opt.count})
+              </button>
+            ))}
           </div>
         )}
 

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Users, User, Building2, CheckCircle2 } from "lucide-react";
-import { KpiRibbon, KpiItem } from "@/components/Common/KpiRibbon";
+import { Users, User, Building2, CheckCircle2, LucideIcon } from "lucide-react";
+import { KpiRibbon, KpiItem, KpiTone } from "@/components/Common/KpiRibbon";
 
 export interface CustomerKpiGridProps {
   totalKhachHang: number;
@@ -18,6 +18,18 @@ export interface CustomerKpiGridProps {
   isLoadingKPI: boolean;
 }
 
+interface RawKpiDef {
+  id: string;
+  title: string;
+  subtext: string;
+  value: React.ReactNode;
+  icon: LucideIcon;
+  tone: KpiTone;
+  compact?: boolean;
+  isActive: boolean;
+  onClick: () => void;
+}
+
 export const CustomerKpiGrid: React.FC<CustomerKpiGridProps> = ({
   totalKhachHang,
   totalCaNhan,
@@ -31,12 +43,14 @@ export const CustomerKpiGrid: React.FC<CustomerKpiGridProps> = ({
   isLoading,
   isLoadingKPI,
 }) => {
-  const kpiCards: KpiItem[] = useMemo(
+  // 1. Định nghĩa cấu hình 4 thẻ KPI khách hàng
+  const kpiDefinitions: RawKpiDef[] = useMemo(
     () => [
       {
+        id: "all",
         title: "Tổng số khách hàng",
-        value: totalKhachHang,
         subtext: "Đăng ký trong toàn hệ thống",
+        value: totalKhachHang.toLocaleString("vi-VN"),
         icon: Users,
         tone: "neutral",
         isActive: loaiFilter === "all" && statusFilter === "all",
@@ -47,9 +61,10 @@ export const CustomerKpiGrid: React.FC<CustomerKpiGridProps> = ({
         },
       },
       {
+        id: "individual",
         title: "Khách hàng Cá nhân",
-        value: totalCaNhan,
         subtext: "Người tiêu dùng cá nhân & mua lẻ",
+        value: totalCaNhan.toLocaleString("vi-VN"),
         icon: User,
         tone: "blue",
         isActive: loaiFilter === "1",
@@ -59,9 +74,10 @@ export const CustomerKpiGrid: React.FC<CustomerKpiGridProps> = ({
         },
       },
       {
+        id: "business",
         title: "Doanh nghiệp / Tổ chức",
-        value: totalToChuc,
         subtext: "Đối tác mua sỉ, công ty & đại lý",
+        value: totalToChuc.toLocaleString("vi-VN"),
         icon: Building2,
         tone: "indigo",
         isActive: loaiFilter === "2",
@@ -71,9 +87,10 @@ export const CustomerKpiGrid: React.FC<CustomerKpiGridProps> = ({
         },
       },
       {
+        id: "active",
         title: "Đang hoạt động",
-        value: totalHoatDong,
         subtext: "Được phép tạo đơn & bảo dưỡng",
+        value: totalHoatDong.toLocaleString("vi-VN"),
         icon: CheckCircle2,
         tone: "emerald",
         isActive: statusFilter === "active",
@@ -96,5 +113,22 @@ export const CustomerKpiGrid: React.FC<CustomerKpiGridProps> = ({
     ]
   );
 
-  return <KpiRibbon items={kpiCards} isLoading={isLoadingKPI && isLoading} />;
+  // 2. Dùng .map() chuyển đổi sang KpiItem chuẩn để nạp vào KpiRibbon
+  const kpiItems: KpiItem[] = useMemo(
+    () =>
+      kpiDefinitions.map((def) => ({
+        title: def.title,
+        value: def.value,
+        subtext: def.subtext,
+        icon: def.icon,
+        tone: def.tone,
+        compact: def.compact,
+        isActive: def.isActive,
+        onClick: def.onClick,
+      })),
+    [kpiDefinitions]
+  );
+
+  return <KpiRibbon items={kpiItems} isLoading={isLoadingKPI || isLoading} />;
 };
+

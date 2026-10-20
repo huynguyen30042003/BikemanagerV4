@@ -59,12 +59,91 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
   isLoadingKPI = false,
   onResetFilters,
 }) => {
-  // Mobile filter dropdown toggle per Section 14.3.1
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const hasActiveFilters = Boolean(
-    searchInput || tinhFilter || statusFilter !== "all"
-  );
+  // Status Filter Definitions mapped via .map()
+  const statusOptions = [
+    {
+      key: "all",
+      label: "Tất cả",
+      count: totalDiaDiem,
+      activeColor: "text-blue-600 dark:text-blue-400 font-semibold",
+      mobileActiveBg: "bg-blue-500/10 border-blue-500/30 text-blue-600 font-semibold",
+    },
+    {
+      key: "active",
+      label: "Hoạt động",
+      count: totalHoatDong,
+      activeColor: "text-emerald-600 dark:text-emerald-400 font-semibold",
+      mobileActiveBg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 font-semibold",
+    },
+    {
+      key: "inactive",
+      label: "Đóng",
+      count: totalNgungHoatDong,
+      activeColor: "text-slate-700 dark:text-slate-300 font-semibold",
+      mobileActiveBg: "bg-slate-500/15 border-slate-500/30 text-slate-700 font-semibold",
+    },
+  ];
+
+  // View Mode Definitions mapped via .map()
+  const viewModeOptions = [
+    {
+      key: "grid" as const,
+      label: "Lưới thẻ",
+      icon: LayoutGrid,
+      title: "Chế độ xem lưới thẻ (Showcase Grid)",
+    },
+    {
+      key: "table" as const,
+      label: "Bảng dữ liệu",
+      icon: List,
+      title: "Chế độ xem bảng chi tiết (Data Table)",
+    },
+  ];
+
+  // Active filter chips mapped via .map()
+  interface ActiveChip {
+    key: string;
+    label: string;
+    icon: React.ElementType;
+    colorClass: string;
+    onRemove: () => void;
+  }
+
+  const activeChips: ActiveChip[] = [];
+  if (searchInput) {
+    activeChips.push({
+      key: "search",
+      label: `Từ khóa: "${searchInput}"`,
+      icon: Search,
+      colorClass: "bg-muted text-foreground border-border/60",
+      onRemove: () => onSearch(""),
+    });
+  }
+  if (tinhFilter) {
+    activeChips.push({
+      key: "province",
+      label: `Tỉnh: ${currentProvinceName}`,
+      icon: Building2,
+      colorClass:
+        "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20 font-medium",
+      onRemove: () => onTinhFilterChange(""),
+    });
+  }
+  if (statusFilter !== "all") {
+    activeChips.push({
+      key: "status",
+      label: `Trạng thái: ${
+        statusFilter === "active" ? "Đang hoạt động" : "Đã đóng"
+      }`,
+      icon: Filter,
+      colorClass: "bg-muted text-foreground border-border/60",
+      onRemove: () => onStatusFilterChange("all"),
+    });
+  }
+
+  const hasActiveFilters = activeChips.length > 0;
 
   return (
     <div className="space-y-4">
@@ -170,7 +249,7 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
               variant="outline"
               size="sm"
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="h-8 px-2.5 gap-1.5 text-xs border-border/80"
+              className="h-8 px-2.5 gap-1.5 text-xs border-border/80 cursor-pointer"
             >
               {isMobileMenuOpen ? (
                 <X className="w-3.5 h-3.5" />
@@ -180,33 +259,28 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
               <span>Bộ lọc trạng thái</span>
             </Button>
 
-            {/* View Switcher on mobile */}
+            {/* View Switcher on mobile via .map() */}
             <div className="flex items-center gap-1.5">
               <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5">
-                <button
-                  type="button"
-                  onClick={() => onViewModeChange("grid")}
-                  className={`flex items-center justify-center w-7 h-7 rounded-md transition-all ${
-                    viewMode === "grid"
-                      ? "bg-background text-foreground shadow-2xs font-semibold"
-                      : "text-muted-foreground"
-                  }`}
-                  title="Xem dạng lưới"
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onViewModeChange("table")}
-                  className={`flex items-center justify-center w-7 h-7 rounded-md transition-all ${
-                    viewMode === "table"
-                      ? "bg-background text-foreground shadow-2xs font-semibold"
-                      : "text-muted-foreground"
-                  }`}
-                  title="Xem dạng bảng"
-                >
-                  <List className="w-3.5 h-3.5" />
-                </button>
+                {viewModeOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  const isActive = viewMode === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => onViewModeChange(opt.key)}
+                      title={opt.title}
+                      className={`flex items-center justify-center w-7 h-7 rounded-md transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-background text-foreground shadow-2xs font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                })}
               </div>
 
               <Button
@@ -214,7 +288,7 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
                 size="icon"
                 onClick={onRefresh}
                 disabled={isFetching || isLoadingKPI}
-                className="h-8 w-8"
+                className="h-8 w-8 cursor-pointer"
                 title="Tải lại"
               >
                 <RefreshCw
@@ -226,70 +300,49 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
 
           {/* Desktop Controls (hidden on mobile, visible on lg+) */}
           <div className="hidden lg:flex items-center gap-2 shrink-0">
-            {/* Status Segment Control */}
+            {/* Status Segment Control via .map() */}
             <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
               <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("all")}
-                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "all"
-                    ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Tất cả ({totalDiaDiem})
-              </button>
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("active")}
-                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "active"
-                    ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Hoạt động ({totalHoatDong})
-              </button>
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("inactive")}
-                className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                  statusFilter === "inactive"
-                    ? "bg-background shadow-xs text-slate-700 dark:text-slate-300 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Đóng ({totalNgungHoatDong})
-              </button>
+              {statusOptions.map((opt) => {
+                const isActive = statusFilter === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => onStatusFilterChange(opt.key)}
+                    className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                      isActive
+                        ? `bg-background shadow-xs ${opt.activeColor}`
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label} ({opt.count})
+                  </button>
+                );
+              })}
             </div>
 
-            {/* View Mode Switcher */}
+            {/* View Mode Switcher via .map() */}
             <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => onViewModeChange("grid")}
-                title="Chế độ xem lưới thẻ (Showcase Grid)"
-                className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
-                  viewMode === "grid"
-                    ? "bg-background text-foreground shadow-2xs font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onViewModeChange("table")}
-                title="Chế độ xem bảng chi tiết (Data Table)"
-                className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
-                  viewMode === "table"
-                    ? "bg-background text-foreground shadow-2xs font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
+              {viewModeOptions.map((opt) => {
+                const Icon = opt.icon;
+                const isActive = viewMode === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => onViewModeChange(opt.key)}
+                    title={opt.title}
+                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-background text-foreground shadow-2xs font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </button>
+                );
+              })}
             </div>
 
             {/* Reload Button */}
@@ -308,104 +361,61 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
           </div>
         </div>
 
-        {/* Khối bộ lọc mở rộng trên Mobile khi nhấn nút 3 gạch */}
+        {/* Khối bộ lọc mở rộng trên Mobile khi nhấn nút 3 gạch via .map() */}
         {isMobileMenuOpen && (
           <div className="lg:hidden pt-2 border-t border-border/60 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
             <span className="text-[11px] font-medium text-muted-foreground block">
               Trạng thái hoạt động:
             </span>
             <div className="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  onStatusFilterChange("all");
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all ${
-                  statusFilter === "all"
-                    ? "bg-blue-500/10 border-blue-500/30 text-blue-600 font-semibold"
-                    : "border-border/60 bg-muted/40 text-muted-foreground"
-                }`}
-              >
-                Tất cả ({totalDiaDiem})
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onStatusFilterChange("active");
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all ${
-                  statusFilter === "active"
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 font-semibold"
-                    : "border-border/60 bg-muted/40 text-muted-foreground"
-                }`}
-              >
-                Hoạt động ({totalHoatDong})
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onStatusFilterChange("inactive");
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all ${
-                  statusFilter === "inactive"
-                    ? "bg-slate-500/15 border-slate-500/30 text-slate-700 font-semibold"
-                    : "border-border/60 bg-muted/40 text-muted-foreground"
-                }`}
-              >
-                Đóng ({totalNgungHoatDong})
-              </button>
+              {statusOptions.map((opt) => {
+                const isActive = statusFilter === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => {
+                      onStatusFilterChange(opt.key);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all cursor-pointer ${
+                      isActive
+                        ? opt.mobileActiveBg
+                        : "border-border/60 bg-muted/40 text-muted-foreground"
+                    }`}
+                  >
+                    {opt.label} ({opt.count})
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Active Filter Chips */}
+        {/* Active Filter Chips via .map() */}
         {hasActiveFilters && (
           <div className="flex items-center gap-2 pt-1 border-t border-border/50 text-xs flex-wrap">
             <span className="text-muted-foreground font-medium">Đang lọc:</span>
-            {searchInput && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/60">
-                Từ khóa: &quot;{searchInput}&quot;
-                <button
-                  type="button"
-                  onClick={() => onSearch("")}
-                  className="hover:text-red-500 cursor-pointer ml-0.5"
-                  title="Xóa tìm kiếm"
+            {activeChips.map((chip) => {
+              const Icon = chip.icon;
+              return (
+                <span
+                  key={chip.key}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border ${chip.colorClass}`}
                 >
-                  ✕
-                </button>
-              </span>
-            )}
-            {tinhFilter && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 font-medium">
-                <Building2 className="w-3 h-3" />
-                Tỉnh: {currentProvinceName}
-                <button
-                  type="button"
-                  onClick={() => onTinhFilterChange("")}
-                  className="hover:text-red-500 cursor-pointer ml-0.5"
-                  title="Bỏ lọc tỉnh"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            {statusFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/60">
-                Trạng thái:{" "}
-                {statusFilter === "active" ? "Đang hoạt động" : "Đã đóng"}
-                <button
-                  type="button"
-                  onClick={() => onStatusFilterChange("all")}
-                  className="hover:text-red-500 cursor-pointer ml-0.5"
-                  title="Bỏ lọc trạng thái"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
+                  <Icon className="w-3 h-3" />
+                  <span>{chip.label}</span>
+                  <button
+                    type="button"
+                    onClick={chip.onRemove}
+                    className="hover:text-red-500 cursor-pointer ml-0.5"
+                    title="Xóa tiêu chí này"
+                  >
+                    ✕
+                  </button>
+                </span>
+              );
+            })}
             <button
               type="button"
               onClick={onResetFilters}

@@ -3,7 +3,6 @@
 import React, { useMemo, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Store } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SelectOption } from "@/components/ui/selectSearch";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -13,6 +12,7 @@ import {
   DiaDiemKpiGrid,
   DiaDiemFilterBar,
   DiaDiemGrid,
+  DiaDiemSkeleton,
   DiaDiemTable,
   CreateDiaDiemSlideOver,
   UpdateDiaDiemSlideOver,
@@ -177,16 +177,7 @@ function DiaDiemContent() {
 
       {/* 3. Nội dung dữ liệu chính (Lưới Showcase Grid hoặc Bảng Table Anti-Blowout) */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-          {Array.from({ length: 8 }).map((_, idx) => (
-            <Card key={idx} className="p-4 rounded-xl border border-border/70 space-y-3">
-              <Skeleton className="h-36 w-full rounded-lg" />
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-8 w-full" />
-            </Card>
-          ))}
-        </div>
+        <DiaDiemSkeleton viewMode={viewMode} count={8} />
       ) : viewMode === "grid" ? (
         <DiaDiemGrid
           items={items}
@@ -218,6 +209,10 @@ function DiaDiemContent() {
           onDelete={(item) => handleOpenDelete(item)}
           provinceMap={provinceMap}
           getLoaiBadge={getLoaiBadge}
+          onResetFilters={handleResetFilters}
+          hasActiveFilters={hasActiveFilters}
+          onOpenCreate={() => setOpenCreate(true)}
+          searchInput={searchInput}
         />
       )}
 

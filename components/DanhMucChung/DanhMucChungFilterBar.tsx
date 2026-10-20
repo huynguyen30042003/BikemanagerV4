@@ -53,10 +53,79 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
   isFetching,
   onResetFilters,
 }) => {
-  // Mobile filter dropdown toggle per Rule 14.3.1
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const hasActiveFilters = Boolean(searchInput || statusFilter !== "all");
+  // Status Filter Definitions mapped via .map()
+  const statusOptions = [
+    {
+      key: "all",
+      label: "Tất cả",
+      count: totalDanhMucChung,
+      activeColor: "text-blue-600 dark:text-blue-400 font-semibold",
+    },
+    {
+      key: "active",
+      label: "Sử dụng",
+      count: totalHoatDong,
+      activeColor: "text-emerald-600 dark:text-emerald-400 font-semibold",
+    },
+    {
+      key: "inactive",
+      label: "Khóa",
+      count: totalNgungHoatDong,
+      activeColor: "text-slate-700 dark:text-slate-300 font-semibold",
+    },
+  ];
+
+  // View Mode Definitions mapped via .map()
+  const viewModeOptions = [
+    {
+      key: "grid" as const,
+      label: "Lưới thẻ",
+      icon: LayoutGrid,
+      title: "Dạng lưới thẻ trực quan",
+    },
+    {
+      key: "table" as const,
+      label: "Bảng dữ liệu",
+      icon: List,
+      title: "Dạng bảng chi tiết",
+    },
+  ];
+
+  // Active filter chips mapped via .map()
+  interface ActiveChip {
+    key: string;
+    label: string;
+    icon: React.ElementType;
+    colorClass: string;
+    onRemove: () => void;
+  }
+
+  const activeChips: ActiveChip[] = [];
+  if (searchInput) {
+    activeChips.push({
+      key: "search",
+      label: `Từ khóa: "${searchInput}"`,
+      icon: Search,
+      colorClass: "bg-muted text-foreground border-border/60",
+      onRemove: () => onSearch(""),
+    });
+  }
+  if (statusFilter !== "all") {
+    activeChips.push({
+      key: "status",
+      label: `Trạng thái: ${
+        statusFilter === "active" ? "Đang sử dụng" : "Đã khóa"
+      }`,
+      icon: Filter,
+      colorClass:
+        "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
+      onRemove: () => onStatusFilterChange("all"),
+    });
+  }
+
+  const hasActiveFilters = activeChips.length > 0;
 
   return (
     <div className="space-y-4">
@@ -153,7 +222,7 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
               variant="outline"
               size="sm"
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="h-8 px-2.5 gap-1.5 text-xs border-border/80"
+              className="h-8 px-2.5 gap-1.5 text-xs border-border/80 cursor-pointer"
             >
               {isMobileMenuOpen ? (
                 <X className="w-3.5 h-3.5" />
@@ -163,31 +232,28 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
               <span>Bộ lọc trạng thái</span>
             </Button>
 
-            {/* View Switcher on mobile */}
+            {/* View Switcher on mobile via .map() */}
             <div className="flex items-center gap-1.5">
               <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5">
-                <button
-                  type="button"
-                  onClick={() => onViewModeChange("grid")}
-                  className={`flex items-center justify-center w-7 h-7 rounded-md transition-all ${
-                    viewMode === "grid"
-                      ? "bg-background text-foreground shadow-2xs font-semibold"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onViewModeChange("table")}
-                  className={`flex items-center justify-center w-7 h-7 rounded-md transition-all ${
-                    viewMode === "table"
-                      ? "bg-background text-foreground shadow-2xs font-semibold"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <List className="w-3.5 h-3.5" />
-                </button>
+                {viewModeOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  const isActive = viewMode === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => onViewModeChange(opt.key)}
+                      title={opt.title}
+                      className={`flex items-center justify-center w-7 h-7 rounded-md transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-background text-foreground shadow-2xs font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                })}
               </div>
 
               <Button
@@ -195,7 +261,7 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
                 size="icon"
                 onClick={onRefresh}
                 disabled={isFetching}
-                className="h-8 w-8"
+                className="h-8 w-8 cursor-pointer"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
@@ -210,71 +276,50 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
               isMobileMenuOpen ? "flex" : "hidden"
             } sm:flex flex-wrap items-center gap-2`}
           >
-            {/* Status Filter Buttons */}
+            {/* Status Filter Buttons via .map() */}
             <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0 overflow-x-auto max-w-full">
               <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5 shrink-0 hidden xs:inline" />
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("all")}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer shrink-0 ${
-                  statusFilter === "all"
-                    ? "bg-background shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Tất cả ({totalDanhMucChung})
-              </button>
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("active")}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer shrink-0 ${
-                  statusFilter === "active"
-                    ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Sử dụng ({totalHoatDong})
-              </button>
-              <button
-                type="button"
-                onClick={() => onStatusFilterChange("inactive")}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer shrink-0 ${
-                  statusFilter === "inactive"
-                    ? "bg-background shadow-xs text-slate-700 dark:text-slate-300 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Khóa ({totalNgungHoatDong})
-              </button>
+              {statusOptions.map((opt) => {
+                const isActive = statusFilter === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => onStatusFilterChange(opt.key)}
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer shrink-0 ${
+                      isActive
+                        ? `bg-background shadow-xs ${opt.activeColor}`
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label} ({opt.count})
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Desktop View Switcher & Reload */}
+            {/* Desktop View Switcher & Reload via .map() */}
             <div className="hidden sm:flex items-center gap-2">
               <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => onViewModeChange("grid")}
-                  title="Dạng lưới thẻ"
-                  className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
-                    viewMode === "grid"
-                      ? "bg-background text-foreground shadow-2xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onViewModeChange("table")}
-                  title="Dạng bảng chi tiết"
-                  className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
-                    viewMode === "table"
-                      ? "bg-background text-foreground shadow-2xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
+                {viewModeOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  const isActive = viewMode === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => onViewModeChange(opt.key)}
+                      title={opt.title}
+                      className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-background text-foreground shadow-2xs font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </button>
+                  );
+                })}
               </div>
 
               <Button
@@ -293,34 +338,30 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
           </div>
         </div>
 
-        {/* Active Filter Chips */}
+        {/* Active Filter Chips via .map() */}
         {hasActiveFilters && (
           <div className="flex items-center gap-2 pt-1 border-t border-border/50 text-xs flex-wrap">
             <span className="text-muted-foreground font-medium">Đang lọc:</span>
-            {searchInput && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/60">
-                Từ khóa: &quot;{searchInput}&quot;
-                <button
-                  type="button"
-                  onClick={() => onSearch("")}
-                  className="hover:text-red-500 cursor-pointer ml-0.5"
+            {activeChips.map((chip) => {
+              const Icon = chip.icon;
+              return (
+                <span
+                  key={chip.key}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border ${chip.colorClass}`}
                 >
-                  ✕
-                </button>
-              </span>
-            )}
-            {statusFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                Trạng thái: {statusFilter === "active" ? "Đang sử dụng" : "Đã khóa"}
-                <button
-                  type="button"
-                  onClick={() => onStatusFilterChange("all")}
-                  className="hover:text-red-500 cursor-pointer ml-0.5"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
+                  <Icon className="w-3 h-3" />
+                  <span>{chip.label}</span>
+                  <button
+                    type="button"
+                    onClick={chip.onRemove}
+                    className="hover:text-red-500 cursor-pointer ml-0.5"
+                    title="Xóa tiêu chí này"
+                  >
+                    ✕
+                  </button>
+                </span>
+              );
+            })}
             <button
               type="button"
               onClick={onResetFilters}

@@ -3,7 +3,6 @@
 import React, { useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useKhachHang } from "@/hooks/KhachHang/useKhachHang";
 import {
@@ -17,6 +16,7 @@ import {
   CustomerKpiGrid,
   CustomerGrid,
   CustomerTable,
+  CustomerSkeleton,
   CreateCustomerSlideOver,
   UpdateCustomerSlideOver,
   ViewMode,
@@ -247,35 +247,7 @@ function CustomerContent() {
 
       {/* 3. Nội dung dữ liệu chính (Lưới Showcase Grid hoặc Bảng Table Anti-Blowout) */}
       {isLoading ? (
-        viewMode === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, idx) => (
-              <Card
-                key={idx}
-                className="rounded-xl border border-border/70 p-4 space-y-3"
-              >
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-10 w-10 rounded-xl" />
-                  <Skeleton className="h-5 w-16 rounded-full" />
-                </div>
-                <Skeleton className="h-6 w-3/4 rounded-md" />
-                <Skeleton className="h-4 w-1/2 rounded-md" />
-                <Skeleton className="h-4 w-full rounded-md" />
-                <div className="pt-2 border-t border-border/40 flex justify-between gap-2">
-                  <Skeleton className="h-8 flex-1 rounded-lg" />
-                  <Skeleton className="h-8 flex-1 rounded-lg" />
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="p-6">
-            <Skeleton className="h-10 w-full mb-3" />
-            <Skeleton className="h-12 w-full mb-2" />
-            <Skeleton className="h-12 w-full mb-2" />
-            <Skeleton className="h-12 w-full" />
-          </Card>
-        )
+        <CustomerSkeleton viewMode={viewMode} />
       ) : viewMode === "grid" ? (
         <CustomerGrid
           items={items}
@@ -302,6 +274,9 @@ function CustomerContent() {
           setPageSize={setPageSize}
           onEdit={handleOpenEditWrapper}
           onDelete={handleOpenDelete}
+          onResetFilters={handleResetFilters}
+          hasActiveFilters={hasActiveFilters}
+          onOpenCreate={handleOpenAddWrapper}
         />
       )}
 
@@ -375,10 +350,16 @@ export default function CustomerPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-6 space-y-6">
+        <div className="p-3 sm:p-4 md:p-8 space-y-4 sm:space-y-6 max-w-full">
           <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-96 w-full" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+          </div>
+          <Skeleton className="h-14 w-full rounded-xl" />
+          <Skeleton className="h-96 w-full rounded-xl" />
         </div>
       }
     >

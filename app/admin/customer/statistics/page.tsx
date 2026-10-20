@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense, useMemo, useState } from "react";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useThongKeKhachHang } from "@/hooks/ThongKeKhachHang/useThongKeKhachHang";
 import { KH_ThongKeKhachHang, ThongKeKhachHangKPI } from "@/types/thongKeKhachHang";
@@ -9,7 +8,10 @@ import {
   CustomerStatisticsKpiGrid,
   CustomerStatisticsFilterBar,
   CustomerStatisticsTable,
+  CustomerStatisticsGrid,
+  CustomerStatisticsSkeleton,
   UpdateCustomerStatisticsSlideOver,
+  ViewMode,
 } from "@/components/Customer/Statistics";
 
 function StatisticsContent() {
@@ -38,6 +40,7 @@ function StatisticsContent() {
   // Local state for modals to isolate form re-renders
   const [openUpdate, setOpenUpdate] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<KH_ThongKeKhachHang | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   // Fallback in-memory calculations
   const vipCount = useMemo(
@@ -86,9 +89,11 @@ function StatisticsContent() {
     setPage(1);
   };
 
+  const hasActiveFilters = Boolean(searchInput || tierFilter !== "all");
+
   return (
     <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
-      {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch trên Mobile) */}
+      {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch & Switch ViewMode) */}
       <CustomerStatisticsFilterBar
         totalThongKeKhachHang={total_ThongKeKhachHang}
         searchInput={searchInput}
@@ -98,13 +103,15 @@ function StatisticsContent() {
           setTierFilter(tier);
           setPage(1);
         }}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         onRefresh={handleReload}
         isFetching={isFetching}
         isLoadingKPI={isLoadingKPI}
         onResetFilters={handleResetFilters}
       />
 
-      {/* 2. Dải 5 KPI Ribbon Thống Kê (Render động từ GetKPI API) */}
+      {/* 2. Dải 5 KPI Ribbon Thống Kê (Config-driven dùng KpiRibbon & .map) */}
       <CustomerStatisticsKpiGrid
         totalThongKeKhachHang={total_ThongKeKhachHang}
         totalHoiVienVip={total_HoiVienVip}
@@ -120,14 +127,25 @@ function StatisticsContent() {
         isLoading={isLoading}
       />
 
-      {/* 3. Bảng dữ liệu Xếp hạng & Thống kê (Anti-Blowout Table với Phân trang) */}
+      {/* 3. Chế độ hiển thị kép: Bảng dữ liệu hoặc Lưới thẻ (Anti-Blowout Table & Responsive Cards) */}
       {isLoading ? (
-        <Card className="p-6">
-          <Skeleton className="h-10 w-full mb-3" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full" />
-        </Card>
+        <CustomerStatisticsSkeleton viewMode={viewMode} />
+      ) : viewMode === "grid" ? (
+        <CustomerStatisticsGrid
+          items={items}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          page={page}
+          pageSize={pageSize}
+          setPage={setPage}
+          setPageSize={setPageSize}
+          onEdit={(item) => {
+            setSelectedItem(item);
+            setOpenUpdate(true);
+          }}
+          onResetFilters={handleResetFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
       ) : (
         <CustomerStatisticsTable
           items={items}
@@ -141,6 +159,8 @@ function StatisticsContent() {
             setSelectedItem(item);
             setOpenUpdate(true);
           }}
+          onResetFilters={handleResetFilters}
+          hasActiveFilters={hasActiveFilters}
         />
       )}
 
@@ -164,7 +184,7 @@ export default function CustomerStatisticsPage() {
       fallback={
         <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
           <Skeleton className="h-8 w-64" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <Skeleton className="h-24 w-full rounded-xl" />
             <Skeleton className="h-24 w-full rounded-xl" />
             <Skeleton className="h-24 w-full rounded-xl" />
@@ -180,3 +200,4 @@ export default function CustomerStatisticsPage() {
     </Suspense>
   );
 }
+

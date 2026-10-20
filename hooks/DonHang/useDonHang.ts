@@ -387,10 +387,17 @@ export const useDonHang = () => {
     setOpenStatusModal(true);
   };
 
-  const handleSubmitStatusChange = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitStatusChange = async (
+    payloadOrEvent?: React.FormEvent | ChuyenTrangThaiDonHangPayload
+  ) => {
+    let payload = dataStatusChange;
+    if (payloadOrEvent && "TrangThaiDonHangID" in payloadOrEvent) {
+      payload = payloadOrEvent;
+    } else if (payloadOrEvent && "preventDefault" in payloadOrEvent) {
+      payloadOrEvent.preventDefault();
+    }
     try {
-      await statusMutation.mutateAsync(dataStatusChange);
+      await statusMutation.mutateAsync(payload);
       toast.success("Cập nhật trạng thái đơn hàng thành công!");
       setOpenStatusModal(false);
       refetch();
@@ -411,15 +418,22 @@ export const useDonHang = () => {
     setOpenPaymentModal(true);
   };
 
-  const handleSubmitPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (dataPayment.SoTien <= 0) {
+  const handleSubmitPayment = async (
+    payloadOrEvent?: React.FormEvent | AddLichSuThanhToanPayload
+  ) => {
+    let payload = dataPayment;
+    if (payloadOrEvent && "SoTien" in payloadOrEvent) {
+      payload = payloadOrEvent;
+    } else if (payloadOrEvent && "preventDefault" in payloadOrEvent) {
+      payloadOrEvent.preventDefault();
+    }
+    if (payload.SoTien <= 0) {
       toast.warning("Số tiền thanh toán phải lớn hơn 0!");
       return;
     }
 
     try {
-      await paymentMutation.mutateAsync(dataPayment);
+      await paymentMutation.mutateAsync(payload);
       toast.success("Ghi nhận thanh toán thành công!");
       setOpenPaymentModal(false);
       refetch();

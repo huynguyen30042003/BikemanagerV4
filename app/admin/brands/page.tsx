@@ -1,9 +1,6 @@
 "use client";
 
 import React, { Suspense, useState, useMemo } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useThuongHieu, useDeleteThuongHieu } from "@/hooks/ThuongHieu/useThuongHieu";
 import { SP_ThuongHieu } from "@/types/thuongHieu";
 import {
@@ -11,11 +8,12 @@ import {
   BrandsFilterBar,
   BrandsGrid,
   BrandsTable,
+  BrandsSkeleton,
+  BrandsDeleteModal,
   CreateBrandSlideOver,
   UpdateBrandSlideOver,
+  ViewMode,
 } from "@/components/Brands";
-
-type ViewMode = "grid" | "table";
 
 function BrandsContent() {
   const {
@@ -61,11 +59,11 @@ function BrandsContent() {
       await deleteMutation.mutateAsync(deletingBrand.thuongHieuID);
       setDeletingBrand(null);
     } catch {
-      // Toast notification is handled in mutation
+      // Toast notification is handled inside useDeleteThuongHieu mutation
     }
   };
 
-  // KPI Metrics prioritization (Backend KPI first, fallback to current dataset)
+  // Ưu tiên số liệu thống kê từ Backend KPI, fallback sang số liệu tính từ danh sách hiện tại
   const totalThuongHieu = useMemo(() => {
     return kpiData?.total_ThuongHieu ?? totalCount;
   }, [kpiData?.total_ThuongHieu, totalCount]);
@@ -120,7 +118,7 @@ function BrandsContent() {
         hasActiveFilters={hasActiveFilters}
       />
 
-      {/* 2. Interactive KPI Cards Grid (.map() based, responsive down to 390px) */}
+      {/* 2. Dải chỉ số KPI dùng KpiRibbon và .map() */}
       <BrandsKpiGrid
         totalThuongHieu={totalThuongHieu}
         totalHoatDong={totalHoatDong}
@@ -135,17 +133,9 @@ function BrandsContent() {
         isLoading={isLoading}
       />
 
-      {/* 3. Main Data Content (Grid vs Table) */}
+      {/* 3. Nội dung dữ liệu chính (Lưới vs Bảng) */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="p-4 rounded-xl border border-border/70 space-y-3">
-              <Skeleton className="h-28 w-full rounded-lg" />
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </Card>
-          ))}
-        </div>
+        <BrandsSkeleton count={8} />
       ) : viewMode === "grid" ? (
         <BrandsGrid
           items={items}
@@ -175,7 +165,7 @@ function BrandsContent() {
         />
       )}
 
-      {/* 4. SlideOver: Thêm thương hiệu (State Isolation) */}
+      {/* 4. SlideOver: Thêm thương hiệu mới (State Isolation) */}
       <CreateBrandSlideOver
         open={openAdd}
         onClose={() => setOpenAdd(false)}
@@ -198,26 +188,11 @@ function BrandsContent() {
         }}
       />
 
-      {/* 6. Modal xác nhận xóa */}
-      <ConfirmModal
-        open={Boolean(deletingBrand)}
+      {/* 6. Modal xác nhận xóa thương hiệu (Component Isolation) */}
+      <BrandsDeleteModal
+        brand={deletingBrand}
         onClose={() => setDeletingBrand(null)}
         onConfirm={handleDeleteConfirm}
-        title="Xác nhận xóa thương hiệu"
-        description={
-          <div className="space-y-2">
-            <p>
-              Bạn có chắc chắn muốn xóa thương hiệu &quot;
-              <strong className="text-foreground">{deletingBrand?.tenThuongHieu}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600 dark:text-rose-400 block bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
-              Lưu ý: Không thể xóa nếu thương hiệu này đang chứa các sản phẩm xe điện hoặc linh kiện phụ tùng đang lưu hành.
-            </span>
-          </div>
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
         isLoading={deleteMutation.isPending}
       />
     </div>
@@ -228,9 +203,9 @@ export default function BrandsPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 space-y-6 max-w-[1600px] mx-auto">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-96 w-full rounded-xl" />
+        <div className="p-4 md:p-8 space-y-6 max-w-[1600px] mx-auto">
+          <div className="h-8 w-64 bg-muted/60 animate-pulse rounded-lg" />
+          <BrandsSkeleton count={8} />
         </div>
       }
     >

@@ -24,6 +24,8 @@ interface CustomerStatisticsTableProps {
   setPage: (page: number | ((prev: number) => number)) => void;
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onEdit: (item: KH_ThongKeKhachHang) => void;
+  onResetFilters?: () => void;
+  hasActiveFilters?: boolean;
 }
 
 function formatCurrency(val: number | null | undefined): string {
@@ -53,6 +55,8 @@ export const CustomerStatisticsTable: React.FC<CustomerStatisticsTableProps> = (
   setPage,
   setPageSize,
   onEdit,
+  onResetFilters,
+  hasActiveFilters,
 }) => {
   const renderTierBadge = (tier: string) => {
     switch (tier) {
@@ -94,7 +98,7 @@ export const CustomerStatisticsTable: React.FC<CustomerStatisticsTableProps> = (
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5 py-1">
-          <span className="font-semibold text-foreground text-sm hover:text-blue-600 transition-colors">
+          <span className="font-semibold text-foreground text-sm hover:text-amber-600 transition-colors">
             {row.tenKhachHang || "Hồ sơ #" + row.khachHangID.substring(0, 8)}
           </span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
@@ -223,7 +227,7 @@ export const CustomerStatisticsTable: React.FC<CustomerStatisticsTableProps> = (
           size="icon-sm"
           onClick={() => onEdit(row)}
           title="Điều chỉnh hạng thẻ & công nợ"
-          className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
+          className="h-8 w-8 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg transition-colors cursor-pointer"
         >
           <SquarePen className="w-4 h-4" />
         </Button>
@@ -241,8 +245,22 @@ export const CustomerStatisticsTable: React.FC<CustomerStatisticsTableProps> = (
           Không có dữ liệu thống kê
         </p>
         <p className="text-xs text-muted-foreground max-w-sm mt-1">
-          Chưa có thông số tích lũy phù hợp với bộ lọc tìm kiếm.
+          {hasActiveFilters
+            ? "Không tìm thấy dữ liệu nào khớp với bộ lọc tìm kiếm. Hãy thử điều chỉnh từ khóa hoặc xóa bớt tiêu chí lọc."
+            : "Chưa có thông số tích lũy khách hàng nào được ghi nhận."}
         </p>
+        {hasActiveFilters && onResetFilters && (
+          <div className="flex items-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onResetFilters}
+              className="cursor-pointer text-xs"
+            >
+              Xóa bộ lọc
+            </Button>
+          </div>
+        )}
       </div>
     );
   }

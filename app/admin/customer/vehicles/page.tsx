@@ -2,7 +2,6 @@
 
 import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { usePhuongTienKhachHang } from "@/hooks/PhuongTienKhachHang/usePhuongTienKhachHang";
@@ -11,8 +10,11 @@ import {
   CustomerVehiclesKpiGrid,
   CustomerVehiclesFilterBar,
   CustomerVehiclesTable,
+  CustomerVehiclesGrid,
+  CustomerVehiclesSkeleton,
   CreateCustomerVehicleSlideOver,
   UpdateCustomerVehicleSlideOver,
+  ViewMode,
 } from "@/components/Customer/Vehicles";
 
 function VehiclesContent() {
@@ -22,6 +24,7 @@ function VehiclesContent() {
   // Local state for modals to isolate form re-renders
   const [openCreate, setOpenCreate] = useState<boolean>(false);
   const [editingItem, setEditingItem] = useState<KH_PhuongTienKhachHang | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   const {
     page,
@@ -101,7 +104,7 @@ function VehiclesContent() {
 
   return (
     <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
-      {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch trên Mobile) */}
+      {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch & Switch ViewMode) */}
       <CustomerVehiclesFilterBar
         totalPhuongTien={total_PhuongTienKhachHang}
         totalHoatDong={total_HoatDong}
@@ -120,6 +123,8 @@ function VehiclesContent() {
           setStatusFilter(status);
           setPage(1);
         }}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         onOpenCreate={() => setOpenCreate(true)}
         onRefresh={handleReload}
         isFetching={isFetching}
@@ -127,7 +132,7 @@ function VehiclesContent() {
         onResetFilters={handleResetFilters}
       />
 
-      {/* 2. Dải KPI Ribbon Thống Kê (Render động từ GetKPI API: {{base_url}}/api/PhuongTienKhachHangApi/GetKPI) */}
+      {/* 2. Dải KPI Ribbon Thống Kê (Config-driven dùng KpiRibbon & .map) */}
       <CustomerVehiclesKpiGrid
         totalPhuongTien={total_PhuongTienKhachHang}
         totalHoatDong={total_HoatDong}
@@ -142,14 +147,24 @@ function VehiclesContent() {
         isLoading={isLoading}
       />
 
-      {/* 3. Bảng dữ liệu Phương tiện Khách hàng (Anti-Blowout Table với Phân trang) */}
+      {/* 3. Chế độ hiển thị kép: Bảng dữ liệu hoặc Lưới thẻ (Anti-Blowout Table & Responsive Cards) */}
       {isLoading ? (
-        <Card className="p-6">
-          <Skeleton className="h-10 w-full mb-3" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full" />
-        </Card>
+        <CustomerVehiclesSkeleton viewMode={viewMode} />
+      ) : viewMode === "grid" ? (
+        <CustomerVehiclesGrid
+          items={items}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          page={page}
+          pageSize={pageSize}
+          setPage={setPage}
+          setPageSize={setPageSize}
+          onEdit={(item) => setEditingItem(item)}
+          onDelete={(item) => handleOpenDelete(item)}
+          onOpenCreate={() => setOpenCreate(true)}
+          onResetFilters={handleResetFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
       ) : (
         <CustomerVehiclesTable
           items={items}
@@ -234,3 +249,4 @@ export default function CustomerVehiclesPage() {
     </Suspense>
   );
 }
+

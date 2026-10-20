@@ -2,14 +2,15 @@
 
 import React, { Suspense, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
 import { useLichSuSoHuuPhuongTien } from "@/hooks/LichSuSoHuuPhuongTien/useLichSuSoHuuPhuongTien";
 import {
   CustomerOwnershipsKpiGrid,
   CustomerOwnershipsFilterBar,
   CustomerOwnershipsTable,
+  CustomerOwnershipsGrid,
+  CustomerOwnershipsSkeleton,
   TransferOwnershipSlideOver,
+  ViewMode,
 } from "@/components/Customer/Ownerships";
 
 function OwnershipsContent() {
@@ -48,6 +49,9 @@ function OwnershipsContent() {
     refetchKPI,
   } = useLichSuSoHuuPhuongTien(initialVehicleId, initialKhachHangId);
 
+  // Chế độ xem: Bảng (Table) hoặc Thẻ (Grid)
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
+
   // Modal State
   const [openTransfer, setOpenTransfer] = useState(false);
   const [transferVehicleId, setTransferVehicleId] = useState("");
@@ -65,7 +69,7 @@ function OwnershipsContent() {
     setPage(1);
   };
 
-  // KPI Metrics calculation (Prioritize backend KPI, fallback to local counts)
+  // Ưu tiên số liệu KPI từ backend, fallback sang tính từ dữ liệu hiện có
   const totalLichSuSoHuu = useMemo(() => {
     return kpiData?.total_LichSuSoHuuPhuongTien ?? totalCount;
   }, [kpiData?.total_LichSuSoHuuPhuongTien, totalCount]);
@@ -96,7 +100,7 @@ function OwnershipsContent() {
   );
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6">
+    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
       {/* 1. Header, CustomerNavTabs & Filter Toolbar */}
       <CustomerOwnershipsFilterBar
         totalLichSuSoHuu={totalLichSuSoHuu}
@@ -121,6 +125,8 @@ function OwnershipsContent() {
           setLyDoFilter(val);
           setPage(1);
         }}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         onOpenTransfer={() => handleOpenTransfer()}
         onRefresh={() => {
           refetch();
@@ -129,9 +135,10 @@ function OwnershipsContent() {
         isFetching={isFetching}
         isLoadingKPI={isLoadingKPI}
         onResetFilters={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
       />
 
-      {/* 2. KPI Cards Grid (.map() based, responsive down to 390px) */}
+      {/* 2. Dải KPI Ribbon (.map() based, responsive down to 390px) */}
       <CustomerOwnershipsKpiGrid
         totalLichSuSoHuu={totalLichSuSoHuu}
         totalChuSoHuuHienTai={totalChuSoHuuHienTai}
@@ -146,14 +153,23 @@ function OwnershipsContent() {
         isLoading={isLoading}
       />
 
-      {/* 3. Main Data Table */}
+      {/* 3. Dữ liệu chính: Bảng dữ liệu hoặc Lưới thẻ thích ứng thiết bị */}
       {isLoading ? (
-        <Card className="p-6">
-          <Skeleton className="h-10 w-full mb-3" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full mb-2" />
-          <Skeleton className="h-12 w-full" />
-        </Card>
+        <CustomerOwnershipsSkeleton viewMode={viewMode} />
+      ) : viewMode === "grid" ? (
+        <CustomerOwnershipsGrid
+          items={items}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          page={page}
+          pageSize={pageSize}
+          setPage={setPage}
+          setPageSize={setPageSize}
+          onTransfer={(vId) => handleOpenTransfer(vId)}
+          onOpenTransfer={() => handleOpenTransfer()}
+          onResetFilters={handleResetFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
       ) : (
         <CustomerOwnershipsTable
           items={items}
@@ -192,9 +208,9 @@ export default function OwnershipsPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 space-y-6">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-96" />
+        <div className="p-4 md:p-8 space-y-6 max-w-[1600px] mx-auto">
+          <div className="h-8 w-64 bg-muted/60 animate-pulse rounded-lg" />
+          <CustomerOwnershipsSkeleton viewMode="table" />
         </div>
       }
     >

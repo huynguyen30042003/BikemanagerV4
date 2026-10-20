@@ -16,6 +16,7 @@ import {
 import {
   DonViTraGop,
   CreateDonViTraGopPayload,
+  UpdateDonViTraGopPayload,
   HopDongTraGop,
   CreateHopDongTraGopPayload,
   ChuyenTrangThaiHopDongPayload,
@@ -166,18 +167,25 @@ export const useDonViTraGopHook = () => {
     setOpenEdit(true);
   };
 
-  const handleSubmitAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.MaDonVi.trim()) {
+  const handleSubmitAdd = async (
+    payloadOrEvent?: React.FormEvent | CreateDonViTraGopPayload
+  ) => {
+    let payload = formData;
+    if (payloadOrEvent && "MaDonVi" in payloadOrEvent) {
+      payload = payloadOrEvent;
+    } else if (payloadOrEvent && "preventDefault" in payloadOrEvent) {
+      payloadOrEvent.preventDefault();
+    }
+    if (!payload.MaDonVi?.trim()) {
       toast.warning("Vui lòng nhập mã đối tác (VD: HDSAISON, FECREDIT)!");
       return;
     }
-    if (!formData.TenDonVi.trim()) {
+    if (!payload.TenDonVi?.trim()) {
       toast.warning("Vui lòng nhập tên đối tác tài chính!");
       return;
     }
     try {
-      await createMutation.mutateAsync(formData);
+      await createMutation.mutateAsync(payload);
       toast.success("Thêm đơn vị đối tác trả góp thành công!");
       setOpenAdd(false);
       refetch();
@@ -186,15 +194,29 @@ export const useDonViTraGopHook = () => {
     }
   };
 
-  const handleSubmitEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const id = selectedItem?.donViTraGopID || selectedItem?.id;
-    if (!id) return;
-    try {
-      await updateMutation.mutateAsync({
+  const handleSubmitEdit = async (
+    payloadOrEvent?: React.FormEvent | UpdateDonViTraGopPayload
+  ) => {
+    let payload: UpdateDonViTraGopPayload;
+    if (payloadOrEvent && "DonViTraGopID" in payloadOrEvent) {
+      payload = payloadOrEvent;
+    } else {
+      if (payloadOrEvent && "preventDefault" in payloadOrEvent) {
+        payloadOrEvent.preventDefault();
+      }
+      const id = selectedItem?.donViTraGopID || selectedItem?.id;
+      if (!id) return;
+      payload = {
         ...formData,
         DonViTraGopID: id,
-      });
+      };
+    }
+    if (!payload.TenDonVi?.trim()) {
+      toast.warning("Vui lòng nhập tên đối tác tài chính!");
+      return;
+    }
+    try {
+      await updateMutation.mutateAsync(payload);
       toast.success("Cập nhật thông tin đối tác thành công!");
       setOpenEdit(false);
       refetch();
@@ -237,6 +259,7 @@ export const useDonViTraGopHook = () => {
     openEdit,
     setOpenEdit,
     selectedItem,
+    setSelectedItem,
     formData,
     setFormData,
     handleOpenAdd,
@@ -350,18 +373,25 @@ export const useHopDongTraGopHook = () => {
     setOpenAdd(true);
   };
 
-  const handleSubmitAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.SoHopDong.trim()) {
+  const handleSubmitAdd = async (
+    payloadOrEvent?: React.FormEvent | CreateHopDongTraGopPayload
+  ) => {
+    let payload = formData;
+    if (payloadOrEvent && "SoHopDong" in payloadOrEvent) {
+      payload = payloadOrEvent;
+    } else if (payloadOrEvent && "preventDefault" in payloadOrEvent) {
+      payloadOrEvent.preventDefault();
+    }
+    if (!payload.SoHopDong?.trim()) {
       toast.warning("Vui lòng nhập số hợp đồng tín dụng!");
       return;
     }
-    if (!formData.DonViTraGopID) {
+    if (!payload.DonViTraGopID) {
       toast.warning("Vui lòng chọn đơn vị đối tác tài chính!");
       return;
     }
     try {
-      await createMutation.mutateAsync(formData);
+      await createMutation.mutateAsync(payload);
       toast.success("Lập hồ sơ đề nghị vay trả góp thành công!");
       setOpenAdd(false);
       refetch();

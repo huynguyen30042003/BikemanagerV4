@@ -15,6 +15,8 @@ import {
   Trash2,
   Copy,
   Check,
+  FolderOpen,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
@@ -33,6 +35,9 @@ export interface CustomerTableProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onEdit: (customer: KH_KhachHang) => void;
   onDelete: (customer: KH_KhachHang) => void;
+  onResetFilters?: () => void;
+  hasActiveFilters?: boolean;
+  onOpenCreate?: () => void;
 }
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({
@@ -45,6 +50,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   setPageSize,
   onEdit,
   onDelete,
+  onResetFilters,
+  hasActiveFilters = false,
+  onOpenCreate,
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -252,6 +260,45 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
       ),
     },
   ];
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl border border-border/80 bg-card p-12 flex flex-col items-center justify-center text-center text-muted-foreground shadow-xs">
+        <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
+          <FolderOpen className="w-7 h-7 stroke-[1.5]" />
+        </div>
+        <p className="font-semibold text-base text-foreground">
+          Không tìm thấy khách hàng nào
+        </p>
+        <p className="text-xs text-muted-foreground max-w-sm mt-1">
+          {hasActiveFilters
+            ? "Không có kết quả khớp với điều kiện lọc. Hãy điều chỉnh từ khóa hoặc xóa bớt tiêu chí lọc."
+            : "Chưa có hồ sơ khách hàng trong hệ thống. Hãy thêm mới khách hàng ngay!"}
+        </p>
+        <div className="flex items-center gap-2 mt-4">
+          {hasActiveFilters && onResetFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onResetFilters}
+              className="cursor-pointer text-xs"
+            >
+              Xóa bộ lọc
+            </Button>
+          )}
+          {onOpenCreate && (
+            <Button
+              size="sm"
+              onClick={onOpenCreate}
+              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer font-medium"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Thêm khách hàng mới
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-border/80 bg-card shadow-xs overflow-hidden">

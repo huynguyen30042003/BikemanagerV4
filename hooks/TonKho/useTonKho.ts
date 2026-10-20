@@ -125,9 +125,9 @@ export function useTonKho(initialKhoId?: string) {
     setOpenTheKho(true);
   };
 
-  const handleSubmitDinhMuc = async () => {
+  const handleSubmitDinhMuc = async (customPayload?: UpdateDinhMucPayload) => {
     try {
-      await updateDinhMucMutation.mutateAsync(dataDinhMuc);
+      await updateDinhMucMutation.mutateAsync(customPayload || dataDinhMuc);
       setOpenDinhMuc(false);
     } catch {
       // Toast handled

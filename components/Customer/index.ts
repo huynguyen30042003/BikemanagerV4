@@ -1,6 +1,9 @@
 export * from "./CustomerFilterBar";
 export * from "./CustomerKpiGrid";
+export * from "./CustomerCard";
 export * from "./CustomerGrid";
 export * from "./CustomerTable";
+export * from "./CustomerSkeleton";
 export * from "./CreateCustomerSlideOver";
 export * from "./UpdateCustomerSlideOver";
+

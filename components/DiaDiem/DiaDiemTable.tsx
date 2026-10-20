@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import {
   Store,
+  Plus,
   SquarePen,
   Trash2,
   Building2,
@@ -14,6 +15,7 @@ import {
   Layers,
   Copy,
   Check,
+  FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +24,7 @@ import { Pagination } from "@/components/Common/Pagination";
 import { DM_DiaDiem } from "@/types/diaDiem";
 import { getImageUrl } from "@/shared/constants/apiConstants";
 
-interface DiaDiemTableProps {
+export interface DiaDiemTableProps {
   items: DM_DiaDiem[];
   totalCount: number;
   totalPages: number;
@@ -34,6 +36,10 @@ interface DiaDiemTableProps {
   onDelete: (item: DM_DiaDiem) => void;
   provinceMap: Map<number, string>;
   getLoaiBadge: (loaiId?: number | null) => React.ReactNode;
+  onResetFilters?: () => void;
+  hasActiveFilters?: boolean;
+  onOpenCreate?: () => void;
+  searchInput?: string;
 }
 
 export const DiaDiemTable: React.FC<DiaDiemTableProps> = ({
@@ -48,6 +54,10 @@ export const DiaDiemTable: React.FC<DiaDiemTableProps> = ({
   onDelete,
   provinceMap,
   getLoaiBadge,
+  onResetFilters,
+  hasActiveFilters,
+  onOpenCreate,
+  searchInput: _searchInput,
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -58,6 +68,45 @@ export const DiaDiemTable: React.FC<DiaDiemTableProps> = ({
     toast.success("Đã sao chép mã cơ sở!");
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl border border-border/80 bg-card p-8 sm:p-12 flex flex-col items-center justify-center text-center text-muted-foreground shadow-xs">
+        <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
+          <FolderOpen className="w-7 h-7 stroke-[1.5]" />
+        </div>
+        <p className="font-semibold text-base text-foreground">
+          Không tìm thấy cơ sở hoặc showroom nào
+        </p>
+        <p className="text-xs text-muted-foreground max-w-sm mt-1">
+          {hasActiveFilters
+            ? "Không có kết quả khớp với bộ lọc. Hãy điều chỉnh từ khóa hoặc xóa bớt tiêu chí lọc."
+            : "Chưa có địa điểm chi nhánh nào trong hệ thống. Hãy tạo cơ sở đầu tiên!"}
+        </p>
+        <div className="flex items-center gap-2 mt-4">
+          {hasActiveFilters && onResetFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onResetFilters}
+              className="cursor-pointer"
+            >
+              Xóa bộ lọc
+            </Button>
+          )}
+          {onOpenCreate && (
+            <Button
+              size="sm"
+              onClick={onOpenCreate}
+              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer font-medium"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Thêm cơ sở mới
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const columns: Column<DM_DiaDiem>[] = [
     {

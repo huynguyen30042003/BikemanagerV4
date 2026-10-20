@@ -3,7 +3,6 @@
 import React, { useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
 import { useDanhMucChiTiet } from "@/hooks/DanhMucChiTiet/useDanhMucChiTiet";
 import { DM_DanhMucChiTiet } from "@/types/danhMucChiTiet";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -12,6 +11,7 @@ import {
   DanhMucChiTietKpiGrid,
   DanhMucChiTietFilterBar,
   DanhMucChiTietGrid,
+  DanhMucChiTietSkeleton,
   DanhMucChiTietTable,
   CreateDanhMucChiTietSlideOver,
   UpdateDanhMucChiTietSlideOver,
@@ -171,16 +171,7 @@ function DanhMucChiTietContent() {
 
       {/* 3. Nội dung dữ liệu chính (Lưới Showcase Grid hoặc Bảng Table Anti-Blowout) */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-          {Array.from({ length: 8 }).map((_, idx) => (
-            <Card key={idx} className="p-4 rounded-xl border border-border/70 space-y-3">
-              <Skeleton className="h-6 w-1/3" />
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </Card>
-          ))}
-        </div>
+        <DanhMucChiTietSkeleton viewMode={viewMode} count={8} />
       ) : viewMode === "grid" ? (
         <DanhMucChiTietGrid
           items={items}
@@ -210,6 +201,10 @@ function DanhMucChiTietContent() {
           onEdit={(item) => setEditingItem(item)}
           onDelete={(item) => handleOpenDelete(item)}
           parentCategoryMap={parentCategoryMap}
+          onResetFilters={handleResetFilters}
+          hasActiveFilters={hasActiveFilters}
+          onOpenCreate={() => setOpenCreate(true)}
+          searchInput={searchInput}
         />
       )}
 

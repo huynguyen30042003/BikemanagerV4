@@ -2,13 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
-import { FolderTree, SquarePen, Trash2 } from "lucide-react";
+import { FolderOpen, FolderTree, Plus, SquarePen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
 import { Pagination } from "@/components/Common/Pagination";
 import { DM_DanhMucChiTiet } from "@/types/danhMucChiTiet";
 
-interface DanhMucChiTietTableProps {
+export interface DanhMucChiTietTableProps {
   items: DM_DanhMucChiTiet[];
   totalCount: number;
   totalPages: number;
@@ -19,6 +19,10 @@ interface DanhMucChiTietTableProps {
   onEdit: (item: DM_DanhMucChiTiet) => void;
   onDelete: (item: DM_DanhMucChiTiet) => void;
   parentCategoryMap: Map<number, string>;
+  onResetFilters?: () => void;
+  hasActiveFilters?: boolean;
+  onOpenCreate?: () => void;
+  searchInput?: string;
 }
 
 export const DanhMucChiTietTable: React.FC<DanhMucChiTietTableProps> = ({
@@ -32,6 +36,10 @@ export const DanhMucChiTietTable: React.FC<DanhMucChiTietTableProps> = ({
   onEdit,
   onDelete,
   parentCategoryMap,
+  onResetFilters,
+  hasActiveFilters,
+  onOpenCreate,
+  searchInput,
 }) => {
   const getParentName = (danhMucId?: number, row?: DM_DanhMucChiTiet) => {
     return (
@@ -41,6 +49,45 @@ export const DanhMucChiTietTable: React.FC<DanhMucChiTietTableProps> = ({
       `Danh mục #${danhMucId || 0}`
     );
   };
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl border border-border/80 bg-card p-8 sm:p-12 flex flex-col items-center justify-center text-center text-muted-foreground shadow-xs">
+        <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
+          <FolderOpen className="w-7 h-7 stroke-[1.5]" />
+        </div>
+        <p className="font-semibold text-base text-foreground">
+          Không tìm thấy mục chi tiết nào
+        </p>
+        <p className="text-xs text-muted-foreground max-w-sm mt-1">
+          {searchInput
+            ? `Không có kết quả nào khớp với từ khóa "${searchInput}". Bạn hãy thử tìm kiếm từ khóa khác hoặc đặt lại bộ lọc.`
+            : "Hiện tại chưa có mục chi tiết nào trong hệ thống. Hãy tạo mục đầu tiên!"}
+        </p>
+        <div className="flex items-center gap-2 mt-4">
+          {hasActiveFilters && onResetFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onResetFilters}
+              className="cursor-pointer"
+            >
+              Xóa bộ lọc
+            </Button>
+          )}
+          {onOpenCreate && (
+            <Button
+              size="sm"
+              onClick={onOpenCreate}
+              className="bg-purple-600 hover:bg-purple-700 text-white cursor-pointer font-medium"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Thêm mục chi tiết mới
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Cấu hình các cột của bảng: theo rule 545, KHÔNG hiển thị cột thứ tự khi xem
   const columns: Column<DM_DanhMucChiTiet>[] = [
