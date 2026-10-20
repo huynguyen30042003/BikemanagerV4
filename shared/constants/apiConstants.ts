@@ -10,8 +10,8 @@ export const CLIENT_SECRET = process.env.ORCHARD_CLIENT_SECRET;
 export const EXPIRED_TOKEN = 100210;
 
 export const TOKEN_KEYS = {
-  ACCESS_TOKEN: "accessToken",
-  REFRESH_TOKEN: "refreshToken",
+  ACCESS_TOKEN: "access_token",
+  REFRESH_TOKEN: "refresh_token",
   USER_INFO: "userInfo",
 } as const;
 

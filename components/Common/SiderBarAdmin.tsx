@@ -44,9 +44,7 @@ import {
   Sparkles,
   LogOut,
   LayoutDashboard,
-  KeyRound,
 } from "lucide-react";
-import TwoFactorSecurityModal from "./TwoFactorSecurityModal";
 
 export type MenuItem = {
   title: string;
@@ -76,6 +74,8 @@ export const MENU_SECTIONS: MenuSection[] = [
       "Administrator",
       "AdminAccess",
       "SaleAccess",
+      "ProductAccess",
+      "OrderAccess",
       "WarehouseAccess",
       "TechnicalAccess",
       "PurchaseAccess",
@@ -89,6 +89,8 @@ export const MENU_SECTIONS: MenuSection[] = [
           "Administrator",
           "AdminAccess",
           "SaleAccess",
+          "ProductAccess",
+          "OrderAccess",
           "WarehouseAccess",
           "TechnicalAccess",
           "PurchaseAccess",
@@ -98,7 +100,7 @@ export const MENU_SECTIONS: MenuSection[] = [
   },
   {
     label: "Hệ thống",
-    roles: ["Administrator"],
+    roles: ["Administrator", "AdminAccess"],
     groups: [
       {
         title: "Danh mục",
@@ -124,31 +126,31 @@ export const MENU_SECTIONS: MenuSection[] = [
         title: "Địa bàn & Cơ sở",
         href: "/admin/diaDiem",
         icon: Store,
-        roles: ["Administrator"],
+        roles: ["Administrator", "AdminAccess"],
         items: [
           {
             title: "Chi nhánh & Showroom",
             href: "/admin/diaDiem",
             icon: Store,
-            roles: ["Administrator"],
+            roles: ["Administrator", "AdminAccess"],
           },
           {
             title: "Cấp Tỉnh & Thành phố",
             href: "/admin/diaPhuongCapTinh",
             icon: Building2,
-            roles: ["Administrator"],
+            roles: ["Administrator", "AdminAccess"],
           },
           {
             title: "Cấp Xã & Phường",
             href: "/admin/diaPhuongCapXa",
             icon: Compass,
-            roles: ["Administrator"],
+            roles: ["Administrator", "AdminAccess"],
           },
           {
             title: "Danh mục Quốc gia",
             href: "/admin/quocGia",
             icon: Globe,
-            roles: ["Administrator"],
+            roles: ["Administrator", "AdminAccess"],
           },
         ],
       },
@@ -156,7 +158,13 @@ export const MENU_SECTIONS: MenuSection[] = [
   },
   {
     label: "Kinh doanh",
-    roles: ["Administrator", "AdminAccess", "SaleAccess"],
+    roles: [
+      "Administrator",
+      "AdminAccess",
+      "SaleAccess",
+      "ProductAccess",
+      "OrderAccess",
+    ],
     groups: [
       {
         title: "Khách hàng",
@@ -244,7 +252,12 @@ export const MENU_SECTIONS: MenuSection[] = [
   },
   {
     label: "Vận hành & Kho",
-    roles: ["Administrator", "AdminAccess", "WarehouseAccess"],
+    roles: [
+      "Administrator",
+      "AdminAccess",
+      "WarehouseAccess",
+      "PurchaseAccess",
+    ],
     groups: [
       {
         title: "Trả góp",
@@ -428,7 +441,6 @@ export default function SiderBarAdmin() {
   const [sidebarWidth, setSidebarWidth] = useState(270);
   const [isResizing, setIsResizing] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isOpen2FAModal, setIsOpen2FAModal] = useState(false);
 
   // Hợp nhất dữ liệu user từ Zustand store (API /auth/me) và JWT Token
   const currentUser = user || tokenUser;
@@ -456,8 +468,6 @@ export default function SiderBarAdmin() {
   // Lọc MENU_SECTIONS theo đúng role của user
   const filteredSections = useMemo(() => {
     return MENU_SECTIONS.map((section) => {
-      console.log("section", section);
-
       if (!hasRequiredRole(section.roles, userRoles)) {
         return null;
       }
@@ -641,7 +651,8 @@ export default function SiderBarAdmin() {
 
                 const isGroupActive = hasChildren
                   ? group.items!.some((sub) => pathname.startsWith(sub.href))
-                  : pathname === group.href;
+                  : pathname === group.href ||
+                    (group.href === "/admin" && pathname === "/");
 
                 return (
                   <div key={group.title} className="space-y-0.5">
@@ -830,16 +841,6 @@ export default function SiderBarAdmin() {
               )}
             </div>
 
-            {/* Nút Cài đặt 2FA SMS */}
-            {/* <button
-              type="button"
-              onClick={() => setIsOpen2FAModal(true)}
-              className="w-8 h-8 rounded-lg text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
-              title="Bật / Tắt tính năng xác thực 2 bước (2FA SMS)"
-            >
-              <KeyRound className="w-4 h-4" />
-            </button> */}
-
             {/* Nút Đăng xuất */}
             <button
               type="button"
@@ -906,17 +907,6 @@ export default function SiderBarAdmin() {
                 </div>
               )}
 
-              {/* Nút 2FA trong Flyout */}
-              {/* <button
-                type="button"
-                onClick={() => setIsOpen2FAModal(true)}
-                className="w-full mt-2.5 py-1.5 px-3 rounded-lg text-xs font-medium text-blue-600 hover:bg-blue-500/10 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-blue-500/20"
-                title="Bật hoặc Tắt tính năng yêu cầu OTP SMS khi đăng nhập"
-              >
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>Bật / Tắt 2FA SMS</span>
-              </button> */}
-
               <button
                 type="button"
                 onClick={handleLogout}
@@ -971,11 +961,6 @@ export default function SiderBarAdmin() {
         title="Kéo để thay đổi kích thước sidebar"
       />
 
-      {/* 5. Two-Factor Authentication Modal */}
-      <TwoFactorSecurityModal
-        isOpen={isOpen2FAModal}
-        onClose={() => setIsOpen2FAModal(false)}
-      />
     </aside>
   );
 }

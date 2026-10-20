@@ -4,25 +4,32 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldAlert, ArrowLeft, Home, LogIn } from "lucide-react";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useLogout } from "@/hooks/Auth/useAuth";
+import {
+  useRole,
+  useLogout,
+  isSafeRedirectUrl,
+} from "@/hooks/Auth/useAuth";
 
 function ForbiddenContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const logout = useLogout();
-  const { user } = useAuthStore();
+  const { user, roles: currentRoles } = useRole();
 
-  const fromUrl = searchParams.get("from") || searchParams.get("callbackUrl") || "/admin";
-  const currentRoles = user?.roles ?? [];
+  const rawFromUrl =
+    searchParams.get("from") ??
+    searchParams.get("callbackUrl") ??
+    "/admin";
+
+  const fromUrl = isSafeRedirectUrl(rawFromUrl) ? rawFromUrl : "/admin";
 
   const handleReLogin = () => {
     logout(`/login?callbackUrl=${encodeURIComponent(fromUrl)}`);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-      <div className="max-w-md w-full rounded-2xl border border-border/80 bg-card p-8 shadow-xl text-center space-y-6">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background">
+      <div className="max-w-md w-full rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-xl text-center space-y-6">
         {/* Icon 403 */}
         <div className="flex justify-center">
           <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20 shadow-xs animate-bounce">
@@ -35,7 +42,7 @@ function ForbiddenContent() {
           <span className="text-xs font-semibold tracking-wider uppercase text-rose-600 dark:text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">
             HTTP 403 Forbidden
           </span>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground pt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground pt-1">
             Không có quyền truy cập
           </h1>
           <p className="text-sm text-muted-foreground">

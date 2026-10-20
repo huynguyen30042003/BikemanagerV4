@@ -1,155 +1,121 @@
 /**
- * Lấy Access Token từ Cookie hoặc localStorage
+ * Kiểm tra đường dẫn redirect nội bộ an toàn (Chống Open Redirect Vulnerability)
+ */
+export function isSafeRedirectUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  return (
+    url.startsWith("/") &&
+    !url.startsWith("//") &&
+    !url.startsWith("/login")
+  );
+}
+
+/**
+ * Lấy Access Token trực tiếp từ Cookie (Tuyệt đối không dùng localStorage)
+ * Hỗ trợ cả chuẩn Opaque Data Protection Token của Orchard Core / OpenIddict (CfDJ8...) và JWT
  */
 export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
+  if (typeof document === "undefined" || !document.cookie) return null;
 
-  // 1. Thử lấy từ Cookie
-  if (document.cookie) {
-    const match = document.cookie.match(/(?:^|;\s*)(?:access_token|accessToken)=([^;]+)/);
-    if (match) {
-      try {
-        return decodeURIComponent(match[1]);
-      } catch {
-        return match[1];
-      }
-    }
+  const match = document.cookie.match(/(?:^|;\s*)access_token=([^;]+)/);
+  if (!match?.[1]) return null;
+
+  let rawToken: string;
+  try {
+    rawToken = decodeURIComponent(match[1]);
+  } catch {
+    rawToken = match[1];
   }
 
-  // 2. Fallback từ localStorage
-  try {
-    const localToken =
-      localStorage.getItem("access_token") ||
-      localStorage.getItem("accessToken") ||
-      localStorage.getItem("token");
-    if (localToken) return localToken;
-  } catch {}
+  if (
+    !rawToken ||
+    rawToken === "undefined" ||
+    rawToken === "null" ||
+    rawToken.trim().length < 10
+  ) {
+    return null;
+  }
 
-  return null;
+  return rawToken.trim();
 }
 
 export interface SaveTokenPayload {
   access_token?: string | null;
-  accessToken?: string | null;
-  token?: string | null;
   refresh_token?: string | null;
-  refreshToken?: string | null;
   expires_in?: number | null;
-  expiresIn?: number | null;
 }
 
 /**
- * Lưu Access Token vào Cookie & localStorage (Client-side)
- * Refresh Token được lưu dạng HttpOnly Cookie từ Server Route Handler và lưu thêm localStorage
+ * Lưu Access Token và mốc hết hạn vào Cookie (Tuyệt đối không lưu vào localStorage)
+ * Refresh Token được quản lý hoàn toàn bằng HttpOnly Cookie từ Server Route Handler
  */
 export function setAuthTokens(payload?: SaveTokenPayload | null): void {
   if (typeof document === "undefined" || !payload) return;
 
-  const accessToken =
-    payload.access_token || payload.accessToken || payload.token;
-  const refreshToken =
-    payload.refresh_token || payload.refreshToken;
-  const expiresIn =
-    payload.expires_in ?? payload.expiresIn ?? 3600;
+  const accessToken = payload.access_token;
+  const expiresIn = payload.expires_in ?? 3600;
 
-  if (accessToken) {
+  if (accessToken && accessToken !== "undefined" && accessToken !== "null") {
+    const expiresAtMs = Date.now() + expiresIn * 1000;
+
     document.cookie = `access_token=${encodeURIComponent(
-      accessToken
+      accessToken,
     )}; path=/; max-age=${expiresIn}; SameSite=Lax`;
-
-    try {
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("expires_at", String(Date.now() + expiresIn * 1000));
-      localStorage.setItem("has_session", "true");
-    } catch {}
-  }
-
-  if (refreshToken) {
-    try {
-      localStorage.setItem("refresh_token", refreshToken);
-    } catch {}
+    document.cookie = `expires_at=${expiresAtMs}; path=/; max-age=${expiresIn}; SameSite=Lax`;
   }
 }
 
 /**
- * Xóa sạch Auth Tokens khỏi Cookie và dọn dẹp bộ nhớ tạm
+ * Xóa sạch Auth Cookies phía Client
  */
 export function clearAuthTokens(): void {
   if (typeof document !== "undefined") {
     document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
     document.cookie = "refresh_token=; path=/; max-age=0; SameSite=Lax";
-    document.cookie = "refreshToken=; path=/; max-age=0; SameSite=Lax";
     document.cookie = "expires_at=; path=/; max-age=0; SameSite=Lax";
   }
-
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("token");
-      localStorage.removeItem("expires_at");
-      localStorage.removeItem("has_session");
-      localStorage.removeItem("auth-storage");
-      localStorage.removeItem("remembered_username");
-    } catch {
-      // Bỏ qua lỗi nếu môi trường không cho phép truy cập localStorage
-    }
-  }
 }
 
 /**
- * Lấy Refresh Token từ Cookie hoặc localStorage
+ * Lấy Refresh Token từ Cookie (nếu không phải HttpOnly)
  */
 export function getRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
+  if (typeof document === "undefined" || !document.cookie) return null;
 
-  // 1. Thử lấy từ Cookie
-  if (document.cookie) {
-    const match = document.cookie.match(/(?:^|;\s*)(?:refresh_token|refreshToken)=([^;]+)/);
-    if (match) {
-      try {
-        return decodeURIComponent(match[1]);
-      } catch {
-        return match[1];
-      }
-    }
+  const match = document.cookie.match(/(?:^|;\s*)refresh_token=([^;]+)/);
+  if (!match?.[1]) return null;
+
+  let raw: string;
+  try {
+    raw = decodeURIComponent(match[1]);
+  } catch {
+    raw = match[1];
   }
 
-  // 2. Fallback từ localStorage
-  try {
-    const local =
-      localStorage.getItem("refresh_token") ||
-      localStorage.getItem("refreshToken");
-    if (local) return local;
-  } catch {}
+  if (!raw || raw === "undefined" || raw === "null") {
+    return null;
+  }
 
-  return null;
+  return raw;
 }
 
 /**
- * Kiểm tra xem người dùng có phiên đăng nhập trước đó hay không (dựa vào cookie hoặc localStorage)
+ * Kiểm tra xem người dùng có cookie phiên làm việc hiện tại hay không
  */
 export function hasAuthSession(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return (
-      Boolean(getRefreshToken()) ||
-      Boolean(getAccessToken()) ||
-      localStorage.getItem("has_session") === "true" ||
-      Boolean(localStorage.getItem("expires_at"))
-    );
-  } catch {
-    return false;
-  }
+  if (typeof document === "undefined" || !document.cookie) return false;
+  return (
+    Boolean(getAccessToken()) ||
+    Boolean(getRefreshToken()) ||
+    /(?:^|;\s*)expires_at=([^;]+)/.test(document.cookie)
+  );
 }
 
 // Singleton Promise để chống gọi trùng lặp song song nhiều request refresh cùng 1 lúc
 let inFlightRefreshPromise: Promise<string | null> | null = null;
 
 /**
- * Gọi API refresh token để lấy Access Token mới
+ * Gọi API refresh token (tự động đính kèm HttpOnly refresh_token cookie qua credentials: "include")
  */
 export async function refreshAccessToken(): Promise<string | null> {
   if (inFlightRefreshPromise) {
@@ -158,27 +124,23 @@ export async function refreshAccessToken(): Promise<string | null> {
 
   inFlightRefreshPromise = (async () => {
     try {
-      const refreshToken = getRefreshToken();
       const res = await fetch("/api/auth/refresh", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
       });
 
       if (!res.ok) {
         throw new Error("Refresh token thất bại hoặc đã hết hạn");
       }
 
-      const data = await res.json();
-      const newAccessToken =
-        data?.access_token ||
-        data?.accessToken;
+      const data: SaveTokenPayload = await res.json();
+      const newAccessToken = data?.access_token;
 
       if (!newAccessToken) {
-        throw new Error("Không tìm thấy access token mới trong kết quả trả về");
+        throw new Error("Không tìm thấy access_token mới trong kết quả trả về");
       }
 
       setAuthTokens(data);
@@ -196,7 +158,7 @@ export async function refreshAccessToken(): Promise<string | null> {
 }
 
 /**
- * Kiểm tra xem Access Token đã hết hạn hoặc sắp hết hạn hay chưa dựa vào claim 'exp' trong JWT
+ * Kiểm tra xem Access Token đã hết hạn hoặc sắp hết hạn hay chưa dựa vào Cookie 'expires_at' hoặc claim 'exp'
  * @param bufferSeconds Thời gian dự phòng trước khi token thực sự hết hạn (mặc định 15 giây)
  */
 export function isAccessTokenExpired(bufferSeconds = 15): boolean {
@@ -204,11 +166,27 @@ export function isAccessTokenExpired(bufferSeconds = 15): boolean {
   if (!token) return true;
 
   try {
-    const payload = decodeJwt<{ exp?: number }>(token);
-    if (!payload || typeof payload.exp !== "number") return false;
+    // 1. Kiểm tra qua mốc thời gian expires_at trong Cookie
+    if (typeof document !== "undefined" && document.cookie) {
+      const match = document.cookie.match(/(?:^|;\s*)expires_at=([^;]+)/);
+      if (match?.[1]) {
+        const expiresAt = Number(decodeURIComponent(match[1]));
+        if (!Number.isNaN(expiresAt) && expiresAt > 0) {
+          const expiresAtMs = expiresAt < 1e12 ? expiresAt * 1000 : expiresAt;
+          return Date.now() >= expiresAtMs - bufferSeconds * 1000;
+        }
+      }
+    }
 
-    // exp tính bằng giây, Date.now() tính bằng mili-giây
-    return Date.now() >= (payload.exp - bufferSeconds) * 1000;
+    // 2. Nếu token là JWT (có chứa dấu chấm), kiểm tra thêm claim 'exp'
+    if (token.includes(".")) {
+      const payload = decodeJwt<{ exp?: number }>(token);
+      if (payload && typeof payload.exp === "number") {
+        return Date.now() >= (payload.exp - bufferSeconds) * 1000;
+      }
+    }
+
+    return false;
   } catch {
     return false;
   }
@@ -220,7 +198,6 @@ export function isAccessTokenExpired(bufferSeconds = 15): boolean {
 function base64UrlDecode(input: string): string {
   let base64 = input.replace(/-/g, "+").replace(/_/g, "/");
 
-  // Bù padding '=' theo chuẩn Base64 (độ dài phải chia hết cho 4)
   const pad = base64.length % 4;
   if (pad === 2) {
     base64 += "==";
@@ -230,7 +207,6 @@ function base64UrlDecode(input: string): string {
     throw new Error("Chuỗi Base64 không hợp lệ");
   }
 
-  // Sử dụng TextDecoder để giải mã Unicode/UTF-8 chuẩn xác
   if (typeof window !== "undefined" && typeof window.atob === "function") {
     const binary = window.atob(base64);
     const bytes = new Uint8Array(binary.length);
@@ -244,53 +220,42 @@ function base64UrlDecode(input: string): string {
 }
 
 /**
- * Giải mã JWT Token lấy phần Payload
+ * Giải mã JWT Token lấy phần Payload (Trả về null nếu là Opaque Data Protection Token CfDJ8...)
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function decodeJwt<T = Record<string, any>>(token?: string | null): T | null {
-  const jwt = token || getAccessToken();
-  if (!jwt) {
-    console.warn("[decodeJwt] Không tìm thấy token nào trong storage/cookies");
+export function decodeJwt<T = Record<string, unknown>>(token?: string | null): T | null {
+  const jwt = token ?? getAccessToken();
+  if (!jwt || !jwt.includes(".")) {
     return null;
   }
 
   try {
     const parts = jwt.split(".");
     if (parts.length < 2) {
-      console.warn("[decodeJwt] Token không đúng định dạng JWT (phải có ít nhất 2 phần)");
       return null;
     }
 
     const jsonString = base64UrlDecode(parts[1]);
-    const payload = JSON.parse(jsonString) as T;
-
-    console.log("[decodeJwt] Decoded Payload thành công:", payload);
-    return payload;
-  } catch (error) {
-    console.error("[decodeJwt] Lỗi khi giải mã token:", error);
+    return JSON.parse(jsonString) as T;
+  } catch {
     return null;
   }
 }
 
 /**
- * Trích xuất tất cả các Roles từ JWT Payload (hỗ trợ mọi format .NET, OpenIddict, OAuth, Keycloak)
+ * Trích xuất tất cả các Roles từ JWT Payload
  */
 export function getUserRoles(token?: string | null): string[] {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const payload = decodeJwt<Record<string, any>>(token);
-  if (!payload) return [];
+  const payload = decodeJwt<Record<string, unknown>>(token);
+  if (!payload) {
+    return [];
+  }
 
-  // 1. Kiểm tra các claim phổ biến cụ thể
-  const directClaim =
-    payload.role ??
-    payload.roles ??
-    payload.Role ??
-    payload.Roles ??
-    payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
-    payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role"] ??
-    payload.authorities ??
-    payload.user_role ??
-    payload.userRoles;
+  const ROLE_CLAIM_KEYS = [
+    "role",
+    "roles",
+    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role",
+  ];
 
   const foundRoles: string[] = [];
 
@@ -307,22 +272,23 @@ export function getUserRoles(token?: string | null): string[] {
     } else if (typeof val === "number") {
       foundRoles.push(String(val));
     } else if (typeof val === "object" && val !== null) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const obj = val as any;
-      const name = obj.name || obj.role || obj.value || obj.title;
-      if (name) foundRoles.push(String(name).trim());
+      const obj = val as Record<string, unknown>;
+      const roleVal = obj.role ?? obj.name ?? obj.value;
+      if (roleVal) foundRoles.push(String(roleVal).trim());
     }
   };
 
-  if (directClaim) {
-    if (Array.isArray(directClaim)) {
-      directClaim.forEach(extractItem);
-    } else {
-      extractItem(directClaim);
+  for (const claimKey of ROLE_CLAIM_KEYS) {
+    const claimValue = payload[claimKey];
+    if (claimValue) {
+      if (Array.isArray(claimValue)) {
+        claimValue.forEach(extractItem);
+      } else {
+        extractItem(claimValue);
+      }
     }
   }
 
-  // 2. Nếu chưa tìm thấy, quét tất cả các key chứa từ 'role' (không phân biệt hoa/thường)
   if (foundRoles.length === 0) {
     for (const [key, value] of Object.entries(payload)) {
       if (key.toLowerCase().includes("role") && value) {
@@ -335,19 +301,15 @@ export function getUserRoles(token?: string | null): string[] {
     }
   }
 
-  // 3. Fallback: Nếu có trường 'scope' chứa thông tin role
   if (foundRoles.length === 0 && typeof payload.scope === "string") {
     const scopes = payload.scope.split(" ").map((s: string) => s.trim());
     const roleCandidates = scopes.filter((s: string) =>
-      ["admin", "administrator", "manager", "staff", "user"].includes(s.toLowerCase())
+      ["admin", "administrator", "manager", "staff", "user"].includes(s.toLowerCase()),
     );
     foundRoles.push(...roleCandidates);
   }
 
-  // Khử trùng lặp
-  const uniqueRoles = Array.from(new Set(foundRoles));
-  console.log("[getUserRoles] Kết quả roles tìm được:", uniqueRoles);
-  return uniqueRoles;
+  return Array.from(new Set(foundRoles));
 }
 
 /**
@@ -377,54 +339,61 @@ export interface UserTokenInfo {
   rawPayload?: Record<string, unknown> | null;
 }
 
+function getStringClaim(
+  payload: Record<string, unknown>,
+  keys: string[],
+): string | null {
+  for (const key of keys) {
+    const val = payload[key];
+    if (typeof val === "string" && val.trim()) {
+      return val.trim();
+    }
+  }
+  return null;
+}
+
 /**
- * Lấy toàn bộ thông tin cơ bản của user từ Token
+ * Lấy thông tin cơ bản của user từ Token
  */
 export function getUserFromToken(token?: string | null): UserTokenInfo | null {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const payload = decodeJwt<Record<string, any>>(token);
-  if (!payload) return null;
+  const activeToken = token ?? getAccessToken();
+  if (!activeToken) return null;
 
-  const roles = getUserRoles(token);
-  const username =
-    payload.sub ||
-    payload.name ||
-    payload.username ||
-    payload.preferred_username ||
-    payload.unique_name ||
-    payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ||
-    null;
+  const payload = decodeJwt<Record<string, unknown>>(activeToken);
+  if (!payload) {
+    return null;
+  }
 
-  const email =
-    payload.email ||
-    payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] ||
-    null;
+  const roles = getUserRoles(activeToken);
+  const username = getStringClaim(payload, [
+    "preferred_username",
+    "unique_name",
+    "username",
+    "name",
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+    "sub",
+  ]);
+
+  const email = getStringClaim(payload, [
+    "email",
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+  ]);
 
   const fullName =
-    payload.fullname ||
-    payload.fullName ||
-    payload.given_name ||
-    username ||
-    null;
+    getStringClaim(payload, ["fullName", "fullname", "given_name", "name"]) ??
+    username;
 
-  const avatarUrl =
-    payload.avatarUrl ||
-    payload.avatar ||
-    payload.picture ||
-    payload.image ||
-    null;
+  const avatarUrl = getStringClaim(payload, ["avatarUrl", "avatar", "picture"]);
+  const id = getStringClaim(payload, ["sub", "id", "nameid"]);
 
-  const userResult: UserTokenInfo = {
-    id: payload.sub || payload.id || null,
+  return {
+    id,
     username,
     email,
     fullName,
     avatarUrl,
     roles,
-    role: roles[0] || null,
+    role: roles[0] ?? null,
     rawPayload: payload,
   };
-
-  console.log("[getUserFromToken] Thông tin user trích xuất:", userResult);
-  return userResult;
 }

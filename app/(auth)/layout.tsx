@@ -1,4 +1,21 @@
+import type { Metadata } from "next";
 import { ReactNode } from "react";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Đăng nhập hệ thống",
+    template: "%s | Quản trị Bike Manager",
+  },
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
+};
 
 interface AuthLayoutProps {
   children: ReactNode;

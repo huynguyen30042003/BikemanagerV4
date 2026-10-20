@@ -3,7 +3,11 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
-import { getUserFromToken, UserTokenInfo } from "@/lib/auth";
+import {
+  getUserFromToken,
+  UserTokenInfo,
+  isAccessTokenExpired,
+} from "@/lib/auth";
 import {
   getRequiredRolesForPath,
   isUserAuthorized,
@@ -29,9 +33,7 @@ export function RoleGuard({
   const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      setTokenUser(getUserFromToken());
-    }
+    setTokenUser(getUserFromToken());
   }, [user]);
 
   const effectiveRoles = user?.roles ?? tokenUser?.roles ?? [];
@@ -65,39 +67,85 @@ export function AdminRouteGuard({
   const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(null);
   const [hasChecked, setHasChecked] = useState(false);
 
+  // 1. Xác thực phiên làm việc từ Token cục bộ và đồng bộ với API /api/auth/me
   useEffect(() => {
-    // 1. Đọc tức thì từ Token trong Cookie để tránh giật lag frame đầu
-    const tUser = getUserFromToken();
-    setTokenUser(tUser);
+    let isMounted = true;
 
-    // 2. Xác thực lại với API
-    if (!user) {
-      fetchUser().finally(() => {
-        setHasChecked(true);
-      });
-    } else {
-      setHasChecked(true);
-    }
-  }, [user, fetchUser]);
+    const verifySession = async () => {
+      // Đọc tức thì từ Token nếu còn hạn để chống giật frame (Flash of Forbidden khi F5)
+      if (!isAccessTokenExpired()) {
+        const tUser = getUserFromToken();
+        if (isMounted && tUser) {
+          setTokenUser(tUser);
+        }
+      }
+
+      // Gọi fetchUser (tự động kiểm tra và refresh token nếu access_token hết hạn)
+      try {
+        const u = await fetchUser();
+        if (isMounted) {
+          if (u) {
+            setTokenUser(getUserFromToken());
+          } else {
+            setTokenUser(null);
+          }
+        }
+      } catch (err) {
+        console.error("[AdminRouteGuard] Lỗi xác thực phiên làm việc:", err);
+        if (isMounted) {
+          setTokenUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setHasChecked(true);
+        }
+      }
+    };
+
+    verifySession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchUser]);
 
   const requiredRoles = getRequiredRolesForPath(pathname);
-
-  // Nếu route không yêu cầu quyền gì, cho phép truy cập luôn
-  if (!requiredRoles || requiredRoles.length === 0) {
-    return <>{children}</>;
-  }
-
-  // Kết hợp roles từ user (API/Zustand) và tokenUser (Cookie)
+  const isAuthenticated = Boolean(user || tokenUser);
   const effectiveRoles = user?.roles ?? tokenUser?.roles ?? [];
-  const hasAccess = isUserAuthorized(requiredRoles, effectiveRoles);
+  const hasRoleAccess = isUserAuthorized(requiredRoles, effectiveRoles);
+  const hasAccess = isAuthenticated && hasRoleAccess;
 
-  // NẾU CÓ QUYỀN -> Render page ngay tức thì, tuyệt đối không hiện Forbidden
+  // 2. Thực hiện chuyển hướng an toàn trong useEffect (Gọi vô điều kiện để tuân thủ Rules of Hooks)
+  useEffect(() => {
+    if (!hasChecked || isLoading) return;
+
+    if (!isAuthenticated) {
+      const callbackPath = encodeURIComponent(pathname || "/admin");
+      router.replace(`/login?callbackUrl=${callbackPath}`);
+      return;
+    }
+
+    if (!hasRoleAccess && mode === "redirect") {
+      const fromPath = encodeURIComponent(pathname || "/admin");
+      router.replace(`/forbidden?from=${fromPath}`);
+    }
+  }, [
+    hasChecked,
+    isLoading,
+    isAuthenticated,
+    hasRoleAccess,
+    mode,
+    pathname,
+    router,
+  ]);
+
+  // NẾU ĐÃ ĐĂNG NHẬP VÀ ĐỦ QUYỀN -> Render nội dung trang ngay tức thì
   if (hasAccess) {
     return <>{children}</>;
   }
 
-  // NẾU CHƯA CÓ QUYỀN VÀ ĐANG TRONG QUÁ TRÌNH KIỂM TRA TỪ API -> Hiển thị Loading xác thực
-  if (!hasChecked || (isLoading && !user)) {
+  // NẾU CHƯA KIỂM TRA XONG HOẶC ĐANG LOADING -> Hiển thị Loading xác thực
+  if (!hasChecked || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
@@ -110,25 +158,25 @@ export function AdminRouteGuard({
     );
   }
 
-  // ĐÃ KIỂM TRA XONG từ cả Token và API mà VẪN KHÔNG CÓ QUYỀN:
-  // 1. Nếu hoàn toàn chưa đăng nhập -> chuyển đến login kèm callbackUrl
-  if (!user && !tokenUser) {
-    const callbackPath = encodeURIComponent(pathname);
-    router.replace(`/login?callbackUrl=${callbackPath}`);
-    return null;
+  // ĐÃ KIỂM TRA XONG MÀ CHƯA ĐĂNG NHẬP HOẶC KHÔNG ĐỦ QUYỀN Ở CHẾ ĐỘ REDIRECT -> Đang chuyển hướng
+  if (!isAuthenticated || mode === "redirect") {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+          <p className="text-xs text-muted-foreground animate-pulse font-medium">
+            Đang chuyển hướng...
+          </p>
+        </div>
+      </div>
+    );
   }
 
-  // 2. Nếu đã đăng nhập nhưng không đủ role:
-  if (mode === "redirect") {
-    const fromPath = encodeURIComponent(pathname);
-    router.replace(`/forbidden?from=${fromPath}`);
-    return null;
-  }
-
+  // NẾU ĐÃ ĐĂNG NHẬP NHƯNG KHÔNG ĐỦ ROLE (chế độ render inline)
   return (
     <AccessDenied
       pathname={pathname}
-      requiredRoles={requiredRoles}
+      requiredRoles={requiredRoles ?? []}
       userRoles={effectiveRoles}
     />
   );

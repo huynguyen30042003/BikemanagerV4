@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
+function isSafeCallbackUrl(url: string | null): url is string {
+  if (!url) return false;
+  return (
+    url.startsWith("/") &&
+    !url.startsWith("//") &&
+    !url.startsWith("/login")
+  );
+}
+
 export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
@@ -13,28 +22,40 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token =
-    req.cookies.get("access_token")?.value ||
-    req.cookies.get("refresh_token")?.value;
+  const accessToken = req.cookies.get("access_token")?.value;
+  const refreshToken = req.cookies.get("refresh_token")?.value;
 
+  const hasActiveAccessToken = Boolean(
+    accessToken &&
+      accessToken !== "undefined" &&
+      accessToken !== "null" &&
+      accessToken.trim().length >= 10,
+  );
+
+  const hasRefreshSession = Boolean(
+    refreshToken &&
+      refreshToken !== "undefined" &&
+      refreshToken !== "null" &&
+      refreshToken.trim().length >= 10,
+  );
+
+  const hasAnySession = hasActiveAccessToken || hasRefreshSession;
   const isAuthPage = pathname === "/login";
 
   // Chưa đăng nhập mà truy cập trang quản trị/dashboard -> chuyển đến login kèm callbackUrl
-  if (!token && !isAuthPage) {
+  if (!hasAnySession && !isAuthPage) {
     const loginUrl = new URL("/login", req.url);
     const callbackPath = req.nextUrl.pathname + req.nextUrl.search;
-    loginUrl.searchParams.set("callbackUrl", callbackPath);
+    if (isSafeCallbackUrl(callbackPath)) {
+      loginUrl.searchParams.set("callbackUrl", callbackPath);
+    }
     return NextResponse.redirect(loginUrl);
   }
 
-  // Đã đăng nhập mà cố vào login: đưa về callbackUrl nếu có, hoặc về /admin
-  if (token && isAuthPage) {
+  // Đã có access_token hợp lệ mà cố vào trang login: đưa về callbackUrl nếu hợp lệ, hoặc về /admin
+  if (hasActiveAccessToken && isAuthPage) {
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
-    if (
-      callbackUrl &&
-      callbackUrl.startsWith("/") &&
-      !callbackUrl.startsWith("/login")
-    ) {
+    if (isSafeCallbackUrl(callbackUrl)) {
       return NextResponse.redirect(new URL(callbackUrl, req.url));
     }
     return NextResponse.redirect(new URL("/admin", req.url));

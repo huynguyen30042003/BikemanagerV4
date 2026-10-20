@@ -5,11 +5,10 @@ import axios, {
 } from "axios";
 import { BE_URL } from "../constants/apiConstants";
 import {
-  setAuthTokens,
-  clearAuthTokens,
   getAccessToken,
   isAccessTokenExpired,
   refreshAccessToken,
+  clearAuthTokens,
 } from "@/lib/auth";
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -17,7 +16,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 // Các endpoint không được phép tự động chạy refresh token khi gặp lỗi 401
-const AUTH_WHITELIST_URLS = ["/auth/login", "/auth/refresh", "/auth/register"];
+const AUTH_WHITELIST_URLS = ["/auth/login", "/auth/refresh", "/auth/register", "/auth/logout"];
 
 class Api {
   public instance: AxiosInstance;
@@ -32,7 +31,7 @@ class Api {
   }
 
   private isExpiredTokenError(error: AxiosError): boolean {
-    const requestUrl = error.config?.url || "";
+    const requestUrl = error.config?.url ?? "";
     const isAuthUrl = AUTH_WHITELIST_URLS.some((url) => requestUrl.includes(url));
 
     return error?.response?.status === 401 && !isAuthUrl;
@@ -45,13 +44,22 @@ class Api {
   private async refreshToken(): Promise<string> {
     const newAccessToken = await refreshAccessToken();
     if (!newAccessToken) {
+      clearAuthTokens();
       if (typeof window !== "undefined") {
+        try {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch {
+          // Bỏ qua lỗi mạng
+        }
         const currentPath = window.location.pathname + window.location.search;
         if (!window.location.pathname.startsWith("/login")) {
           window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;
         }
       }
-      throw new Error("Không tìm thấy access token mới từ API refresh");
+      throw new Error("Không tìm thấy access_token mới từ API refresh");
     }
 
     this.instance.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
@@ -78,23 +86,24 @@ class Api {
         }
 
         if (typeof window !== "undefined") {
-          const requestUrl = config.url || "";
+          const requestUrl = config.url ?? "";
           const isAuthUrl = AUTH_WHITELIST_URLS.some((url) => requestUrl.includes(url));
 
-          const token = getAccessToken();
+          if (!isAuthUrl) {
+            const token = getAccessToken();
 
-          // Chủ động refresh trước nếu token sắp hết hạn (trong vòng 15 giây) và không phải API auth
-          if (!isAuthUrl && token && isAccessTokenExpired(15)) {
-            try {
-              const newToken = await this.refreshToken();
-              config.headers.set("Authorization", `Bearer ${newToken}`);
-            } catch (error) {
-              console.error("[AUTO REFRESH FAILED]", error);
-              return Promise.reject(error);
+            // Chủ động refresh trước nếu chưa có access_token (nhưng còn HttpOnly refresh_token cookie) hoặc token sắp hết hạn (15 giây)
+            if (!token || isAccessTokenExpired(15)) {
+              try {
+                const newToken = await this.refreshToken();
+                config.headers.set("Authorization", `Bearer ${newToken}`);
+              } catch (error) {
+                console.error("[AUTO REFRESH FAILED]", error);
+                return Promise.reject(error);
+              }
+            } else {
+              config.headers.set("Authorization", `Bearer ${token}`);
             }
-          } else if (token) {
-            // Luôn ghi đè bằng token mới nhất từ getAccessToken()
-            config.headers.set("Authorization", `Bearer ${token}`);
           }
         }
 

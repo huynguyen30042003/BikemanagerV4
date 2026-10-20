@@ -47,9 +47,9 @@ export function getRequiredRolesForPath(pathname: string): string[] | null {
     return ROUTE_PERMISSIONS[pathname];
   }
 
-  // 2. Khớp tiền tố (prefix) dài nhất (ví dụ /admin/products/123 -> /admin/products)
+  // 2. Khớp tiền tố (prefix) dài nhất theo segment (ví dụ /admin/products/123 -> /admin/products)
   const matchedRoute = Object.keys(ROUTE_PERMISSIONS)
-    .filter((route) => pathname.startsWith(route))
+    .filter((route) => pathname === route || pathname.startsWith(`${route}/`))
     .sort((a, b) => b.length - a.length)[0];
 
   return matchedRoute ? ROUTE_PERMISSIONS[matchedRoute] : null;
@@ -60,7 +60,7 @@ export function getRequiredRolesForPath(pathname: string): string[] | null {
  */
 export function isUserAuthorized(
   requiredRoles: string[] | null | undefined,
-  userRoles: string[] | undefined
+  userRoles: string[] | undefined,
 ): boolean {
   // Nếu route không yêu cầu quyền cụ thể nào -> cho phép
   if (!requiredRoles || requiredRoles.length === 0) return true;
@@ -69,6 +69,6 @@ export function isUserAuthorized(
 
   const normalizedUserRoles = userRoles.map((r) => r.toLowerCase().trim());
   return requiredRoles.some((role) =>
-    normalizedUserRoles.includes(role.toLowerCase().trim())
+    normalizedUserRoles.includes(role.toLowerCase().trim()),
   );
 }

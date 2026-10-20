@@ -4,122 +4,111 @@ import { APP_URL } from "@/shared/constants/apiConstants";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
+function clearCookiesOnResponse(res: NextResponse): NextResponse {
+  res.cookies.set("access_token", "", { path: "/", maxAge: 0, sameSite: "lax" });
+  res.cookies.set("refresh_token", "", { path: "/", maxAge: 0, sameSite: "lax" });
+  res.cookies.set("expires_at", "", { path: "/", maxAge: 0, sameSite: "lax" });
+  return res;
+}
+
+function extractRefreshTokenFromSetCookie(response: Response): string | null {
+  const allSetCookies = response.headers.getSetCookie?.() ?? [];
+  const setCookieHeader = response.headers.get("set-cookie") ?? "";
+  const allCookieStrings = [setCookieHeader, ...allSetCookies].join("; ");
+  const cookieMatch = allCookieStrings.match(/refresh_token=([^;]+)/i);
+  if (!cookieMatch?.[1]) return null;
+  try {
+    return decodeURIComponent(cookieMatch[1]);
+  } catch {
+    return cookieMatch[1];
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const cookieStore = await cookies();
 
-    // 1. Tìm refresh token từ HttpOnly cookies (hỗ trợ cả 2 tên gọi)
-    let refreshToken =
-      cookieStore.get("refresh_token")?.value ||
-      cookieStore.get("refreshToken")?.value ||
-      cookieStore.get("RefreshToken")?.value;
+    // 1. Tìm refresh_token từ HttpOnly cookies
+    let refreshToken = cookieStore.get("refresh_token")?.value;
 
-    // 2. Fallback nếu client gửi refresh token qua JSON body
+    // 2. Fallback nếu client gửi refresh_token qua JSON body
     if (!refreshToken) {
       try {
         const body = await req.json();
-        refreshToken =
-          body?.refresh_token ||
-          body?.refreshToken ||
-          body?.RefreshToken;
+        refreshToken = body?.refresh_token;
       } catch {
-        // Body có thể rỗng hoặc không phải JSON
+        // Body có thể rỗng
       }
     }
 
-    // 3. Fallback nếu client gửi qua custom headers
+    // 3. Fallback nếu client gửi qua custom header
     if (!refreshToken) {
-      refreshToken =
-        req.headers.get("x-refresh-token") ||
-        req.headers.get("x-token") ||
-        undefined;
+      refreshToken = req.headers.get("x-refresh-token") ?? undefined;
     }
 
-    // Lấy access_token cũ (nếu có) để backend đối chiếu
-    let accessToken =
-      cookieStore.get("access_token")?.value ||
-      cookieStore.get("accessToken")?.value;
-
-    if (!accessToken) {
-      const authHeader = req.headers.get("authorization");
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        accessToken = authHeader.substring(7);
-      }
-    }
-
-    if (!refreshToken) {
-      console.warn("[API_AUTH_REFRESH] Không tìm thấy refresh token trong cookie hoặc payload");
+    if (!refreshToken || refreshToken === "undefined" || refreshToken === "null") {
       const errRes = NextResponse.json(
-        { message: "No refresh token" },
-        { status: 401 }
+        { message: "Không tìm thấy refresh_token hợp lệ" },
+        { status: 401 },
       );
-      errRes.cookies.set("access_token", "", { path: "/", maxAge: 0 });
-      errRes.cookies.set("refresh_token", "", { path: "/", maxAge: 0 });
-      errRes.cookies.set("refreshToken", "", { path: "/", maxAge: 0 });
-      errRes.cookies.set("expires_at", "", { path: "/", maxAge: 0 });
-      return errRes;
+      return clearCookiesOnResponse(errRes);
     }
 
-    const backendBase =
-      APP_URL || process.env.NEXT_PUBLIC_API_URL || "https://localhost:5001/api";
-
-    console.log("[API_AUTH_REFRESH] Gửi refresh token sang backend:", `${backendBase}/auth/refresh`);
-
-    // Gửi yêu cầu sang backend Orchard / OpenIddict:
-    // Hỗ trợ cả Cookie header, JSON body và Authorization header để tương thích tối đa
-    const response = await fetch(`${backendBase}/auth/refresh`, {
+    // Gửi yêu cầu làm mới token sang backend (không gửi Authorization Bearer đã hết hạn để tránh bị middleware JWT chặn)
+    const response = await fetch(`${APP_URL}/auth/refresh`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Cookie: `refresh_token=${refreshToken}; refreshToken=${refreshToken}; RefreshToken=${refreshToken}`,
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        Cookie: `refresh_token=${refreshToken}`,
       },
       body: JSON.stringify({
         refresh_token: refreshToken,
-        refreshToken: refreshToken,
-        RefreshToken: refreshToken,
       }),
     });
 
     const data = await response.json().catch(() => null);
 
-    if (!response.ok || !data) {
-      console.error("[API_AUTH_REFRESH] Backend từ chối refresh token:", response.status, data);
+    if (!response.ok || !data || !data.access_token) {
       const errRes = NextResponse.json(
-        data || { message: "Invalid refresh token" },
-        { status: 401 }
+        data ?? { message: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại" },
+        { status: 401 },
       );
-      errRes.cookies.set("access_token", "", { path: "/", maxAge: 0 });
-      errRes.cookies.set("refresh_token", "", { path: "/", maxAge: 0 });
-      errRes.cookies.set("refreshToken", "", { path: "/", maxAge: 0 });
-      errRes.cookies.set("expires_at", "", { path: "/", maxAge: 0 });
-      return errRes;
+      return clearCookiesOnResponse(errRes);
     }
 
-    // Trích xuất refresh token mới (nếu backend có cơ chế rotation), hoặc giữ nguyên token hiện tại
-    const setCookie = response.headers.get("set-cookie");
-    const cookieMatch = setCookie?.match(/refresh_token=([^;]+)/i);
-    const newRefreshToken =
-      data.refresh_token ||
-      data.refreshToken ||
-      (cookieMatch ? cookieMatch[1] : null) ||
+    const newAccessToken: string = data.access_token;
+    const expiresIn: number = data.expires_in ?? 3600;
+    const newRefreshToken: string =
+      data.refresh_token ??
+      extractRefreshTokenFromSetCookie(response) ??
       refreshToken;
 
     const res = NextResponse.json({
-      ...data,
-      refresh_token: newRefreshToken,
+      success: true,
+      access_token: newAccessToken,
+      expires_in: expiresIn,
+      token_type: data.token_type ?? "Bearer",
     });
 
-    // 1. Lưu cookie access_token (httpOnly: false để client JS đọc được)
-    res.cookies.set("access_token", data.access_token, {
+    // 1. Cập nhật cookie access_token (httpOnly: false để client JS đọc được)
+    res.cookies.set("access_token", newAccessToken, {
       httpOnly: false,
       secure: false,
       sameSite: "lax",
       path: "/",
-      maxAge: data.expires_in,
+      maxAge: expiresIn,
     });
 
-    // 2. Cập nhật cookie refresh_token (HttpOnly)
+    // 2. Cập nhật cookie expires_at
+    res.cookies.set("expires_at", String(Date.now() + expiresIn * 1000), {
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: expiresIn,
+    });
+
+    // 3. Cập nhật cookie refresh_token (HttpOnly)
     if (newRefreshToken) {
       const refreshMaxAge = 60 * 60 * 24 * 7; // 7 ngày
       res.cookies.set("refresh_token", newRefreshToken, {
@@ -131,20 +120,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Forward Set-Cookie từ backend nếu có
-    if (setCookie) {
-      const allCookies = response.headers.getSetCookie?.() || [];
-      allCookies.forEach((cookie) => {
-        res.headers.append("Set-Cookie", cookie);
-      });
-    }
-
     return res;
   } catch (error) {
     console.error("[API_AUTH_REFRESH_ERROR]", error);
-    return NextResponse.json(
-      { message: "Refresh failed" },
-      { status: 401 }
+    const errRes = NextResponse.json(
+      { message: "Không thể làm mới phiên đăng nhập" },
+      { status: 401 },
     );
+    return clearCookiesOnResponse(errRes);
   }
 }

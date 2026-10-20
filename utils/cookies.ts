@@ -8,7 +8,7 @@ export const setCookie = (name: string, value: string, days?: number) => {
     expires = "; expires=" + date.toUTCString();
   }
 
-  document.cookie = `${name}=${value}${expires}; path=/; SameSite=Strict`;
+  document.cookie = `${name}=${encodeURIComponent(value)}${expires}; path=/; SameSite=Lax`;
 };
 
 export const getCookie = (name: string): string | null => {
@@ -21,7 +21,12 @@ export const getCookie = (name: string): string | null => {
     let c = ca[i];
     while (c.charAt(0) === " ") c = c.substring(1, c.length);
     if (c.indexOf(nameEQ) === 0) {
-      return c.substring(nameEQ.length, c.length);
+      const raw = c.substring(nameEQ.length, c.length);
+      try {
+        return decodeURIComponent(raw);
+      } catch {
+        return raw;
+      }
     }
   }
   return null;
@@ -29,10 +34,16 @@ export const getCookie = (name: string): string | null => {
 
 export const deleteCookie = (name: string) => {
   if (typeof window === "undefined") return;
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  document.cookie = `${name}=; max-age=0; path=/; SameSite=Lax`;
 };
 
 export const clearAllAuthCookies = () => {
-  const authCookies = ["accessToken", "refreshToken", "user", "rememberMe"];
+  const authCookies = [
+    "access_token",
+    "refresh_token",
+    "expires_at",
+    "user",
+    "rememberMe",
+  ];
   authCookies.forEach((cookie) => deleteCookie(cookie));
 };

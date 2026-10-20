@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, ArrowLeft, Home, LogIn } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useLogout } from "@/hooks/Auth/useAuth";
+import { useLogout, isSafeRedirectUrl } from "@/hooks/Auth/useAuth";
 
 interface AccessDeniedProps {
   pathname?: string;
@@ -23,15 +23,15 @@ export default function AccessDenied({
   const { user } = useAuthStore();
 
   const currentRoles = userRoles ?? user?.roles ?? [];
-  const targetPath = pathname || "/admin";
+  const targetPath = isSafeRedirectUrl(pathname) ? pathname : "/admin";
 
   const handleReLogin = () => {
     logout(`/login?callbackUrl=${encodeURIComponent(targetPath)}`);
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-6">
-      <div className="max-w-md w-full rounded-2xl border border-border/80 bg-card p-8 shadow-lg text-center space-y-6">
+    <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
+      <div className="max-w-md w-full rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-lg text-center space-y-6">
         {/* Icon & Status */}
         <div className="flex justify-center">
           <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20 shadow-xs animate-bounce">

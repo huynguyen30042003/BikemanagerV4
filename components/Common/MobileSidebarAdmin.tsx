@@ -21,9 +21,7 @@ import {
   LogOut,
   RefreshCw,
   ShieldCheck,
-  KeyRound,
 } from "lucide-react";
-import TwoFactorSecurityModal from "./TwoFactorSecurityModal";
 
 export function MobileSidebarAdmin() {
   const pathname = usePathname();
@@ -34,7 +32,6 @@ export function MobileSidebarAdmin() {
   const [isOpen, setIsOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isOpen2FAModal, setIsOpen2FAModal] = useState(false);
 
   // Hợp nhất dữ liệu user
   const currentUser = user || tokenUser;
@@ -285,15 +282,6 @@ export function MobileSidebarAdmin() {
                   </div>
                 </div>
 
-                {/* Nút Cài đặt Bật/Tắt 2FA SMS */}
-                {/* <button
-                  type="button"
-                  onClick={() => setIsOpen2FAModal(true)}
-                  className="w-8 h-8 rounded-lg text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 border border-border/70 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                  title="Bật / Tắt tính năng xác thực 2 bước (2FA SMS)"
-                >
-                  <KeyRound className="w-4 h-4" />
-                </button> */}
               </div>
             </div>
 
@@ -313,7 +301,8 @@ export function MobileSidebarAdmin() {
                         ? group.items!.some((item) =>
                             pathname.startsWith(item.href),
                           )
-                        : pathname === group.href;
+                        : pathname === group.href ||
+                          (group.href === "/admin" && pathname === "/");
                       const isExpanded = Boolean(openGroups[group.title]);
 
                       if (!hasItems) {
@@ -418,11 +407,6 @@ export function MobileSidebarAdmin() {
         </div>
       )}
 
-      {/* Modal Cài đặt Xác thực 2 bước (2FA SMS) */}
-      <TwoFactorSecurityModal
-        isOpen={isOpen2FAModal}
-        onClose={() => setIsOpen2FAModal(false)}
-      />
     </>
   );
 }
