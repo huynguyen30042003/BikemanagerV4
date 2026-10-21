@@ -1,7 +1,14 @@
 import api from "..";
 import { APP_URL } from "../../constants/apiConstants";
 import { getAccessToken } from "@/lib/auth";
-import { GiaoDichFilter, TonKhoFilter, UpdateDinhMucPayload, KHO_TonKhoKPI } from "@/types/tonKho";
+import {
+  GiaoDichFilter,
+  TonKhoFilter,
+  UpdateDinhMucPayload,
+  KHO_TonKhoKPI,
+  KHO_TonKho_NhapTonDauKy_Request,
+  KHO_TonKho_NhapTonDauKy_Response,
+} from "@/types/tonKho";
 
 const getAuthHeaders = () => {
   const token = getAccessToken();
@@ -130,7 +137,7 @@ export const getLoChiPhiTonKhoApi = async (
 export const getTonKhoKPIApi = async (): Promise<KHO_TonKhoKPI> => {
   try {
     const res = await api.post(
-      `${APP_URL}/TonKhoApi/GetKPI`,
+       `${APP_URL}/TonKhoApi/GetKPI`,
       {},
       {
         headers: getAuthHeaders(),
@@ -145,5 +152,24 @@ export const getTonKhoKPIApi = async (): Promise<KHO_TonKhoKPI> => {
     });
     return res.data?.data ?? res.data;
   }
+};
+
+/**
+ * Nhập tồn kho đầu kỳ (hỗ trợ cả có Serial và không có Serial)
+ * POST /api/TonKhoApi/NhapTonDauKy
+ */
+export const nhapTonDauKyApi = async (
+  payload: KHO_TonKho_NhapTonDauKy_Request
+): Promise<KHO_TonKho_NhapTonDauKy_Response> => {
+  const response = await api.post(
+    `${APP_URL}/TonKhoApi/NhapTonDauKy`,
+    payload,
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data?.data ?? response.data;
 };
 

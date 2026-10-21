@@ -38,6 +38,7 @@ import {
   Compass,
   Globe,
   Layers,
+  PackagePlus,
   ArrowLeftRight,
   ClipboardCheck,
   Wrench,
@@ -315,6 +316,12 @@ export const MENU_SECTIONS: MenuSection[] = [
             title: "Tồn kho & Thẻ kho",
             href: "/admin/inventory",
             icon: Layers,
+            roles: ["Administrator", "AdminAccess", "WarehouseAccess"],
+          },
+          {
+            title: "Tồn kho đầu kỳ",
+            href: "/admin/opening-stock",
+            icon: PackagePlus,
             roles: ["Administrator", "AdminAccess", "WarehouseAccess"],
           },
           {

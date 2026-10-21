@@ -194,16 +194,17 @@ export function usePhieuChuyenKho() {
     }));
   };
 
-  const handleSubmitCreate = async () => {
-    if (!dataCreate.KhoXuatID || !dataCreate.KhoNhapID) {
+  const handleSubmitCreate = async (payload?: CreatePhieuChuyenPayload) => {
+    const data = payload || dataCreate;
+    if (!data.KhoXuatID || !data.KhoNhapID) {
       toast.error("Vui lòng chọn cả kho xuất và kho nhập!");
       return;
     }
-    if (dataCreate.KhoXuatID === dataCreate.KhoNhapID) {
+    if (data.KhoXuatID === data.KhoNhapID) {
       toast.error("Kho xuất và kho nhập không được trùng nhau!");
       return;
     }
-    const validChiTiets = dataCreate.ChiTiets.filter(
+    const validChiTiets = (data.ChiTiets || []).filter(
       (c) => c.BienTheSanPhamID && c.SoLuongChuyen > 0
     );
     if (validChiTiets.length === 0) {
@@ -213,7 +214,7 @@ export function usePhieuChuyenKho() {
 
     try {
       await createMutation.mutateAsync({
-        ...dataCreate,
+        ...data,
         ChiTiets: validChiTiets,
       });
       setOpenCreate(false);
@@ -222,35 +223,51 @@ export function usePhieuChuyenKho() {
     }
   };
 
-  const handleXuatKho = async (phieuId: string) => {
+  const handleXuatKho = async (phieuIdOrPayload: string | XuatKhoPayload) => {
     try {
-      await xuatKhoMutation.mutateAsync({ PhieuChuyenKhoID: phieuId });
+      const payload: XuatKhoPayload =
+        typeof phieuIdOrPayload === "string"
+          ? { PhieuChuyenKhoID: phieuIdOrPayload }
+          : phieuIdOrPayload;
+      await xuatKhoMutation.mutateAsync(payload);
       setOpenDetail(false);
     } catch {
       // Toast handled
     }
   };
 
-  const handleNhanHang = async (phieu: KHO_PhieuChuyenKho) => {
+  const handleNhanHang = async (
+    phieuOrPayload: KHO_PhieuChuyenKho | NhanHangPayload
+  ) => {
     try {
-      const thucNhans = (phieu.chiTiets || []).map((ct) => ({
-        BienTheSanPhamID: ct.bienTheSanPhamID,
-        SoSerialID: ct.soSerialID || null,
-        SoLuongThucNhan: ct.soLuongChuyen,
-      }));
-      await nhanHangMutation.mutateAsync({
-        PhieuChuyenKhoID: phieu.phieuChuyenKhoID,
-        ThucNhans: thucNhans,
-      });
+      let payload: NhanHangPayload;
+      if ("ThucNhans" in phieuOrPayload) {
+        payload = phieuOrPayload;
+      } else {
+        const thucNhans = (phieuOrPayload.chiTiets || []).map((ct) => ({
+          BienTheSanPhamID: ct.bienTheSanPhamID,
+          SoSerialID: ct.soSerialID || null,
+          SoLuongThucNhan: ct.soLuongChuyen,
+        }));
+        payload = {
+          PhieuChuyenKhoID: phieuOrPayload.phieuChuyenKhoID,
+          ThucNhans: thucNhans,
+        };
+      }
+      await nhanHangMutation.mutateAsync(payload);
       setOpenDetail(false);
     } catch {
       // Toast handled
     }
   };
 
-  const handleHuyPhieu = async (phieuId: string) => {
+  const handleHuyPhieu = async (phieuIdOrPayload: string | HuyPhieuChuyenPayload) => {
     try {
-      await huyMutation.mutateAsync({ PhieuChuyenKhoID: phieuId });
+      const payload: HuyPhieuChuyenPayload =
+        typeof phieuIdOrPayload === "string"
+          ? { PhieuChuyenKhoID: phieuIdOrPayload }
+          : phieuIdOrPayload;
+      await huyMutation.mutateAsync(payload);
       setOpenDetail(false);
     } catch {
       // Toast handled
@@ -259,6 +276,17 @@ export function usePhieuChuyenKho() {
 
   const handleSearch = (val: string) => {
     setSearchInput(val);
+    setPage(1);
+  };
+
+  const hasActiveFilters = Boolean(
+    searchInput || khoFilter || statusFilter !== null
+  );
+
+  const handleResetFilters = () => {
+    handleSearch("");
+    setKhoFilter("");
+    setStatusFilter(null);
     setPage(1);
   };
 
@@ -272,7 +300,10 @@ export function usePhieuChuyenKho() {
     statusFilter,
     setStatusFilter,
     searchInput,
+    searchTerm,
     handleSearch,
+    hasActiveFilters,
+    handleResetFilters,
 
     transferStatusOptions,
     getTransferStatusBadge,

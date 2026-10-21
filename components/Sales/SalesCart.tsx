@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   User,
   ShoppingCart,
@@ -11,12 +11,15 @@ import {
   CreditCard,
   RefreshCw,
   Receipt,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SearchSelect } from "@/components/ui/selectSearch";
+import { DatePicker } from "@/components/ui/datePicker";
 import { CartItem, formatCurrency } from "./types";
+import DatePickerInput from "../ui/DatePickerInput";
 
 interface SelectOption {
   value: string | number;
@@ -50,6 +53,8 @@ interface SalesCartProps {
   paymentMethodId: string;
   onPaymentMethodChange: (val: string) => void;
   paymentMethodOptions: SelectOption[];
+  saleDate: string;
+  onSaleDateChange: (val: string) => void;
   isCreating: boolean;
   onCheckout: () => void;
 }
@@ -90,9 +95,14 @@ export const SalesCart: React.FC<SalesCartProps> = ({
   paymentMethodId,
   onPaymentMethodChange,
   paymentMethodOptions,
+  saleDate,
+  onSaleDateChange,
   isCreating,
   onCheckout,
 }) => {
+  useEffect(() => {
+    console.log("saleDate", saleDate);
+  }, [saleDate]);
   return (
     <div
       className={`${
@@ -146,7 +156,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
             {cart.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground text-xs flex flex-col items-center justify-center">
                 <ShoppingCart className="w-10 h-10 text-muted-foreground/30 mb-2" />
-                <p className="font-medium text-foreground">Giỏ hàng đang trống</p>
+                <p className="font-medium text-foreground">
+                  Giỏ hàng đang trống
+                </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   Chọn sản phẩm bên cột danh mục để thêm vào đơn
                 </p>
@@ -158,7 +170,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                   className="p-2.5 rounded-xl border border-border/70 bg-background/90 flex items-center justify-between gap-2 text-xs"
                 >
                   <div className="flex-1 min-w-0 pr-1">
-                    <p className="font-semibold text-foreground truncate">{item.tenBienThe}</p>
+                    <p className="font-semibold text-foreground truncate">
+                      {item.tenBienThe}
+                    </p>
                     <p className="text-[11px] font-mono text-muted-foreground">
                       {formatCurrency(item.donGia)}
                     </p>
@@ -169,7 +183,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => onUpdateQuantity(item.bienTheSanPhamID, -1)}
+                      onClick={() =>
+                        onUpdateQuantity(item.bienTheSanPhamID, -1)
+                      }
                       className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
                     >
                       <Minus className="w-3 h-3" />
@@ -225,7 +241,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                 type="number"
                 min={0}
                 value={discountAmount || ""}
-                onChange={(e) => onDiscountChange(parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  onDiscountChange(parseInt(e.target.value) || 0)
+                }
                 placeholder="0"
                 className="h-8 text-xs font-mono"
               />
@@ -238,7 +256,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                 type="number"
                 min={0}
                 value={deliveryFee || ""}
-                onChange={(e) => onDeliveryFeeChange(parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  onDeliveryFeeChange(parseInt(e.target.value) || 0)
+                }
                 placeholder="0"
                 className="h-8 text-xs font-mono"
               />
@@ -251,7 +271,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                 type="number"
                 min={0}
                 value={registrationFee || ""}
-                onChange={(e) => onRegistrationFeeChange(parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  onRegistrationFeeChange(parseInt(e.target.value) || 0)
+                }
                 placeholder="0"
                 className="h-8 text-xs font-mono"
               />
@@ -260,7 +282,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
 
           {/* Tổng thanh toán */}
           <div className="flex justify-between items-center p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-            <span className="text-foreground font-bold text-sm">Tổng thanh toán:</span>
+            <span className="text-foreground font-bold text-sm">
+              Tổng thanh toán:
+            </span>
             <span className="text-blue-600 dark:text-blue-400 font-mono text-lg sm:text-xl font-black">
               {formatCurrency(grandTotal)}
             </span>
@@ -305,7 +329,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
               min={0}
               value={receivedCash}
               onChange={(e) =>
-                onReceivedCashChange(e.target.value === "" ? "" : parseInt(e.target.value) || 0)
+                onReceivedCashChange(
+                  e.target.value === "" ? "" : parseInt(e.target.value) || 0,
+                )
               }
               placeholder="Nhập số tiền khách đưa..."
               className="h-8.5 text-xs font-mono pl-3"
@@ -319,7 +345,9 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                 key={preset.label}
                 type="button"
                 onClick={() =>
-                  onQuickCash(preset.amount === "exact" ? grandTotal : preset.amount)
+                  onQuickCash(
+                    preset.amount === "exact" ? grandTotal : preset.amount,
+                  )
                 }
                 className="px-2 py-1 rounded bg-background hover:bg-muted text-[10px] font-mono border border-border/70 cursor-pointer transition-colors"
               >
@@ -329,19 +357,34 @@ export const SalesCart: React.FC<SalesCartProps> = ({
           </div>
         </div>
 
-        {/* Payment Method Selector */}
-        <div>
-          <label className="block text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1">
-            <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Phương thức thanh toán</span>
-          </label>
-          <SearchSelect
-            placeholder="Chọn phương thức thanh toán..."
-            options={paymentMethodOptions}
-            value={Number(paymentMethodId)}
-            onChange={(val) => onPaymentMethodChange(String(val))}
-            height={9.5}
-          />
+        {/* Payment Method & Sale Date Selector */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1">
+              <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Phương thức thanh toán</span>
+            </label>
+            <SearchSelect
+              placeholder="Chọn phương thức thanh toán..."
+              options={paymentMethodOptions}
+              value={Number(paymentMethodId)}
+              onChange={(val) => onPaymentMethodChange(String(val))}
+              height={9.5}
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-amber-500" />
+              <span>Ngày bán</span>
+            </label>
+            <DatePickerInput
+              value={saleDate}
+              onChange={onSaleDateChange}
+              max={new Date()}
+              placeholder="dd/MM/yyyy"
+            />
+          </div>
         </div>
 
         {/* Checkout Button */}

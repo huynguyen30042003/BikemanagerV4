@@ -407,6 +407,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
 
       const sanitizedPayload = {
         ...targetData,
+        NgayBan: targetData.NgayBan || null,
         TamTinh: subTotal,
         TienThueVAT: vatTotal,
         TongTien: total,

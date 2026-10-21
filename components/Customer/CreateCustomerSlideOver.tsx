@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { SearchSelect } from "@/components/ui/selectSearch";
+import { DatePickerInput } from "@/components/ui/DatePickerInput";
 import { CreateKhachHangPayload } from "@/types/khachHang";
 
 interface CreateCustomerSlideOverProps {
@@ -200,16 +201,16 @@ export function CreateCustomerSlideOver({
                 <label className="text-sm font-medium text-foreground">
                   Ngày sinh
                 </label>
-                <Input
-                  type="date"
+                <DatePickerInput
                   value={dataAdd.NgaySinh || ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setDataAdd((prev) => ({
                       ...prev,
-                      NgaySinh: e.target.value,
+                      NgaySinh: val,
                     }))
                   }
-                  className="rounded-lg"
+                  max={new Date()}
+                  placeholder="dd/MM/yyyy"
                 />
               </div>
 
@@ -217,16 +218,16 @@ export function CreateCustomerSlideOver({
                 <label className="text-sm font-medium text-foreground">
                   Ngày cấp CCCD
                 </label>
-                <Input
-                  type="date"
+                <DatePickerInput
                   value={dataAdd.NgayCapMaDinhDanh || ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setDataAdd((prev) => ({
                       ...prev,
-                      NgayCapMaDinhDanh: e.target.value,
+                      NgayCapMaDinhDanh: val,
                     }))
                   }
-                  className="rounded-lg"
+                  max={new Date()}
+                  placeholder="dd/MM/yyyy"
                 />
               </div>
 

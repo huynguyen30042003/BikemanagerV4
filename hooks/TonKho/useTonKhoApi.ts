@@ -8,8 +8,14 @@ import {
   getTonKhoDetailApi,
   updateDinhMucTonKhoApi,
   getTonKhoKPIApi,
+  nhapTonDauKyApi,
 } from "@/shared/api/TonKho";
-import { GiaoDichFilter, TonKhoFilter, UpdateDinhMucPayload } from "@/types/tonKho";
+import {
+  GiaoDichFilter,
+  TonKhoFilter,
+  UpdateDinhMucPayload,
+  KHO_TonKho_NhapTonDauKy_Request,
+} from "@/types/tonKho";
 
 export const TON_KHO_QUERY_KEYS = {
   all: ["tonKho"] as const,
@@ -83,6 +89,28 @@ export const useGetLoChiPhiTonKho = (params: { KhoID?: string | null; BienTheSan
     queryKey: [...TON_KHO_QUERY_KEYS.all, "loChiPhis", params],
     queryFn: () => import("@/shared/api/TonKho").then((m) => m.getLoChiPhiTonKhoApi(params)),
     enabled: true,
+  });
+};
+
+export const useNhapTonDauKy = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: KHO_TonKho_NhapTonDauKy_Request) => nhapTonDauKyApi(payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: TON_KHO_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: TON_KHO_QUERY_KEYS.kpi() });
+      queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
+      queryClient.invalidateQueries({ queryKey: ["soSerial"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["bienTheSanPham"] });
+      toast.success(
+        `Nhập tồn kho đầu kỳ thành công! Tồn sau bổ sung: ${data.soLuongSau?.toLocaleString("vi-VN")} (Khả dụng: ${data.soLuongKhaDung?.toLocaleString("vi-VN")})`
+      );
+    },
+    onError: (error: Error) => {
+      toast.error(error?.message || "Nhập tồn kho đầu kỳ thất bại!");
+    },
   });
 };
 

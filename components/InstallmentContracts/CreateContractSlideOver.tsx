@@ -25,6 +25,7 @@ import { useGetKhachHang } from "@/hooks/KhachHang/useKhachHangApi";
 import { useGetDonHang } from "@/hooks/DonHang/useDonHangApi";
 import { DH_DonHang } from "@/types/donHang";
 import { toast } from "sonner";
+import DatePickerInput from "../ui/DatePickerInput";
 
 export interface CreateContractSlideOverProps {
   open: boolean;
@@ -442,16 +443,16 @@ export const CreateContractSlideOver: React.FC<
               <label className="block text-xs font-semibold text-foreground mb-1">
                 Ngày nộp hồ sơ
               </label>
-              <Input
-                type="datetime-local"
+              <DatePickerInput
                 value={formData.NgayNopHoSo || ""}
-                onChange={(e) =>
+                onChange={(val) =>
                   setFormData((prev) => ({
                     ...prev,
-                    NgayNopHoSo: e.target.value,
+                    NgayNopHoSo: val,
                   }))
                 }
-                className="text-xs font-mono h-10"
+                max={new Date()}
+                placeholder="dd/MM/yyyy"
               />
             </div>
           </div>

@@ -29,6 +29,10 @@ export const getPhieuKiemKeApi = async (
     `${APP_URL}/PhieuKiemKeApi/Gets`,
     {
       KhoID: filter.KhoID || null,
+      TrangThaiID: filter.TrangThaiID ?? null,
+      TuKhoa: filter.TuKhoa || "",
+      TuNgay: filter.TuNgay || null,
+      DenNgay: filter.DenNgay || null,
       PageIndex: filter.PageIndex ?? 1,
       PageSize: filter.PageSize ?? 50,
     },

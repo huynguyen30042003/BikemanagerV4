@@ -127,10 +127,7 @@ export const getNhaCungCapKPIApi = async () => {
  */
 export const getPurchaseNavTabsApi = async (): Promise<NH_PurchaseNavTabs> => {
   const endpoints = [
-    `${BE_URL}/api/v1/NhaCungCapApi/NavTabs`,
     `${APP_URL}/NhaCungCapApi/NavTabs`,
-    `${APP_URL}/DonNhapHangApi/NavTabs`,
-    `/api/v1/NhaCungCapApi/NavTabs`,
   ];
 
   for (const url of endpoints) {
@@ -162,7 +159,7 @@ export const getPurchaseNavTabsApi = async (): Promise<NH_PurchaseNavTabs> => {
   }
 
   const fallback = await api.post(
-    `${BE_URL}/api/v1/NhaCungCapApi/NavTabs`,
+    `${BE_URL}/api/NhaCungCapApi/NavTabs`,
     {},
     {
       headers: getAuthHeaders(),

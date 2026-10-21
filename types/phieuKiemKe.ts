@@ -40,6 +40,10 @@ export interface KHO_PhieuKiemKe {
 
 export interface PhieuKiemKeFilter {
   KhoID?: string | null;
+  TrangThaiID?: number | null;
+  TuKhoa?: string;
+  TuNgay?: string | null;
+  DenNgay?: string | null;
   PageIndex?: number;
   PageSize?: number;
 }

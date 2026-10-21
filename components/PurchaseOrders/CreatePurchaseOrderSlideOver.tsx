@@ -9,6 +9,7 @@ import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { CreateDonNhapHangPayload } from "@/types/donNhapHang";
 import { formatCurrency } from "./PurchaseOrdersKpiGrid";
+import DatePickerInput from "../ui/DatePickerInput";
 
 export interface CreatePurchaseOrderSlideOverProps {
   open: boolean;
@@ -63,13 +64,16 @@ export const CreatePurchaseOrderSlideOver: React.FC<
   onSubmit,
   isCreating,
 }) => {
-  const [formData, setFormData] = useState<CreateDonNhapHangPayload>(getInitialFormData);
+  const [formData, setFormData] =
+    useState<CreateDonNhapHangPayload>(getInitialFormData);
 
   useEffect(() => {
     if (open) {
       setFormData({
         ...getInitialFormData(),
-        NhaCungCapID: supplierOptions[0]?.value ? String(supplierOptions[0].value) : "",
+        NhaCungCapID: supplierOptions[0]?.value
+          ? String(supplierOptions[0].value)
+          : "",
         KhoID: khoOptions[0]?.value ? String(khoOptions[0].value) : "",
       });
     }
@@ -107,21 +111,21 @@ export const CreatePurchaseOrderSlideOver: React.FC<
   const subTotal = useMemo(() => {
     return formData.ChiTiets.reduce(
       (sum, item) => sum + (item.SoLuong || 0) * (item.DonGiaNhap || 0),
-      0
+      0,
     );
   }, [formData.ChiTiets]);
 
   const totalVat = useMemo(() => {
     return formData.ChiTiets.reduce(
       (sum, item) => sum + (item.TienThueVAT || 0),
-      0
+      0,
     );
   }, [formData.ChiTiets]);
 
   const totalPayment = useMemo(() => {
     const detailsTotal = formData.ChiTiets.reduce(
       (sum, item) => sum + (item.ThanhTien || 0),
-      0
+      0,
     );
     return detailsTotal + (Number(formData.ChiPhiVanChuyen) || 0);
   }, [formData.ChiTiets, formData.ChiPhiVanChuyen]);
@@ -197,20 +201,16 @@ export const CreatePurchaseOrderSlideOver: React.FC<
             <label className="block text-xs font-semibold text-foreground mb-1">
               Ngày hóa đơn
             </label>
-            <Input
-              type="date"
-              value={
-                formData.NgayHoaDon ? formData.NgayHoaDon.slice(0, 10) : ""
-              }
-              onChange={(e) =>
+            <DatePickerInput
+              value={formData.NgayHoaDon || ""}
+              onChange={(val) =>
                 setFormData((prev) => ({
                   ...prev,
-                  NgayHoaDon: e.target.value
-                    ? new Date(e.target.value).toISOString()
-                    : null,
+                  NgayHoaDon: val,
                 }))
               }
-              className="text-xs"
+              max={new Date()}
+              placeholder="dd/MM/yyyy"
             />
           </div>
 
@@ -337,7 +337,8 @@ export const CreatePurchaseOrderSlideOver: React.FC<
                           const vat = Number(updated[idx].ThueVAT) || 0;
                           const sub = sl * donGia;
                           updated[idx].TienThueVAT = (sub * vat) / 100;
-                          updated[idx].ThanhTien = sub + updated[idx].TienThueVAT;
+                          updated[idx].ThanhTien =
+                            sub + updated[idx].TienThueVAT;
                           setFormData((prev) => ({
                             ...prev,
                             ChiTiets: updated,
@@ -363,7 +364,8 @@ export const CreatePurchaseOrderSlideOver: React.FC<
                           const vat = Number(updated[idx].ThueVAT) || 0;
                           const sub = sl * gia;
                           updated[idx].TienThueVAT = (sub * vat) / 100;
-                          updated[idx].ThanhTien = sub + updated[idx].TienThueVAT;
+                          updated[idx].ThanhTien =
+                            sub + updated[idx].TienThueVAT;
                           setFormData((prev) => ({
                             ...prev,
                             ChiTiets: updated,
@@ -399,7 +401,8 @@ export const CreatePurchaseOrderSlideOver: React.FC<
                           const vat = Number(updated[idx].ThueVAT) || 0;
                           const sub = sl * donGia;
                           updated[idx].TienThueVAT = (sub * vat) / 100;
-                          updated[idx].ThanhTien = sub + updated[idx].TienThueVAT;
+                          updated[idx].ThanhTien =
+                            sub + updated[idx].TienThueVAT;
                           setFormData((prev) => ({
                             ...prev,
                             ChiTiets: updated,

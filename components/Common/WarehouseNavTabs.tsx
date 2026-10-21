@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { ArrowLeftRight, ClipboardCheck, Layers, Warehouse } from "lucide-react";
+import { ArrowLeftRight, ClipboardCheck, Layers, PackagePlus, Warehouse } from "lucide-react";
 import { useGetWarehouseNavTabs } from "@/hooks/Kho/useKhoApi";
 import { BaseNavTabs, NavTabItem } from "@/components/Common/BaseNavTabs";
 
-export type WarehouseTabKey = "warehouses" | "inventory" | "transfers" | "audits";
+export type WarehouseTabKey = "warehouses" | "inventory" | "opening-stock" | "transfers" | "audits";
 
 interface WarehouseNavTabsProps {
   activeTab: WarehouseTabKey;
@@ -51,6 +51,12 @@ export function WarehouseNavTabs({
         href: "/admin/inventory",
         icon: Layers,
         count: countInventory,
+      },
+      {
+        key: "opening-stock",
+        label: "Tồn kho đầu kỳ",
+        href: "/admin/opening-stock",
+        icon: PackagePlus,
       },
       {
         key: "transfers",

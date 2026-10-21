@@ -6,6 +6,7 @@ export interface KHO_TonKho {
   maSKU?: string;
   maVach?: string;
   tenSanPham?: string;
+  TenBienThe?: string;
   mauSac?: string;
   dungLuongPin?: string;
   soLuong: number;
@@ -102,4 +103,41 @@ export interface KHO_TonKhoKPI {
   totalTonKhaDung?: number;
   totalSapHetHang?: number;
   totalHetHang?: number;
+}
+
+export interface KHO_TonKho_SerialNhap_Item {
+  MaSerial: string;
+  SoKhung?: string | null;
+  SoMay?: string | null;
+  SoPin?: string | null;
+  NgaySanXuat?: string | null;
+  ViTriLuuTru?: string | null;
+}
+
+export interface KHO_TonKho_NhapTonDauKy_Request {
+  DiaDiemID?: string | null;
+  KhoID: string;
+  BienTheSanPhamID: string;
+  SoLuong: number;
+  DonGiaVon?: number | null;
+  SoLuongToiThieu?: number | null;
+  ViTriLuuTru?: string | null;
+  LoaiGiaoDichID?: number | null;
+  TrangThaiSerialID?: number;
+  GhiChu?: string | null;
+  Serials?: KHO_TonKho_SerialNhap_Item[] | null;
+}
+
+export interface KHO_TonKho_NhapTonDauKy_Response {
+  khoID: string;
+  bienTheSanPhamID: string;
+  soLuongTruoc: number;
+  soLuongBoSung: number;
+  soLuongSau: number;
+  soLuongDaDat: number;
+  soLuongKhaDung: number;
+  soLuongToiThieu?: number | null;
+  viTriLuuTru?: string | null;
+  donGiaVon: number;
+  ngayCapNhat?: string | null;
 }

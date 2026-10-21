@@ -28,6 +28,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/admin/purchase-orders": ["Administrator", "AdminAccess", "PurchaseAccess"],
   "/admin/warehouses": ["Administrator", "AdminAccess", "WarehouseAccess"],
   "/admin/inventory": ["Administrator", "AdminAccess", "WarehouseAccess"],
+  "/admin/opening-stock": ["Administrator", "AdminAccess", "WarehouseAccess"],
   "/admin/stock-transfers": ["Administrator", "AdminAccess", "WarehouseAccess"],
   "/admin/stock-audits": ["Administrator", "AdminAccess", "WarehouseAccess"],
 

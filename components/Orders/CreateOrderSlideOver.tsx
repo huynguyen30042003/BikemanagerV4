@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/datePicker";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { CreateDonHangPayload } from "@/types/donHang";
@@ -39,6 +40,7 @@ const getInitialFormData = (): CreateDonHangPayload => ({
   LoaiDonHangID: 87, // 87: Bán lẻ tại quầy
   TrangThaiDonHangID: 72, // 72: Chờ xử lý
   TrangThaiThanhToanID: 83, // 83: Chưa thanh toán
+  NgayBan: new Date().toISOString().split("T")[0],
   PhiVanChuyen: 0,
   PhiDichVuBienSo: 0,
   TienGiamGia: 0,
@@ -178,7 +180,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1">
               Hình thức bán hàng
@@ -194,6 +196,23 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
               }
               isLoading={isLoadingOrderTypes}
               height={10}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1">
+              Ngày bán
+            </label>
+            <DatePicker
+              value={formData.NgayBan || ""}
+              onChange={(isoVal) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  NgayBan: isoVal,
+                }))
+              }
+              max={new Date()}
+              inputClassName="h-10"
             />
           </div>
 

@@ -62,6 +62,30 @@ export function usePhieuKiemKe() {
     isLoading: isLoadingReasons,
   } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.LY_DO_LECH_KIEM_KE);
   const [khoFilter, setKhoFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<number | null>(null);
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchInput("");
+    setSearchTerm("");
+    setKhoFilter("");
+    setStatusFilter(null);
+    setPage(1);
+  };
+
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        searchTerm.trim() || khoFilter !== "" || statusFilter !== null
+      ),
+    [searchTerm, khoFilter, statusFilter]
+  );
 
   const [openCreate, setOpenCreate] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
@@ -99,10 +123,12 @@ export function usePhieuKiemKe() {
   const queryParams = useMemo(() => {
     return {
       KhoID: khoFilter || null,
+      TrangThaiID: statusFilter ?? null,
+      TuKhoa: searchTerm || "",
       PageIndex: page,
       PageSize: pageSize,
     };
-  }, [khoFilter, page, pageSize]);
+  }, [khoFilter, statusFilter, searchTerm, page, pageSize]);
 
   const { data, isLoading, isFetching, refetch } = useGetPhieuKiemKe(queryParams);
 
@@ -152,22 +178,24 @@ export function usePhieuKiemKe() {
     setOpenCapNhat(true);
   };
 
-  const handleSubmitCreate = async () => {
-    if (!dataCreate.KhoID) {
+  const handleSubmitCreate = async (customPayload?: CreatePhieuKiemKePayload) => {
+    const payload = customPayload || dataCreate;
+    if (!payload.KhoID) {
       toast.error("Vui lòng chọn kho cần tiến hành kiểm kê!");
       return;
     }
     try {
-      await createMutation.mutateAsync(dataCreate);
+      await createMutation.mutateAsync(payload);
       setOpenCreate(false);
     } catch {
       // Toast handled
     }
   };
 
-  const handleSubmitCapNhat = async () => {
+  const handleSubmitCapNhat = async (customPayload?: CapNhatSoDemPayload) => {
+    const payload = customPayload || dataCapNhat;
     try {
-      await capNhatMutation.mutateAsync(dataCapNhat);
+      await capNhatMutation.mutateAsync(payload);
       setOpenCapNhat(false);
     } catch {
       // Toast handled
@@ -199,6 +227,14 @@ export function usePhieuKiemKe() {
     setPageSize,
     khoFilter,
     setKhoFilter,
+    statusFilter,
+    setStatusFilter,
+    searchInput,
+    setSearchInput,
+    searchTerm,
+    handleSearch,
+    handleResetFilters,
+    hasActiveFilters,
 
     auditStatusOptions,
     getAuditStatusBadge,

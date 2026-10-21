@@ -6,7 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export type KpiTone = "neutral" | "blue" | "amber" | "emerald" | "rose" | "indigo";
+export type KpiTone =
+  | "neutral"
+  | "blue"
+  | "amber"
+  | "emerald"
+  | "rose"
+  | "indigo";
 
 export interface KpiItem {
   title: string;
@@ -26,13 +32,22 @@ export interface KpiItem {
 
 const TONE: Record<KpiTone, { value: string; icon: string }> = {
   neutral: { value: "text-foreground", icon: "bg-blue-500/10 text-blue-600" },
-  blue: { value: "text-blue-600 dark:text-blue-400", icon: "bg-blue-500/10 text-blue-600" },
-  amber: { value: "text-amber-600 dark:text-amber-400", icon: "bg-amber-500/10 text-amber-600" },
+  blue: {
+    value: "text-blue-600 dark:text-blue-400",
+    icon: "bg-blue-500/10 text-blue-600",
+  },
+  amber: {
+    value: "text-amber-600 dark:text-amber-400",
+    icon: "bg-amber-500/10 text-amber-600",
+  },
   emerald: {
     value: "text-emerald-600 dark:text-emerald-400",
     icon: "bg-emerald-500/10 text-emerald-600",
   },
-  rose: { value: "text-rose-600 dark:text-rose-400", icon: "bg-rose-500/10 text-rose-600" },
+  rose: {
+    value: "text-rose-600 dark:text-rose-400",
+    icon: "bg-rose-500/10 text-rose-600",
+  },
   indigo: {
     value: "text-indigo-600 dark:text-indigo-400",
     icon: "bg-indigo-500/10 text-indigo-600",
@@ -42,10 +57,13 @@ const TONE: Record<KpiTone, { value: string; icon: string }> = {
 const ACTIVE_BORDER: Record<KpiTone, string> = {
   neutral: "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10",
   blue: "border-blue-500/50 bg-blue-500/5 shadow-xs ring-2 ring-blue-500/10",
-  amber: "border-amber-500/50 bg-amber-500/5 shadow-xs ring-2 ring-amber-500/10",
-  emerald: "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10",
+  amber:
+    "border-amber-500/50 bg-amber-500/5 shadow-xs ring-2 ring-amber-500/10",
+  emerald:
+    "border-emerald-500/50 bg-emerald-500/5 shadow-xs ring-2 ring-emerald-500/10",
   rose: "border-rose-500/50 bg-rose-500/5 shadow-xs ring-2 ring-rose-500/10",
-  indigo: "border-indigo-500/50 bg-indigo-500/5 shadow-xs ring-2 ring-indigo-500/10",
+  indigo:
+    "border-indigo-500/50 bg-indigo-500/5 shadow-xs ring-2 ring-indigo-500/10",
 };
 
 const GRID_COLS: Record<number, string> = {
@@ -65,7 +83,10 @@ export function KpiRibbon({ items, isLoading, className }: KpiRibbonProps) {
   const cols = GRID_COLS[items.length] ?? "grid-cols-2 md:grid-cols-4";
 
   return (
-    <section aria-label="Chỉ số tổng quan" className={cn("grid gap-3", cols, className)}>
+    <section
+      aria-label="Chỉ số tổng quan"
+      className={cn("grid gap-3", cols, className)}
+    >
       {items.map((item) => {
         const Icon = item.icon;
         const toneKey = item.tone ?? "neutral";
@@ -82,7 +103,7 @@ export function KpiRibbon({ items, isLoading, className }: KpiRibbonProps) {
         return (
           <Card
             key={item.title}
-            className={cardClasses}
+            className={`gap-0 sm:gap-2 ${cardClasses}`}
             onClick={item.onClick}
             role={isClickable ? "button" : undefined}
             tabIndex={isClickable ? 0 : undefined}
@@ -120,7 +141,9 @@ export function KpiRibbon({ items, isLoading, className }: KpiRibbonProps) {
               {isLoading ? <Skeleton className="h-7 w-16" /> : item.value}
             </div>
             {item.subtext && (
-              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{item.subtext}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                {item.subtext}
+              </p>
             )}
           </Card>
         );

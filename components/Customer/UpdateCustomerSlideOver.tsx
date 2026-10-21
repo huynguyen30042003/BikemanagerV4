@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { SearchSelect } from "@/components/ui/selectSearch";
+import { DatePickerInput } from "@/components/ui/DatePickerInput";
 import { UpdateKhachHangPayload } from "@/types/khachHang";
 
 interface UpdateCustomerSlideOverProps {
@@ -156,16 +157,16 @@ export function UpdateCustomerSlideOver({
                 <label className="text-sm font-medium text-foreground">
                   Ngày sinh
                 </label>
-                <Input
-                  type="date"
+                <DatePickerInput
                   value={dataUpdate.NgaySinh || ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setDataUpdate((prev) => ({
                       ...prev,
-                      NgaySinh: e.target.value,
+                      NgaySinh: val,
                     }))
                   }
-                  className="rounded-lg"
+                  max={new Date()}
+                  placeholder="dd/MM/yyyy"
                 />
               </div>
 

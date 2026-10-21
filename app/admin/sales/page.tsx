@@ -33,6 +33,9 @@ function SalesContent() {
   const [registrationFee, setRegistrationFee] = useState(0);
   const [paymentMethodId, setPaymentMethodId] = useState("78"); // Mặc định tiền mặt
   const [receivedCash, setReceivedCash] = useState<number | "">(""); // Tiền khách đưa
+  const [saleDate, setSaleDate] = useState<string>(
+    new Date().toISOString().split("T")[0],
+  );
 
   // Hook quản lý đơn hàng & biến thể sản phẩm (BienTheSanPhamApi/Gets đã có đầy đủ tồn kho theo KhoID)
   const {
@@ -56,6 +59,8 @@ function SalesContent() {
     isLoadingCategories,
   } = useDonHang({
     KhoID: selectedKhoId || undefined,
+    DanhMucChiTietID:
+      selectedCategoryTab !== "all" ? Number(selectedCategoryTab) : null,
     waitForKho: true,
   });
 
@@ -85,115 +90,9 @@ function SalesContent() {
     ];
   }, [categoryOptions]);
 
-  // 2. Lọc sản phẩm theo Tab danh mục (DanhMucID: 10) và từ khóa tìm kiếm
+  // 2. Lọc sản phẩm theo từ khóa tìm kiếm (Danh mục đã được lọc trực tiếp qua API BienTheSanPhamApi/Gets qua DanhMucChiTietID)
   const filteredVariants = useMemo(() => {
     let list = (variantOptions as VariantItem[]) || [];
-
-    if (selectedCategoryTab !== "all") {
-      const selectedCat = categorySelectOptions.find(
-        (t) => t.value === selectedCategoryTab,
-      );
-      const catLabel = selectedCat?.label?.toLowerCase() || "";
-
-      if (catLabel) {
-        list = list.filter((v) => {
-          const name = (v.name || "").toLowerCase();
-          const sku = (v.sku || "").toLowerCase();
-
-          if (catLabel.includes("xe máy điện")) {
-            return (
-              name.includes("xe máy") ||
-              name.includes("scooter") ||
-              name.includes("feliz") ||
-              name.includes("klara") ||
-              name.includes("evo") ||
-              name.includes("theon")
-            );
-          }
-          if (catLabel.includes("xe đạp điện")) {
-            return (
-              name.includes("xe đạp") ||
-              name.includes("trợ lực") ||
-              name.includes("mini")
-            );
-          }
-          if (catLabel.includes("xe máy xăng") || catLabel.includes("50cc")) {
-            return (
-              name.includes("50cc") ||
-              name.includes("xăng") ||
-              name.includes("xe máy")
-            );
-          }
-          if (catLabel.includes("pin")) {
-            return (
-              name.includes("pin") ||
-              name.includes("lithium") ||
-              name.includes("lfp") ||
-              name.includes("kwh")
-            );
-          }
-          if (catLabel.includes("ắc quy")) {
-            return (
-              name.includes("ắc quy") ||
-              name.includes("ac quy") ||
-              name.includes("bình")
-            );
-          }
-          if (catLabel.includes("sạc")) {
-            return (
-              name.includes("sạc") ||
-              name.includes("sac") ||
-              name.includes("adapter") ||
-              name.includes("nguồn")
-            );
-          }
-          if (catLabel.includes("cơ khí") || catLabel.includes("vỏ xe")) {
-            return (
-              name.includes("lốp") ||
-              name.includes("vỏ") ||
-              name.includes("phanh") ||
-              name.includes("dàn áo") ||
-              name.includes("vành") ||
-              name.includes("giảm xóc")
-            );
-          }
-          if (catLabel.includes("điện tử") || catLabel.includes("động cơ")) {
-            return (
-              name.includes("ic") ||
-              name.includes("động cơ") ||
-              name.includes("tay ga") ||
-              name.includes("đồng hồ") ||
-              name.includes("smartkey") ||
-              name.includes("điều tốc")
-            );
-          }
-          if (catLabel.includes("phụ kiện") || catLabel.includes("đồ chơi")) {
-            return (
-              name.includes("mũ") ||
-              name.includes("thùng") ||
-              name.includes("khóa") ||
-              name.includes("giá đỡ") ||
-              name.includes("yên")
-            );
-          }
-          if (
-            catLabel.includes("dầu") ||
-            catLabel.includes("nhớt") ||
-            catLabel.includes("bảo dưỡng")
-          ) {
-            return (
-              name.includes("nhớt") ||
-              name.includes("dầu") ||
-              name.includes("xịt") ||
-              name.includes("bảo dưỡng")
-            );
-          }
-
-          const firstWord = catLabel.split(" ")[0];
-          return name.includes(firstWord) || sku.includes(firstWord);
-        });
-      }
-    }
 
     // Lọc theo từ khóa tìm kiếm
     if (filterText.trim()) {
@@ -206,12 +105,7 @@ function SalesContent() {
     }
 
     return list;
-  }, [
-    variantOptions,
-    selectedCategoryTab,
-    categorySelectOptions,
-    filterText,
-  ]);
+  }, [variantOptions, filterText]);
 
   // Thao tác giỏ hàng có kiểm tra tồn kho
   const addToCart = (v: VariantItem) => {
@@ -368,6 +262,7 @@ function SalesContent() {
       LoaiDonHangID: 87, // Bán lẻ tại quầy
       TrangThaiDonHangID: 72, // Hoàn thành ngay tại quầy
       TrangThaiThanhToanID: 83,
+      NgayBan: saleDate || null,
       TamTinh: subTotal,
       TienGiamGia: discountAmount,
       PhiVanChuyen: deliveryFee,
@@ -484,6 +379,8 @@ function SalesContent() {
           paymentMethodId={paymentMethodId}
           onPaymentMethodChange={setPaymentMethodId}
           paymentMethodOptions={paymentMethodOptions}
+          saleDate={saleDate}
+          onSaleDateChange={setSaleDate}
           isCreating={isCreating}
           onCheckout={handleCheckout}
         />

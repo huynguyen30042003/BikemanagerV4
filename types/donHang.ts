@@ -161,6 +161,7 @@ export interface CreateDonHangPayload {
   DiaChiGiaoHang?: string | null;
   TinhID?: number | null;
   XaID?: number | null;
+  NgayBan?: string | null;
   GhiChu?: string | null;
   ChiTiets: CreateChiTietDonHangPayload[];
 }

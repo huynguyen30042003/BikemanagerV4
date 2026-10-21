@@ -17,6 +17,7 @@ import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { useCreateSoSerial } from "@/hooks/SoSerial/useSoSerialApi";
 import { CreateSoSerialPayload } from "@/types/soSerial";
+import DatePickerInput from "../ui/DatePickerInput";
 
 const soSerialSchema = z.object({
   bienTheSanPhamID: z
@@ -272,16 +273,16 @@ export const CreateProductSerialSlideOver: React.FC<
             <label className="block text-xs font-semibold text-foreground mb-1">
               Ngày sản xuất
             </label>
-            <Input
-              type="date"
+            <DatePickerInput
               value={formData.NgaySanXuat || ""}
-              onChange={(e) =>
+              onChange={(val) =>
                 setFormData((prev) => ({
                   ...prev,
-                  NgaySanXuat: e.target.value,
+                  NgaySanXuat: val,
                 }))
               }
-              className="text-xs"
+              max={new Date()}
+              placeholder="dd/MM/yyyy"
             />
           </div>
         </div>
