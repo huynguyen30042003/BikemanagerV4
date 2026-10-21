@@ -27,7 +27,15 @@ import { useGetDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
 import { useGetKho } from "@/hooks/Kho/useKhoApi";
 import { useGetBienTheSanPham } from "@/hooks/BienTheSanPham/useBienTheSanPhamApi";
 
-export const useDonHang = () => {
+export interface UseDonHangOptions {
+  KhoID?: string | null;
+  DanhMucChiTietID?: number | null;
+  TuKhoaVariants?: string;
+  PageSizeVariants?: number;
+  waitForKho?: boolean;
+}
+
+export const useDonHang = (hookOptions?: UseDonHangOptions) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState("");
@@ -65,7 +73,13 @@ export const useDonHang = () => {
     getLabel: getPaymentMethodLabel,
     isLoading: isLoadingPaymentMethods,
   } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.PHUONG_THUC_THANH_TOAN);
-
+  
+  const {
+    options: categoryOptions,
+    items: categoryItems,
+    isLoading: isLoadingCategories,
+    getLabel: getCategoryLabel,
+  } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.NGANH_HANG);
   // Khách hàng options
   const { data: dataCustomers, isLoading: isLoadingCustomers } = useGetKhachHang({
     PageIndex: 1,
@@ -108,11 +122,36 @@ export const useDonHang = () => {
     }));
   }, [dataKhos]);
 
-  // Biến thể sản phẩm options
-  const { data: dataVariants, isLoading: isLoadingVariants } = useGetBienTheSanPham({
-    PageIndex: 1,
-    PageSize: 100,
-  });
+  // Xác định KhoID truy vấn biến thể: ưu tiên từ hookOptions, nếu waitForKho thì đợi khoOptions có giá trị
+  const effectiveKhoId =
+    hookOptions?.KhoID !== undefined
+      ? hookOptions.KhoID
+      : khoOptions.length > 0
+      ? String(khoOptions[0].value)
+      : null;
+
+  const shouldEnableVariantsQuery = hookOptions?.waitForKho
+    ? Boolean(effectiveKhoId) || (!isLoadingKhos && khoOptions.length === 0)
+    : true;
+
+  // Biến thể sản phẩm options (Lấy từ BienTheSanPhamApi/Gets có kèm số lượng tồn kho theo KhoID)
+  const {
+    data: dataVariants,
+    isLoading: isLoadingVariants,
+    refetch: refetchVariants,
+    isFetching: isFetchingVariants,
+  } = useGetBienTheSanPham(
+    {
+      KhoID: effectiveKhoId,
+      DanhMucChiTietID: hookOptions?.DanhMucChiTietID ?? null,
+      TuKhoa: hookOptions?.TuKhoaVariants ?? "",
+      PageIndex: 1,
+      PageSize: hookOptions?.PageSizeVariants ?? 200,
+    },
+    {
+      enabled: shouldEnableVariantsQuery,
+    },
+  );
 
   const variantOptions = useMemo(() => {
     const list = dataVariants?.data ?? dataVariants?.items ?? [];
@@ -120,17 +159,37 @@ export const useDonHang = () => {
       (v: {
         bienTheSanPhamID: string;
         tenBienThe: string;
+        tenSanPham?: string;
         maSKU: string;
         giaBan?: number;
+        mauSac?: string;
+        danhMucChiTietID?: number;
         quanLyTheoSerial?: boolean;
+        soLuongTon?: number;
+        tongTonKho?: number;
+        tonKhaDung?: number;
+        tonKhoTaiKho?: number;
+        tonKhaDungTaiKho?: number;
+        tenKho?: string;
       }) => ({
         value: v.bienTheSanPhamID,
         label: `${v.tenBienThe} [${v.maSKU}]`,
         sku: v.maSKU,
-        name: v.tenBienThe,
+        name: v.tenSanPham
+          ? `${v.tenSanPham}${v.mauSac ? ` (${v.mauSac})` : ""}`
+          : v.tenBienThe,
         defaultPrice: v.giaBan || 0,
         quanLySerial: Boolean(v.quanLyTheoSerial),
-      })
+        danhMucChiTietID: v.danhMucChiTietID,
+        soLuongTon: v.tonKhoTaiKho ?? v.tongTonKho ?? v.soLuongTon ?? 0,
+        soLuongKhaDung:
+          v.tonKhaDungTaiKho ??
+          v.tonKhoTaiKho ??
+          v.tonKhaDung ??
+          v.soLuongTon ??
+          0,
+        tenKho: v.tenKho,
+      }),
     );
   }, [dataVariants]);
 
@@ -503,6 +562,11 @@ export const useDonHang = () => {
     paymentMethodOptions,
     getPaymentMethodLabel,
     isLoadingPaymentMethods,
+    categoryOptions,
+    categoryItems,
+    getCategoryLabel,
+    categoryData: { data: categoryItems },
+    isLoadingCategories,
 
     customerOptions,
     isLoadingCustomers,
@@ -512,6 +576,8 @@ export const useDonHang = () => {
     isLoadingKhos,
     variantOptions,
     isLoadingVariants,
+    refetchVariants,
+    isFetchingVariants,
 
     items,
     totalCount,

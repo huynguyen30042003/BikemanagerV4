@@ -28,7 +28,9 @@ function DiaPhuongCapXaContent() {
 
   // Local state for modals to isolate form re-renders from the main catalog list
   const [openCreate, setOpenCreate] = useState<boolean>(false);
-  const [editingItem, setEditingItem] = useState<DM_DiaPhuongCapXa | null>(null);
+  const [editingItem, setEditingItem] = useState<DM_DiaPhuongCapXa | null>(
+    null,
+  );
 
   const {
     page,
@@ -71,19 +73,27 @@ function DiaPhuongCapXaContent() {
   // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback lọc cục bộ)
   const activeCount = useMemo(
     () => items.filter((item) => item.trangThai === true).length,
-    [items]
+    [items],
   );
   const inactiveCount = useMemo(
     () => items.filter((item) => item.trangThai === false).length,
-    [items]
+    [items],
   );
 
-  const kpi = kpiData as unknown as (DiaPhuongCapXaKPI & { data?: DiaPhuongCapXaKPI }) | undefined;
+  const kpi = kpiData as unknown as
+    | (DiaPhuongCapXaKPI & { data?: DiaPhuongCapXaKPI })
+    | undefined;
 
-  const total_DiaPhuongCapXa = kpi?.data?.total_DiaPhuongCapXa ?? kpi?.total_DiaPhuongCapXa ?? totalCount;
-  const total_HoatDong = kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
-  const total_NgungHoatDong = kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
-  const total_DiaPhuongCapTinh = kpi?.data?.total_DiaPhuongCapTinh ?? kpi?.total_DiaPhuongCapTinh ?? provinceOptions.length;
+  const total_DiaPhuongCapXa =
+    kpi?.data?.total_DiaPhuongCapXa ?? kpi?.total_DiaPhuongCapXa ?? totalCount;
+  const total_HoatDong =
+    kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
+  const total_NgungHoatDong =
+    kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
+  const total_DiaPhuongCapTinh =
+    kpi?.data?.total_DiaPhuongCapTinh ??
+    kpi?.total_DiaPhuongCapTinh ??
+    provinceOptions.length;
 
   const handleReload = () => {
     refetch();
@@ -103,7 +113,7 @@ function DiaPhuongCapXaContent() {
   }, [tinhFilter, provinceMap]);
 
   const hasActiveFilters = Boolean(
-    searchInput || tinhFilter || statusFilter !== "all"
+    searchInput || tinhFilter || statusFilter !== "all",
   );
 
   const handleResetFilters = () => {
@@ -114,7 +124,7 @@ function DiaPhuongCapXaContent() {
   };
 
   return (
-    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch trên Mobile) */}
       <DiaPhuongCapXaFilterBar
         totalDiaPhuongCapXa={total_DiaPhuongCapXa}
@@ -243,8 +253,8 @@ function DiaPhuongCapXaContent() {
               &quot; không?
             </p>
             <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác nếu xã / phường này đang có các cơ sở
-              hoặc dữ liệu khách hàng liên kết.
+              Hành động này không thể hoàn tác nếu xã / phường này đang có các
+              cơ sở hoặc dữ liệu khách hàng liên kết.
             </span>
           </div>
         }
@@ -260,7 +270,7 @@ export default function DiaPhuongCapXaPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
           <Skeleton className="h-8 w-60" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
             <Skeleton className="h-24 w-full rounded-xl" />

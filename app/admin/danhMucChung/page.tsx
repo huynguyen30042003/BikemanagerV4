@@ -72,26 +72,30 @@ function DanhMucChungContent() {
 
   // KPI metrics từ API GetKPI hoặc fallback tính cục bộ
   const activeCount = useMemo(
-    () => items.filter((item: DM_DanhMucChung) => item.trangThai === true).length,
-    [items]
+    () =>
+      items.filter((item: DM_DanhMucChung) => item.trangThai === true).length,
+    [items],
   );
   const inactiveCount = useMemo(
-    () => items.filter((item: DM_DanhMucChung) => item.trangThai === false).length,
-    [items]
+    () =>
+      items.filter((item: DM_DanhMucChung) => item.trangThai === false).length,
+    [items],
   );
   const totalSubCategories = useMemo(
     () =>
       items.reduce(
-        (acc: number, item: DM_DanhMucChung) => acc + (item.soLuongChiTiet || 0),
-        0
+        (acc: number, item: DM_DanhMucChung) =>
+          acc + (item.soLuongChiTiet || 0),
+        0,
       ),
-    [items]
+    [items],
   );
 
   const total_DanhMucChung = kpiData?.total_DanhMucChung ?? totalCount;
   const total_HoatDong = kpiData?.total_HoatDong ?? activeCount;
   const total_NgungHoatDong = kpiData?.total_NgungHoatDong ?? inactiveCount;
-  const total_DanhMucChiTiet = kpiData?.total_DanhMucChiTiet ?? totalSubCategories;
+  const total_DanhMucChiTiet =
+    kpiData?.total_DanhMucChiTiet ?? totalSubCategories;
 
   const hasActiveFilters = Boolean(searchInput || statusFilter !== "all");
 
@@ -102,7 +106,7 @@ function DanhMucChungContent() {
   };
 
   return (
-    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch trên Mobile) */}
       <DanhMucChungFilterBar
         totalDanhMucChung={total_DanhMucChung}
@@ -212,7 +216,8 @@ function DanhMucChungContent() {
             </p>
             <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
               Hành động này không thể hoàn tác. Nếu danh mục đang có mục con
-              hoặc dữ liệu phụ thuộc, hệ thống sẽ từ chối xóa để đảm bảo toàn vẹn dữ liệu.
+              hoặc dữ liệu phụ thuộc, hệ thống sẽ từ chối xóa để đảm bảo toàn
+              vẹn dữ liệu.
             </span>
           </div>
         }

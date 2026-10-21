@@ -148,7 +148,7 @@ function OrdersContent() {
   };
 
   return (
-    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Thanh tiêu đề, Tab điều hướng & Bộ lọc mở rộng */}
       <OrdersFilterBar
         totalCount={totalCount}

@@ -33,12 +33,16 @@ export const useGetTonKhoKPI = () => {
 };
 
 
-export const useGetTonKho = (params: TonKhoFilter) => {
+export const useGetTonKho = (
+  params: TonKhoFilter,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: TON_KHO_QUERY_KEYS.list(params),
     queryFn: () => getTonKhoApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
+    enabled: options?.enabled,
   });
 };
 

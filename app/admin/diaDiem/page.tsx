@@ -71,22 +71,27 @@ function DiaDiemContent() {
   // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback tính cục bộ)
   const activeCount = useMemo(
     () => items.filter((item) => item.trangThai === true).length,
-    [items]
+    [items],
   );
   const inactiveCount = useMemo(
     () => items.filter((item) => item.trangThai === false).length,
-    [items]
+    [items],
   );
   const showroomCount = useMemo(
     () => items.filter((item) => item.loaiDiaDiemID === 1).length,
-    [items]
+    [items],
   );
 
-  const kpi = kpiData as unknown as (DiaDiemKPI & { data?: DiaDiemKPI }) | undefined;
+  const kpi = kpiData as unknown as
+    | (DiaDiemKPI & { data?: DiaDiemKPI })
+    | undefined;
 
-  const total_DiaDiem = kpi?.data?.total_DiaDiem ?? kpi?.total_DiaDiem ?? totalCount;
-  const total_HoatDong = kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
-  const total_NgungHoatDong = kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
+  const total_DiaDiem =
+    kpi?.data?.total_DiaDiem ?? kpi?.total_DiaDiem ?? totalCount;
+  const total_HoatDong =
+    kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
+  const total_NgungHoatDong =
+    kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
 
   const handleReload = () => {
     refetch();
@@ -118,7 +123,7 @@ function DiaDiemContent() {
   };
 
   const hasActiveFilters = Boolean(
-    searchInput || tinhFilter || statusFilter !== "all"
+    searchInput || tinhFilter || statusFilter !== "all",
   );
 
   const handleResetFilters = () => {
@@ -129,7 +134,7 @@ function DiaDiemContent() {
   };
 
   return (
-    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch trên Mobile) */}
       <DiaDiemFilterBar
         totalDiaDiem={total_DiaDiem}
@@ -271,7 +276,7 @@ export default function DiaDiemPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
           <Skeleton className="h-8 w-60" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
             <Skeleton className="h-24 w-full rounded-xl" />

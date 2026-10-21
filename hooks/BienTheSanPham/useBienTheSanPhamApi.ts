@@ -26,12 +26,16 @@ export const BIEN_THE_QUERY_KEYS = {
   kpi: () => [...BIEN_THE_QUERY_KEYS.all, "kpi"] as const,
 };
 
-export const useGetBienTheSanPham = (params: BienTheFilter) => {
+export const useGetBienTheSanPham = (
+  params: BienTheFilter,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: BIEN_THE_QUERY_KEYS.list(params),
     queryFn: () => getBienTheSanPhamApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
+    enabled: options?.enabled,
   });
 };
 

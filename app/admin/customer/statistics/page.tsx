@@ -3,7 +3,10 @@
 import React, { Suspense, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useThongKeKhachHang } from "@/hooks/ThongKeKhachHang/useThongKeKhachHang";
-import { KH_ThongKeKhachHang, ThongKeKhachHangKPI } from "@/types/thongKeKhachHang";
+import {
+  KH_ThongKeKhachHang,
+  ThongKeKhachHangKPI,
+} from "@/types/thongKeKhachHang";
 import {
   CustomerStatisticsKpiGrid,
   CustomerStatisticsFilterBar,
@@ -39,35 +42,39 @@ function StatisticsContent() {
 
   // Local state for modals to isolate form re-renders
   const [openUpdate, setOpenUpdate] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = useState<KH_ThongKeKhachHang | null>(null);
+  const [selectedItem, setSelectedItem] = useState<KH_ThongKeKhachHang | null>(
+    null,
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   // Fallback in-memory calculations
   const vipCount = useMemo(
     () =>
       items.filter(
-        (i) => i.hangKhachHang === "Vang" || i.hangKhachHang === "KimCuong"
+        (i) => i.hangKhachHang === "Vang" || i.hangKhachHang === "KimCuong",
       ).length,
-    [items]
+    [items],
   );
 
   const totalSpent = useMemo(
     () => items.reduce((acc, cur) => acc + (cur.tongTienDaChi || 0), 0),
-    [items]
+    [items],
   );
 
   const totalDebt = useMemo(
     () => items.reduce((acc, cur) => acc + (cur.congNoHienTai || 0), 0),
-    [items]
+    [items],
   );
 
   const debtCustomersCount = useMemo(
     () => items.filter((cur) => (cur.congNoHienTai || 0) > 0).length,
-    [items]
+    [items],
   );
 
   // Exact metrics from GetKPI API: {{base_url}}/api/ThongKeKhachHangApi/GetKPI
-  const kpi = kpiData as unknown as (ThongKeKhachHangKPI & { data?: ThongKeKhachHangKPI }) | undefined;
+  const kpi = kpiData as unknown as
+    | (ThongKeKhachHangKPI & { data?: ThongKeKhachHangKPI })
+    | undefined;
   const kpiMetrics = kpi?.data ?? kpi;
 
   const total_ThongKeKhachHang =
@@ -92,7 +99,7 @@ function StatisticsContent() {
   const hasActiveFilters = Boolean(searchInput || tierFilter !== "all");
 
   return (
-    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch & Switch ViewMode) */}
       <CustomerStatisticsFilterBar
         totalThongKeKhachHang={total_ThongKeKhachHang}
@@ -182,7 +189,7 @@ export default function CustomerStatisticsPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
           <Skeleton className="h-8 w-64" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <Skeleton className="h-24 w-full rounded-xl" />
@@ -200,4 +207,3 @@ export default function CustomerStatisticsPage() {
     </Suspense>
   );
 }
-

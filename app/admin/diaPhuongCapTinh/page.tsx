@@ -3,7 +3,10 @@
 import React, { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDiaPhuongCapTinh } from "@/hooks/DiaPhuongCapTinh/useDiaPhuongCapTinh";
-import { DM_DiaPhuongCapTinh, DiaPhuongCapTinhKPI } from "@/types/diaPhuongCapTinh";
+import {
+  DM_DiaPhuongCapTinh,
+  DiaPhuongCapTinhKPI,
+} from "@/types/diaPhuongCapTinh";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   DiaPhuongCapTinhKpiGrid,
@@ -19,7 +22,9 @@ type ViewMode = "grid" | "table";
 
 function DiaPhuongCapTinhContent() {
   const [openCreate, setOpenCreate] = useState<boolean>(false);
-  const [editingItem, setEditingItem] = useState<DM_DiaPhuongCapTinh | null>(null);
+  const [editingItem, setEditingItem] = useState<DM_DiaPhuongCapTinh | null>(
+    null,
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const {
@@ -57,23 +62,31 @@ function DiaPhuongCapTinhContent() {
   // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback lọc cục bộ)
   const activeCount = useMemo(
     () => items.filter((item) => item.trangThai === true).length,
-    [items]
+    [items],
   );
   const inactiveCount = useMemo(
     () => items.filter((item) => item.trangThai === false).length,
-    [items]
+    [items],
   );
   const cityCount = useMemo(
     () => items.filter((item) => item.loai === 2).length,
-    [items]
+    [items],
   );
 
-  const kpi = kpiData as unknown as (DiaPhuongCapTinhKPI & { data?: DiaPhuongCapTinhKPI }) | undefined;
+  const kpi = kpiData as unknown as
+    | (DiaPhuongCapTinhKPI & { data?: DiaPhuongCapTinhKPI })
+    | undefined;
 
-  const total_DiaPhuongCapTinh = kpi?.data?.total_DiaPhuongCapTinh ?? kpi?.total_DiaPhuongCapTinh ?? totalCount;
-  const total_HoatDong = kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
-  const total_NgungHoatDong = kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
-  const total_ThanhPho = kpi?.data?.total_ThanhPho ?? kpi?.total_ThanhPho ?? cityCount;
+  const total_DiaPhuongCapTinh =
+    kpi?.data?.total_DiaPhuongCapTinh ??
+    kpi?.total_DiaPhuongCapTinh ??
+    totalCount;
+  const total_HoatDong =
+    kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
+  const total_NgungHoatDong =
+    kpi?.data?.total_NgungHoatDong ?? kpi?.total_NgungHoatDong ?? inactiveCount;
+  const total_ThanhPho =
+    kpi?.data?.total_ThanhPho ?? kpi?.total_ThanhPho ?? cityCount;
 
   const handleReload = () => {
     refetch();
@@ -89,7 +102,7 @@ function DiaPhuongCapTinhContent() {
   };
 
   return (
-    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch trên Mobile) */}
       <DiaPhuongCapTinhFilterBar
         totalDiaPhuongCapTinh={total_DiaPhuongCapTinh}
@@ -213,7 +226,7 @@ export default function DiaPhuongCapTinhPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
           <Skeleton className="h-8 w-60" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
             <Skeleton className="h-24 w-full rounded-xl" />

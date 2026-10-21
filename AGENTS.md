@@ -596,7 +596,23 @@ Mỗi khi thêm một trang hoặc module mới (ví dụ: `/admin/reports` ho�
 > [!IMPORTANT]
 > **Quy chuẩn bắt buộc cho TOÀN BỘ các trang trong hệ thống** (bao gồm Quản trị Sản phẩm, Đơn hàng, Bán hàng, Kho bãi, Khách hàng, Danh mục, Tổng quan Dashboard, v.v.). Mọi trang mới hoặc trang được nâng cấp/refactor đều phải tuân thủ nghiêm ngặt 3 nguyên tắc dưới đây.
 
-### 14.1. Nguyên tắc "Trang Nhạc Trưởng" (Universal Orchestrator Page Pattern)
+### 14.1. Nguyên tắc "Trang Nhạc Trưởng" & Ma trận Quy chuẩn Phân tách Component
+
+#### 14.1.1. Ma trận Phân tách Component (Component Separation vs. Co-location Matrix)
+
+Để đảm bảo hiệu năng cao nhất (chống Re-render), code sạch, dễ bảo trì và không bị phân mảnh file vụn vặt, toàn bộ hệ thống tuân thủ ma trận phân định sau:
+
+| Thành phần / Khối chức năng | Quy chuẩn Kiến trúc | Vị trí File | Lý do Kỹ thuật & Rationale |
+| :--- | :--- | :--- | :--- |
+| **Form Thêm mới / Cập nhật (SlideOver / Modal)** | **BẮT BUỘC TÁCH FILE RIÊNG** | `components/<Feature>/Create...SlideOver.tsx`<br/>`components/<Feature>/Update...SlideOver.tsx` | **Chống Re-render Trap (Mục 11)**: Cô lập toàn bộ form state (`formData`, `errors`, `onChange`). Tránh việc gõ phím làm re-render toàn bộ trang cha, KPI ribbon và Table. |
+| **Bảng dữ liệu chính (Data Table)** | **BẮT BUỘC TÁCH FILE RIÊNG** | `components/<Feature>/...Table.tsx` | Tách biệt logic render từng dòng, phân trang, skeleton loading, bọc container chống tràn ngang `overflow-x-auto min-w-[...]`. |
+| **Lưới thẻ Card (Showcase Grid)** | **BẮT BUỘC TÁCH FILE RIÊNG** | `components/<Feature>/...Grid.tsx` | Tách biệt logic animation `motion/react`, layout lưới co giãn responsive khi kích hoạt chế độ xem kép (Dual View Mode). |
+| **Dải thẻ KPI Ribbon** | **BẮT BUỘC TÁCH FILE RIÊNG** | `components/<Feature>/...KpiGrid.tsx` hoặc `...Ribbon.tsx` | Đóng gói mảng cấu hình thẻ render qua `.map()` và `useMemo`, nhận props metrics từ `page.tsx`. |
+| **Thanh Tab điều hướng con** | **BẮT BUỘC TÁCH FILE DÙNG CHUNG** | `components/Common/...NavTabs.tsx` | Kế thừa 100% từ component dùng chung `BaseNavTabs.tsx` (Mục 14.4), cấm viết lại HTML container hay thẻ `<Link>`. |
+| **Thanh Tiêu đề & Bộ lọc (`...FilterBar.tsx`)** | **GỘP CHUNG 1 FILE DUY NHẤT** (Co-location) | `components/<Feature>/...FilterBar.tsx` | **TUYỆT ĐỐI KHÔNG TÁCH NHỎ** thành `MobileFilterBar.tsx` & `DesktopFilterBar.tsx`. Cả 2 khối giao diện Mobile (`lg:hidden`) và Desktop (`hidden lg:flex`) **phải nằm chung trong cùng 1 file** để chia sẻ state tìm kiếm, props lọc, và định nghĩa `statusOptions`, `viewModeOptions`. |
+| **Màn hình Bán lẻ / POS Showroom đặc thù** | **LINH HOẠT THEO ĐỘ PHỨC TẠP** | `components/Sales/` hoặc `app/admin/sales/` | Nếu nghiệp vụ bán lẻ phức tạp (> 600 dòng), nên tách thành các khối: `SalesCatalog` (danh mục), `SalesCart` (giỏ hàng & thanh toán), `SalesFloatingBar` (thanh checkout mobile). |
+
+#### 14.1.2. Trách nhiệm của "Trang Nhạc Trưởng" (`page.tsx`)
 
 - ❌ **CẤM**: Viết dồn toàn bộ mã giao diện, logic form, bảng dữ liệu, thanh tìm kiếm, dải lọc và modal vào một file `page.tsx` duy nhất (> 200 - 300 dòng). Không viết code "monolith" (nguyên khối).
 - ✅ **BẮT BUỘC**: `page.tsx` chỉ đóng vai trò **nhạc trưởng (Orchestrator)** điều phối luồng dữ liệu:
@@ -604,7 +620,7 @@ Mỗi khi thêm một trang hoặc module mới (ví dụ: `/admin/reports` ho�
   - Gọi các TanStack React Query hooks (`useQuery`, `useMutation`).
   - Quản lý trạng thái mở/đóng modal (`openCreate`, `editingItem`, `openConfirm`).
   - Phân bổ dữ liệu xuống các feature component con chuyên biệt đặt tại `components/<FeatureName>/`:
-    - `...FilterBar.tsx`: Thanh tiêu đề, thông tin chào mừng/hướng dẫn, tìm kiếm, chọn chi nhánh/kho và lọc trạng thái.
+    - `...FilterBar.tsx`: Thanh tiêu đề, thông tin chào mừng/hướng dẫn, tìm kiếm, chọn chi nhánh/kho và lọc trạng thái (Mobile & Desktop chung 1 file).
     - `...KpiGrid.tsx` / `...Ribbon.tsx`: Dải thẻ KPI thống kê tóm tắt đầu trang (render bằng `.map()`).
     - `...Table.tsx`: Bảng dữ liệu chính kèm phân trang, bọc trong container chống tràn ngang.
     - `...Grid.tsx` / `...CardList.tsx`: Chế độ xem dạng thẻ card (nếu hỗ trợ Dual View).

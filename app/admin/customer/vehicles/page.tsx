@@ -5,7 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { usePhuongTienKhachHang } from "@/hooks/PhuongTienKhachHang/usePhuongTienKhachHang";
-import { KH_PhuongTienKhachHang, PhuongTienKhachHangKPI } from "@/types/phuongTienKhachHang";
+import {
+  KH_PhuongTienKhachHang,
+  PhuongTienKhachHangKPI,
+} from "@/types/phuongTienKhachHang";
 import {
   CustomerVehiclesKpiGrid,
   CustomerVehiclesFilterBar,
@@ -23,7 +26,9 @@ function VehiclesContent() {
 
   // Local state for modals to isolate form re-renders
   const [openCreate, setOpenCreate] = useState<boolean>(false);
-  const [editingItem, setEditingItem] = useState<KH_PhuongTienKhachHang | null>(null);
+  const [editingItem, setEditingItem] = useState<KH_PhuongTienKhachHang | null>(
+    null,
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   const {
@@ -63,11 +68,11 @@ function VehiclesContent() {
   // Fallback metrics
   const activeCount = useMemo(
     () => items.filter((i) => i.trangThai === true).length,
-    [items]
+    [items],
   );
   const inactiveCount = useMemo(
     () => items.filter((i) => i.trangThai === false).length,
-    [items]
+    [items],
   );
   const avgKm = useMemo(() => {
     if (items.length === 0) return 0;
@@ -76,14 +81,15 @@ function VehiclesContent() {
   }, [items]);
 
   // Exact metrics from GetKPI API: {{base_url}}/api/PhuongTienKhachHangApi/GetKPI
-  const kpi = kpiData as unknown as (PhuongTienKhachHangKPI & { data?: PhuongTienKhachHangKPI }) | undefined;
+  const kpi = kpiData as unknown as
+    | (PhuongTienKhachHangKPI & { data?: PhuongTienKhachHangKPI })
+    | undefined;
   const kpiMetrics = kpi?.data ?? kpi;
 
   const total_PhuongTienKhachHang =
     kpiMetrics?.total_PhuongTienKhachHang ?? totalCount;
   const total_HoatDong = kpiMetrics?.total_HoatDong ?? activeCount;
-  const total_NgungHoatDong =
-    kpiMetrics?.total_NgungHoatDong ?? inactiveCount;
+  const total_NgungHoatDong = kpiMetrics?.total_NgungHoatDong ?? inactiveCount;
   const total_KM = kpiMetrics?.total_KM ?? avgKm;
 
   const handleReload = () => {
@@ -99,11 +105,11 @@ function VehiclesContent() {
   };
 
   const hasActiveFilters = Boolean(
-    searchInput || statusFilter !== "all" || khachHangFilter
+    searchInput || statusFilter !== "all" || khachHangFilter,
   );
 
   return (
-    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch & Switch ViewMode) */}
       <CustomerVehiclesFilterBar
         totalPhuongTien={total_PhuongTienKhachHang}
@@ -216,7 +222,8 @@ function VehiclesContent() {
               &quot; không?
             </p>
             <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này sẽ xóa toàn bộ lịch sử sở hữu và thông số của xe trong hệ thống.
+              Hành động này sẽ xóa toàn bộ lịch sử sở hữu và thông số của xe
+              trong hệ thống.
             </span>
           </div>
         }
@@ -232,7 +239,7 @@ export default function CustomerVehiclesPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+        <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
           <Skeleton className="h-8 w-64" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
             <Skeleton className="h-24 w-full rounded-xl" />
@@ -249,4 +256,3 @@ export default function CustomerVehiclesPage() {
     </Suspense>
   );
 }
-

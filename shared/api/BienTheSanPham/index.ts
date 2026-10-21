@@ -36,6 +36,11 @@ export const getBienTheSanPhamApi = async (
     {
       QuanLyTheoSerial: filter.QuanLyTheoSerial ?? null,
       SanPhamID: filter.SanPhamID ?? null,
+      KhoID: filter.KhoID ?? null,
+      CoTonKho: filter.CoTonKho ?? null,
+      DangHoatDong: filter.DangHoatDong ?? filter.TrangThai ?? null,
+      TrangThai: filter.TrangThai ?? filter.DangHoatDong ?? null,
+      DanhMucChiTietID: filter.DanhMucChiTietID ?? null,
       TuKhoa: filter.TuKhoa ?? "",
       PageIndex: filter.PageIndex ?? 1,
       PageSize: filter.PageSize ?? 50,

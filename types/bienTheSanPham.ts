@@ -22,7 +22,12 @@ export interface SP_BienTheSanPham {
 
 export interface BienTheFilter {
   SanPhamID?: string | null;
-  QuanLyTheoSerial?: boolean
+  KhoID?: string | null;
+  CoTonKho?: boolean | null;
+  QuanLyTheoSerial?: boolean | null;
+  DangHoatDong?: boolean | null;
+  TrangThai?: boolean | null;
+  DanhMucChiTietID?: number | null;
   TuKhoa?: string;
   PageIndex?: number;
   PageSize?: number;
