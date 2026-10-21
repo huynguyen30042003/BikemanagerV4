@@ -2,8 +2,8 @@
 
 import React, { Suspense, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useSanPham, useDeleteSanPham } from "@/hooks/SanPham/useSanPham";
 import { SP_SanPham } from "@/types/sanPham";
@@ -14,6 +14,7 @@ import {
   ProductsTable,
   CreateProductSlideOver,
   UpdateProductSlideOver,
+  ProductsSkeleton,
 } from "@/components/Products";
 
 type ViewMode = "grid" | "table";
@@ -59,7 +60,9 @@ function ProductsContent() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [openAdd, setOpenAdd] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SP_SanPham | null>(null);
-  const [deletingProduct, setDeletingProduct] = useState<SP_SanPham | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<SP_SanPham | null>(
+    null,
+  );
 
   const deleteMutation = useDeleteSanPham();
 
@@ -76,12 +79,13 @@ function ProductsContent() {
     try {
       await deleteMutation.mutateAsync(deletingProduct.sanPhamID);
       setDeletingProduct(null);
+      refetchKPI();
     } catch {
       // Toast notification is handled in mutation
     }
   };
 
-  // KPI Metrics prioritization (Backend KPI first, fallback to current dataset)
+  // Thống kê KPI ưu tiên từ Backend API GetKPI, fallback sang dataset client
   const totalSanPham = useMemo(() => {
     return kpiData?.total_SanPham ?? totalCount;
   }, [kpiData?.total_SanPham, totalCount]);
@@ -112,11 +116,11 @@ function ProductsContent() {
   }, [items]);
 
   const hasActiveFilters = Boolean(
-    searchInput || statusFilter !== "all" || brandFilter || categoryFilter
+    searchInput || statusFilter !== "all" || brandFilter || categoryFilter,
   );
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header, Navigation Tabs & Multi-Filter Toolbar */}
       <ProductsFilterBar
         totalSanPham={totalSanPham}
@@ -156,7 +160,7 @@ function ProductsContent() {
         hasActiveFilters={hasActiveFilters}
       />
 
-      {/* 2. Interactive KPI Cards Grid (.map() based, responsive down to 390px) */}
+      {/* 2. Dải KPI Ribbon tương tác (.map() based, dùng KpiRibbon chuẩn) */}
       <ProductsKpiGrid
         totalSanPham={totalSanPham}
         totalLaPhuongTien={totalLaPhuongTien}
@@ -179,11 +183,14 @@ function ProductsContent() {
         isLoading={isLoading}
       />
 
-      {/* 3. Main Data Content (Grid vs Table) */}
+      {/* 3. Nội dung dữ liệu chính (Chế độ xem kép: Grid thẻ xe & Table) */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="p-4 rounded-xl border border-border/70 space-y-3">
+            <Card
+              key={i}
+              className="p-4 rounded-xl border border-border/70 space-y-3"
+            >
               <Skeleton className="h-36 w-full rounded-lg" />
               <Skeleton className="h-5 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
@@ -219,7 +226,7 @@ function ProductsContent() {
         />
       )}
 
-      {/* 4. SlideOver: Thêm sản phẩm mới (State Isolation) */}
+      {/* 4. SlideOver: Thêm sản phẩm mới (State Form cô lập hoàn toàn) */}
       <CreateProductSlideOver
         open={openAdd}
         onClose={() => setOpenAdd(false)}
@@ -235,7 +242,7 @@ function ProductsContent() {
         }}
       />
 
-      {/* 5. SlideOver: Cập nhật sản phẩm (State Isolation) */}
+      {/* 5. SlideOver: Cập nhật sản phẩm (State Form cô lập hoàn toàn) */}
       <UpdateProductSlideOver
         open={Boolean(editingProduct)}
         onClose={() => setEditingProduct(null)}
@@ -250,7 +257,7 @@ function ProductsContent() {
         }}
       />
 
-      {/* 6. Modal xác nhận xóa */}
+      {/* 6. Modal xác nhận xóa sản phẩm an toàn */}
       <ConfirmModal
         open={Boolean(deletingProduct)}
         onClose={() => setDeletingProduct(null)}
@@ -260,11 +267,14 @@ function ProductsContent() {
           <div className="space-y-2">
             <p>
               Bạn có chắc chắn muốn xóa sản phẩm &quot;
-              <strong className="text-foreground">{deletingProduct?.tenSanPham}</strong>
+              <strong className="text-foreground">
+                {deletingProduct?.tenSanPham}
+              </strong>
               &quot; không?
             </p>
             <span className="text-xs text-rose-600 dark:text-rose-400 block bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
-              Lưu ý: Không thể xóa nếu sản phẩm này đã có các biến thể màu/pin hoặc phát sinh dữ liệu tồn kho.
+              Lưu ý: Không thể xóa nếu sản phẩm này đã có các biến thể màu/pin
+              hoặc phát sinh dữ liệu tồn kho.
             </span>
           </div>
         }
@@ -278,14 +288,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-8 space-y-6 max-w-[1600px] mx-auto">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-96 w-full rounded-xl" />
-        </div>
-      }
-    >
+    <Suspense fallback={<ProductsSkeleton />}>
       <ProductsContent />
     </Suspense>
   );

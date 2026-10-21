@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 
 export const OrdersSkeleton: React.FC = () => {
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header Skeleton */}
       <div className="space-y-2 pb-4 border-b border-border/70">
         <Skeleton className="h-4 w-48" />
@@ -72,7 +72,10 @@ export const OrdersSkeleton: React.FC = () => {
         </div>
         <div className="divide-y divide-border/40">
           {Array.from({ length: 6 }).map((_, idx) => (
-            <div key={idx} className="p-4 flex items-center justify-between gap-4">
+            <div
+              key={idx}
+              className="p-4 flex items-center justify-between gap-4"
+            >
               <div className="flex items-center gap-3">
                 <Skeleton className="w-8 h-8 rounded-full" />
                 <div className="space-y-1">

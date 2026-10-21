@@ -241,6 +241,7 @@ export const UpdateBrandSlideOver: React.FC<UpdateBrandSlideOverProps> = ({
               }));
             }}
             placeholder="Chọn quốc gia"
+            height={10}
           />
         </div>
 

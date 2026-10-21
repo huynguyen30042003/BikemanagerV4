@@ -267,6 +267,7 @@ export function UpdateCustomerSlideOver({
               }
               placeholder="Chọn Tỉnh / TP"
               isLoading={isLoadingTinh}
+              height={10}
             />
           </div>
 
@@ -288,6 +289,7 @@ export function UpdateCustomerSlideOver({
               }
               disabled={!dataUpdate.TinhID}
               isLoading={isLoadingXaUpdate}
+              height={10}
             />
           </div>
 

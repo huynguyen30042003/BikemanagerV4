@@ -155,6 +155,7 @@ export const UploadProductImageSlideOver: React.FC<
             }
             placeholder="Chọn đối tượng áp dụng"
             className="h-9.5 text-xs"
+            height={9.5}
           />
         </div>
 

@@ -2,8 +2,8 @@
 
 import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSoSerial } from "@/hooks/SoSerial/useSoSerial";
 import { SP_SoSerial } from "@/types/soSerial";
 import {
@@ -14,6 +14,7 @@ import {
   CreateProductSerialSlideOver,
   ActivateWarrantySlideOver,
   ChangeSerialStatusSlideOver,
+  ProductSerialsSkeleton,
 } from "@/components/ProductSerials";
 
 type ViewMode = "grid" | "table";
@@ -58,7 +59,9 @@ function SerialsContent() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [openAdd, setOpenAdd] = useState(false);
-  const [warrantySerial, setWarrantySerial] = useState<SP_SoSerial | null>(null);
+  const [warrantySerial, setWarrantySerial] = useState<SP_SoSerial | null>(
+    null,
+  );
   const [statusSerial, setStatusSerial] = useState<SP_SoSerial | null>(null);
 
   const handleResetFilters = () => {
@@ -77,7 +80,7 @@ function SerialsContent() {
           b.color === "emerald" || i.trangThaiID === 59 || i.trangThaiID === 1
         );
       }).length,
-    [items, getSerialStatusBadge]
+    [items, getSerialStatusBadge],
   );
 
   const soldCount = useMemo(
@@ -88,7 +91,7 @@ function SerialsContent() {
           b.color === "blue" || i.trangThaiID === 61 || i.trangThaiID === 2
         );
       }).length,
-    [items, getSerialStatusBadge]
+    [items, getSerialStatusBadge],
   );
 
   const maintenanceCount = useMemo(
@@ -104,10 +107,10 @@ function SerialsContent() {
           i.trangThaiID === 65
         );
       }).length,
-    [items, getSerialStatusBadge]
+    [items, getSerialStatusBadge],
   );
 
-  // KPI Metrics prioritization (Backend KPI first, fallback to client dataset)
+  // Thống kê KPI ưu tiên từ Backend API GetKPI, fallback sang dataset client
   const totalSoSerial = useMemo(() => {
     return kpiData?.total_SoSerial ?? totalCount;
   }, [kpiData?.total_SoSerial, totalCount]);
@@ -125,11 +128,11 @@ function SerialsContent() {
   }, [kpiData?.total_BaoHanhXuong, maintenanceCount]);
 
   const hasActiveFilters = Boolean(
-    searchInput || statusFilter !== null || bienTheFilter
+    searchInput || statusFilter !== null || bienTheFilter,
   );
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header, Navigation Tabs & Multi-Filter Toolbar */}
       <ProductSerialsFilterBar
         searchInput={searchInput}
@@ -162,7 +165,7 @@ function SerialsContent() {
         hasActiveFilters={hasActiveFilters}
       />
 
-      {/* 2. Interactive KPI Cards Grid (.map() based, responsive down to 390px) */}
+      {/* 2. Dải KPI Ribbon tương tác (.map() based, dùng KpiRibbon chuẩn) */}
       <ProductSerialsKpiGrid
         totalSoSerial={totalSoSerial}
         totalTrongKho={totalTrongKho}
@@ -189,7 +192,7 @@ function SerialsContent() {
         isLoading={isLoading}
       />
 
-      {/* 3. Main Data Content (Grid vs Table) */}
+      {/* 3. Nội dung dữ liệu chính (Chế độ xem kép: Grid thẻ tài sản & Table) */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, idx) => (
@@ -235,7 +238,7 @@ function SerialsContent() {
         />
       )}
 
-      {/* 4. SlideOver: Đăng ký Serial mới (State Isolation) */}
+      {/* 4. SlideOver: Đăng ký Serial mới (State Form cô lập hoàn toàn) */}
       <CreateProductSerialSlideOver
         open={openAdd}
         onClose={() => setOpenAdd(false)}
@@ -248,7 +251,7 @@ function SerialsContent() {
         }}
       />
 
-      {/* 5. SlideOver: Kích hoạt Bảo hành Điện tử (State Isolation) */}
+      {/* 5. SlideOver: Kích hoạt Bảo hành Điện tử (State Form cô lập hoàn toàn) */}
       <ActivateWarrantySlideOver
         open={Boolean(warrantySerial)}
         onClose={() => setWarrantySerial(null)}
@@ -262,7 +265,7 @@ function SerialsContent() {
         }}
       />
 
-      {/* 6. SlideOver: Chuyển Trạng thái Thiết bị (State Isolation) */}
+      {/* 6. SlideOver: Chuyển Trạng thái Thiết bị (State Form cô lập hoàn toàn) */}
       <ChangeSerialStatusSlideOver
         open={Boolean(statusSerial)}
         onClose={() => setStatusSerial(null)}
@@ -281,20 +284,7 @@ function SerialsContent() {
 
 export default function ProductSerialsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-4 md:p-8 space-y-6 max-w-[1600px] mx-auto">
-          <Skeleton className="h-8 w-64" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
-          <Skeleton className="h-96 w-full" />
-        </div>
-      }
-    >
+    <Suspense fallback={<ProductSerialsSkeleton />}>
       <SerialsContent />
     </Suspense>
   );

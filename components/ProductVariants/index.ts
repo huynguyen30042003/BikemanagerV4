@@ -4,3 +4,4 @@ export * from "./ProductVariantsGrid";
 export * from "./ProductVariantsTable";
 export * from "./CreateProductVariantSlideOver";
 export * from "./UpdateProductVariantSlideOver";
+export * from "./ProductVariantsSkeleton";

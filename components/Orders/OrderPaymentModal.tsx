@@ -83,6 +83,7 @@ export const OrderPaymentModal: React.FC<OrderPaymentModalProps> = ({
               }))
             }
             isLoading={isLoadingPaymentMethods}
+            height={10}
           />
         </div>
 

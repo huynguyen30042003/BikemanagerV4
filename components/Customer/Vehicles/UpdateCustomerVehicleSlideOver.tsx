@@ -139,6 +139,7 @@ export const UpdateCustomerVehicleSlideOver: React.FC<UpdateCustomerVehicleSlide
             }
             placeholder="Chọn khách hàng sở hữu..."
             isLoading={isLoadingCustomers}
+            height={10}
             className={errors.khachHangID ? "border-red-500" : ""}
           />
           {errors.khachHangID && (

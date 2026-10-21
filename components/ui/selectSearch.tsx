@@ -114,7 +114,9 @@ function SearchSelect({
       >
         <span
           className={
-            selectedOption ? "text-foreground" : "text-muted-foreground"
+            selectedOption
+              ? "text-foreground truncate"
+              : "text-muted-foreground"
           }
         >
           {isLoading
@@ -142,7 +144,7 @@ function SearchSelect({
       {/* Dropdown */}
       {open && (
         <div
-          className={`absolute left-0 right-0 z-20 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg ${
+          className={`absolute left-0 right-0 z-50 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg ${
             placement === "top" ? "bottom-full mb-1" : "top-full mt-1"
           }`}
         >
@@ -293,7 +295,7 @@ function MultiSearchSelect({
       {/* Dropdown */}
       {open && (
         <div
-          className={`absolute left-0 right-0 z-20 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg ${
+          className={`absolute left-0 right-0 z-50 rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-lg ${
             placement === "top" ? "bottom-full mb-1" : "top-full mt-1"
           }`}
         >

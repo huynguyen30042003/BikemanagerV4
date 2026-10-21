@@ -130,6 +130,15 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
     [totalHoatDong]
   );
 
+  // Đếm số lượng bộ lọc nâng cao
+  const activeCount = useMemo(() => {
+    let count = 0;
+    if (tinhFilter) count++;
+    if (loaiFilter !== "all") count++;
+    if (statusFilter !== "all") count++;
+    return count;
+  }, [tinhFilter, loaiFilter, statusFilter]);
+
   // Danh sách các chip đang lọc (Dùng .map() render sạch sẽ)
   const activeChips = useMemo(() => {
     const chips: {
@@ -249,16 +258,17 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
         </div>
 
         {/* Quick Tab Switcher with Horizontal Scroll */}
-        <div className="flex items-center justify-between pt-1 overflow-x-auto whitespace-nowrap">
+        <div className="pt-1 max-w-full">
           <CustomerNavTabs activeTab="customer" totalCustomer={totalKhachHang} />
         </div>
       </div>
 
       {/* 2. Toolbar: Search, Filters & View Mode Switcher */}
       <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs space-y-2.5">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
-          {/* Ô tìm kiếm */}
-          <div className="relative flex-1 max-w-md">
+        {/* === GIAO DIỆN MÀN HÌNH NHỎ (Mobile/Tablet < lg) === */}
+        <div className="lg:hidden space-y-2">
+          {/* Ô tìm kiếm từ khóa trên Mobile */}
+          <div className="relative w-full">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               placeholder="Tìm theo tên, mã KH, số điện thoại, email, CCCD/MST..."
@@ -273,28 +283,34 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground w-4 h-4 rounded-full flex items-center justify-center hover:bg-muted cursor-pointer transition-colors"
                 title="Xóa tìm kiếm"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Controls row for Mobile */}
-          <div className="lg:hidden flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+          {/* Dòng điều khiển: Nút mở bộ lọc + Chuyển đổi View + Tải lại */}
+          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsMobileFilterOpen((prev) => !prev)}
-              className="h-8.5 px-3 gap-1.5 text-xs font-medium border-border/80 cursor-pointer"
+              className={`h-8.5 px-3 gap-1.5 text-xs font-medium border-border/80 cursor-pointer transition-colors ${
+                activeCount > 0
+                  ? "border-blue-500/50 bg-blue-50/50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300"
+                  : "text-muted-foreground"
+              }`}
             >
               {isMobileFilterOpen ? (
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5 text-rose-500" />
               ) : (
-                <Menu className="w-3.5 h-3.5" />
+                <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               )}
-              <span>Bộ lọc chi tiết</span>
-              {hasActiveFilters && (
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              <span>Bộ lọc</span>
+              {activeCount > 0 && (
+                <span className="w-4.5 h-4.5 rounded-full bg-blue-600 text-white dark:bg-blue-500 text-[10px] flex items-center justify-center font-bold">
+                  {activeCount}
+                </span>
               )}
             </Button>
 
@@ -337,14 +353,126 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
             </div>
           </div>
 
-          {/* Detailed Filters: Always visible on Desktop (lg:flex), Collapsible on Mobile */}
-          <div
-            className={`flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-2.5 flex-wrap ${
-              isMobileFilterOpen ? "flex" : "hidden lg:flex"
-            }`}
-          >
+          {/* KHUNG BỘ LỌC CHI TIẾT KHI MÀN HÌNH NHỎ (Thu gọn / Mở rộng) */}
+          {isMobileFilterOpen && (
+            <div className="flex flex-col gap-3 p-3 rounded-xl bg-muted/40 border border-border/70 animate-in fade-in-50 slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between pb-1 border-b border-border/40">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  Bộ lọc chi tiết
+                </span>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={onResetFilters}
+                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+                  >
+                    Đặt lại bộ lọc
+                  </button>
+                )}
+              </div>
+
+              {/* 1. Lọc theo Tỉnh/Thành */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Tỉnh / Thành phố
+                </label>
+                <SearchSelect
+                  options={[
+                    { value: "", label: "Tất cả Tỉnh/Thành" },
+                    ...provinceOptions,
+                  ]}
+                  value={tinhFilter}
+                  onChange={(val) => onTinhFilterChange(val ?? "")}
+                  placeholder="Chọn Tỉnh/Thành..."
+                  isLoading={isLoadingTinh}
+                  className="h-9.5 text-xs w-full"
+                  height={9.5}
+                />
+              </div>
+
+              {/* 2. Phân loại khách hàng */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Phân loại đối tượng
+                </label>
+                <div className="grid grid-cols-3 gap-1 bg-background/80 p-1 rounded-lg border border-border/60 text-xs">
+                  {loaiOptions.map((opt) => {
+                    const isSelected = loaiFilter === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => onLoaiFilterChange(opt.value)}
+                        className={`px-2 py-1.5 rounded-md font-medium text-center transition-all cursor-pointer ${
+                          isSelected
+                            ? `bg-card shadow-xs ${opt.activeClass}`
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Trạng thái hoạt động */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Trạng thái hoạt động
+                </label>
+                <div className="grid grid-cols-3 gap-1 bg-background/80 p-1 rounded-lg border border-border/60 text-xs">
+                  {statusOptions.map((opt) => {
+                    const isSelected = statusFilter === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => onStatusFilterChange(opt.value)}
+                        className={`px-2 py-1.5 rounded-md font-medium text-center transition-all cursor-pointer ${
+                          isSelected
+                            ? `bg-card shadow-xs ${opt.activeClass}`
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* === GIAO DIỆN MÀN HÌNH LỚN (Desktop >= lg) === */}
+        <div className="hidden lg:flex items-center justify-between gap-2.5 w-full">
+          {/* Ô tìm kiếm & Bộ lọc Tỉnh */}
+          <div className="flex items-center gap-2 flex-1 max-w-xl">
+            {/* Search Box */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                placeholder="Tìm theo tên, mã KH, số điện thoại, email, CCCD/MST..."
+                value={searchInput}
+                onChange={(e) => onSearch(e.target.value)}
+                className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-sm focus-visible:ring-blue-500/20"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => onSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground w-4 h-4 rounded-full flex items-center justify-center hover:bg-muted cursor-pointer transition-colors"
+                  title="Xóa tìm kiếm"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
             {/* Tỉnh thành Filter */}
-            <div className="w-full lg:w-48 shrink-0">
+            <div className="w-48 shrink-0">
               <SearchSelect
                 options={[
                   { value: "", label: "Tất cả Tỉnh/Thành" },
@@ -355,12 +483,16 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
                 placeholder="Chọn Tỉnh/Thành"
                 isLoading={isLoadingTinh}
                 className="h-9.5 text-xs w-full"
+                height={9.5}
               />
             </div>
+          </div>
 
+          {/* Desktop Right Side: Segment Controls & View Mode & Reload */}
+          <div className="flex items-center gap-2 shrink-0">
             {/* Phân loại Tabs (Sử dụng .map()) */}
-            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0 max-w-full overflow-x-auto no-scrollbar">
-              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5 hidden sm:block shrink-0" />
+            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5 shrink-0" />
               {loaiOptions.map((opt) => {
                 const isSelected = loaiFilter === opt.value;
                 return (
@@ -368,7 +500,7 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
                     key={opt.value}
                     type="button"
                     onClick={() => onLoaiFilterChange(opt.value)}
-                    className={`flex-1 sm:flex-initial px-2 sm:px-2.5 py-1.5 rounded-md font-medium text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap text-center ${
+                    className={`px-2.5 py-1.5 rounded-md font-medium text-xs transition-all cursor-pointer whitespace-nowrap text-center ${
                       isSelected
                         ? opt.activeClass
                         : "text-muted-foreground hover:text-foreground"
@@ -381,7 +513,7 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
             </div>
 
             {/* Trạng thái filter (Sử dụng .map()) */}
-            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0 max-w-full overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
               {statusOptions.map((opt) => {
                 const isSelected = statusFilter === opt.value;
                 return (
@@ -389,7 +521,7 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
                     key={opt.value}
                     type="button"
                     onClick={() => onStatusFilterChange(opt.value)}
-                    className={`flex-1 sm:flex-initial px-2 sm:px-2.5 py-1.5 rounded-md font-medium text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap text-center ${
+                    className={`px-2.5 py-1.5 rounded-md font-medium text-xs transition-all cursor-pointer whitespace-nowrap text-center ${
                       isSelected
                         ? opt.activeClass
                         : "text-muted-foreground hover:text-foreground"
@@ -402,42 +534,40 @@ export const CustomerFilterBar: React.FC<CustomerFilterBarProps> = ({
             </div>
 
             {/* Desktop View Mode & Reload */}
-            <div className="hidden lg:flex items-center gap-1.5 ml-auto">
-              <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
-                {VIEW_MODE_OPTIONS.map((opt) => {
-                  const Icon = opt.icon;
-                  const isSelected = viewMode === opt.mode;
-                  return (
-                    <button
-                      key={opt.mode}
-                      type="button"
-                      onClick={() => onViewModeChange(opt.mode)}
-                      title={`Chế độ xem ${opt.label}`}
-                      className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-background text-foreground shadow-2xs font-semibold"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </button>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={onRefresh}
-                disabled={isFetching || isLoadingKPI}
-                title="Tải lại danh sách và chỉ số KPI"
-                className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs active:scale-95"
-              >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
-                />
-              </Button>
+            <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
+              {VIEW_MODE_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                const isSelected = viewMode === opt.mode;
+                return (
+                  <button
+                    key={opt.mode}
+                    type="button"
+                    onClick={() => onViewModeChange(opt.mode)}
+                    title={`Chế độ xem ${opt.label}`}
+                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-background text-foreground shadow-2xs font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </button>
+                );
+              })}
             </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isFetching || isLoadingKPI}
+              title="Tải lại danh sách và chỉ số KPI"
+              className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs active:scale-95"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
+              />
+            </Button>
           </div>
         </div>
 

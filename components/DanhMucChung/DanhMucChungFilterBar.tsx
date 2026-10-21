@@ -130,7 +130,7 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
   return (
     <div className="space-y-4">
       {/* 1. Header & Actions Hub */}
-      <div className="flex flex-col gap-4 pb-4 border-b border-border/70">
+      <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4 pb-2 sm:pb-4 border-b border-border/70 mb-2 sm:mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
           <div>
             <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
@@ -147,7 +147,8 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
                   Danh mục dùng chung
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Quản lý và định nghĩa các nhóm danh mục phân loại mẹ trong toàn hệ thống
+                  Quản lý và định nghĩa các nhóm danh mục phân loại mẹ trong
+                  toàn hệ thống
                 </p>
               </div>
             </div>
@@ -166,7 +167,9 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-blue-500" : ""}`}
               />
-              <span className="text-xs font-medium hidden xs:inline">Đồng bộ</span>
+              <span className="text-xs font-medium hidden xs:inline">
+                Đồng bộ
+              </span>
               <span className="text-xs font-medium xs:hidden">Sync</span>
             </Button>
 
@@ -182,7 +185,7 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
         </div>
 
         {/* Quick Tab Switcher with Horizontal Scroll */}
-        <div className="flex items-center justify-between pt-1 overflow-x-auto whitespace-nowrap">
+        <div className="pt-1 max-w-full">
           <CategoryNavTabs
             activeTab="chung"
             totalChung={totalDanhMucChung}
@@ -192,10 +195,11 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
       </div>
 
       {/* 2. Toolbar: Search, Filters & View Toggle */}
-      <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs space-y-2.5">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-          {/* Ô tìm kiếm từ khóa */}
-          <div className="relative flex-1 max-w-md">
+      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs space-y-2.5">
+        {/* === GIAO DIỆN MÀN HÌNH NHỎ (Mobile/Tablet < lg) === */}
+        <div className="lg:hidden space-y-2">
+          {/* Ô tìm kiếm từ khóa trên Mobile */}
+          <div className="relative w-full">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               placeholder="Tìm theo tên danh mục..."
@@ -215,26 +219,31 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
             )}
           </div>
 
-          {/* Nút 3 gạch mở rộng bộ lọc trên Mobile */}
-          <div className="sm:hidden flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+          {/* Dòng điều khiển: Nút mở bộ lọc + Chuyển đổi View + Tải lại */}
+          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="h-8 px-2.5 gap-1.5 text-xs border-border/80 cursor-pointer"
+              className="h-8.5 px-3 gap-1.5 text-xs font-medium border-border/80 cursor-pointer"
             >
               {isMobileMenuOpen ? (
                 <X className="w-3.5 h-3.5" />
               ) : (
-                <Menu className="w-3.5 h-3.5" />
+                <Filter className="w-3.5 h-3.5" />
               )}
-              <span>Bộ lọc trạng thái</span>
+              <span>Bộ lọc</span>
+              {statusFilter !== "all" && (
+                <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-600 text-white">
+                  1
+                </span>
+              )}
             </Button>
 
             {/* View Switcher on mobile via .map() */}
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5">
+              <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shadow-2xs">
                 {viewModeOptions.map((opt) => {
                   const Icon = opt.icon;
                   const isActive = viewMode === opt.key;
@@ -244,7 +253,7 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
                       type="button"
                       onClick={() => onViewModeChange(opt.key)}
                       title={opt.title}
-                      className={`flex items-center justify-center w-7 h-7 rounded-md transition-all cursor-pointer ${
+                      className={`flex items-center justify-center w-7.5 h-7.5 rounded-md transition-all cursor-pointer ${
                         isActive
                           ? "bg-background text-foreground shadow-2xs font-semibold"
                           : "text-muted-foreground hover:text-foreground"
@@ -261,7 +270,8 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
                 size="icon"
                 onClick={onRefresh}
                 disabled={isFetching}
-                className="h-8 w-8 cursor-pointer"
+                title="Tải lại dữ liệu"
+                className="h-8.5 w-8.5 cursor-pointer shadow-2xs"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
@@ -270,15 +280,84 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
             </div>
           </div>
 
-          {/* Dải bộ lọc trạng thái & View Mode: trên desktop luôn hiện, trên mobile ẩn/hiện theo nút 3 gạch */}
-          <div
-            className={`${
-              isMobileMenuOpen ? "flex" : "hidden"
-            } sm:flex flex-wrap items-center gap-2`}
-          >
+          {/* KHUNG BỘ LỌC CHI TIẾT KHI MÀN HÌNH NHỎ (Thu gọn / Mở rộng) */}
+          {isMobileMenuOpen && (
+            <div className="flex flex-col gap-3 p-3 rounded-xl bg-muted/40 border border-border/70 animate-in fade-in-50 slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between pb-1 border-b border-border/40">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  Bộ lọc chi tiết
+                </span>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={onResetFilters}
+                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+                  >
+                    Đặt lại bộ lọc
+                  </button>
+                )}
+              </div>
+
+              {/* Lọc theo trạng thái */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Trạng thái sử dụng
+                </label>
+                <div className="grid grid-cols-3 gap-1 bg-background/80 p-1 rounded-lg border border-border/60 text-xs">
+                  {statusOptions.map((opt) => {
+                    const isActive = statusFilter === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => onStatusFilterChange(opt.key)}
+                        className={`px-2 py-1.5 rounded-md font-medium text-center transition-all cursor-pointer ${
+                          isActive
+                            ? `bg-card shadow-xs ${opt.activeColor}`
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {opt.label} ({opt.count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* === GIAO DIỆN MÀN HÌNH LỚN (Desktop >= lg) === */}
+        <div className="hidden lg:flex items-center justify-between gap-2.5 w-full">
+          {/* Left: Ô tìm kiếm từ khóa */}
+          <div className="flex items-center gap-2 flex-1 max-w-md">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                placeholder="Tìm theo tên danh mục..."
+                value={searchInput}
+                onChange={(e) => onSearch(e.target.value)}
+                className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-sm focus-visible:ring-blue-500/20"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => onSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground w-4 h-4 rounded-full flex items-center justify-center hover:bg-muted cursor-pointer transition-colors"
+                  title="Xóa tìm kiếm"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Dải bộ lọc trạng thái & View Mode Switcher & Reload */}
+          <div className="flex items-center gap-2 shrink-0">
             {/* Status Filter Buttons via .map() */}
-            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0 overflow-x-auto max-w-full">
-              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5 shrink-0 hidden xs:inline" />
+            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5 shrink-0" />
               {statusOptions.map((opt) => {
                 const isActive = statusFilter === opt.key;
                 return (
@@ -286,7 +365,7 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
                     key={opt.key}
                     type="button"
                     onClick={() => onStatusFilterChange(opt.key)}
-                    className={`px-2.5 sm:px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer shrink-0 ${
+                    className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer shrink-0 ${
                       isActive
                         ? `bg-background shadow-xs ${opt.activeColor}`
                         : "text-muted-foreground hover:text-foreground"
@@ -298,43 +377,41 @@ export const DanhMucChungFilterBar: React.FC<DanhMucChungFilterBarProps> = ({
               })}
             </div>
 
-            {/* Desktop View Switcher & Reload via .map() */}
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
-                {viewModeOptions.map((opt) => {
-                  const Icon = opt.icon;
-                  const isActive = viewMode === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      onClick={() => onViewModeChange(opt.key)}
-                      title={opt.title}
-                      className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
-                        isActive
-                          ? "bg-background text-foreground shadow-2xs font-semibold"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </button>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={onRefresh}
-                disabled={isFetching}
-                title="Tải lại dữ liệu"
-                className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs"
-              >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
-                />
-              </Button>
+            {/* Desktop View Switcher via .map() */}
+            <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
+              {viewModeOptions.map((opt) => {
+                const Icon = opt.icon;
+                const isActive = viewMode === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => onViewModeChange(opt.key)}
+                    title={opt.title}
+                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-background text-foreground shadow-2xs font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </button>
+                );
+              })}
             </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isFetching}
+              title="Tải lại dữ liệu"
+              className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
+              />
+            </Button>
           </div>
         </div>
 

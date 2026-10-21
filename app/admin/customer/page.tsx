@@ -96,24 +96,30 @@ function CustomerContent() {
   // File upload previews
   const [avatarPreviewAdd, setAvatarPreviewAdd] = useState<string | null>(null);
   const [logoPreviewAdd, setLogoPreviewAdd] = useState<string | null>(null);
-  const [avatarPreviewUpdate, setAvatarPreviewUpdate] = useState<string | null>(null);
-  const [logoPreviewUpdate, setLogoPreviewUpdate] = useState<string | null>(null);
+  const [avatarPreviewUpdate, setAvatarPreviewUpdate] = useState<string | null>(
+    null,
+  );
+  const [logoPreviewUpdate, setLogoPreviewUpdate] = useState<string | null>(
+    null,
+  );
 
   // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback lọc cục bộ)
   const individualCount = useMemo(
     () => items.filter((i: KH_KhachHang) => i.loaiKhachHang === 1).length,
-    [items]
+    [items],
   );
   const businessCount = useMemo(
     () => items.filter((i: KH_KhachHang) => i.loaiKhachHang === 2).length,
-    [items]
+    [items],
   );
   const activeCount = useMemo(
     () => items.filter((i: KH_KhachHang) => i.trangThai === true).length,
-    [items]
+    [items],
   );
 
-  const kpi = kpiData as unknown as (KhachHangKPI & { data?: KhachHangKPI }) | undefined;
+  const kpi = kpiData as unknown as
+    | (KhachHangKPI & { data?: KhachHangKPI })
+    | undefined;
 
   const total_KhachHang =
     kpi?.data?.total_KhachHang ?? kpi?.total_KhachHang ?? totalCount;
@@ -132,7 +138,10 @@ function CustomerContent() {
   const handleAvatarChangeAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setDataAdd((prev: CreateKhachHangPayload) => ({ ...prev, anhChanDung: file }));
+      setDataAdd((prev: CreateKhachHangPayload) => ({
+        ...prev,
+        anhChanDung: file,
+      }));
       setAvatarPreviewAdd(URL.createObjectURL(file));
     }
   };
@@ -140,7 +149,10 @@ function CustomerContent() {
   const handleLogoChangeAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setDataAdd((prev: CreateKhachHangPayload) => ({ ...prev, anhBieuTrung: file }));
+      setDataAdd((prev: CreateKhachHangPayload) => ({
+        ...prev,
+        anhBieuTrung: file,
+      }));
       setLogoPreviewAdd(URL.createObjectURL(file));
     }
   };
@@ -170,7 +182,7 @@ function CustomerContent() {
   };
 
   const hasActiveFilters = Boolean(
-    searchInput || statusFilter !== "all" || loaiFilter !== "all" || tinhFilter
+    searchInput || statusFilter !== "all" || loaiFilter !== "all" || tinhFilter,
   );
 
   const handleResetFilters = () => {
@@ -335,9 +347,9 @@ function CustomerContent() {
               &quot; không?
             </p>
             <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác. Nếu khách hàng đang có đơn hàng, hợp
-              đồng trả góp hoặc phương tiện xe liên kết, hệ thống sẽ từ chối xóa để
-              bảo toàn dữ liệu nghiệp vụ.
+              Hành động này không thể hoàn tác. Nếu khách hàng đang có đơn hàng,
+              hợp đồng trả góp hoặc phương tiện xe liên kết, hệ thống sẽ từ chối
+              xóa để bảo toàn dữ liệu nghiệp vụ.
             </span>
           </div>
         }

@@ -11,7 +11,10 @@ import { SlideOver } from "@/components/ui/SlideOver";
 import { WarehouseNavTabs } from "@/components/Common/WarehouseNavTabs";
 import { usePhieuChuyenKho } from "@/hooks/PhieuChuyenKho/usePhieuChuyenKho";
 import { useGetPhieuChuyenKhoKPI } from "@/hooks/PhieuChuyenKho/usePhieuChuyenKhoApi";
-import { KHO_PhieuChuyenKho, KHO_ChiTietChuyenKho } from "@/types/phieuChuyenKho";
+import {
+  KHO_PhieuChuyenKho,
+  KHO_ChiTietChuyenKho,
+} from "@/types/phieuChuyenKho";
 import {
   ArrowLeftRight,
   Plus,
@@ -110,43 +113,51 @@ function StockTransfersContent() {
     isLoadingStatusList,
   } = usePhieuChuyenKho();
 
-  const { data: transferKpi, isLoading: isLoadingKPI } = useGetPhieuChuyenKhoKPI();
+  const { data: transferKpi, isLoading: isLoadingKPI } =
+    useGetPhieuChuyenKhoKPI();
 
   // Thống kê nhanh theo trạng thái động từ DM_DanhMucChiTiet
   const waitingCount = useMemo(
     () =>
       items.filter((i) => {
         const b = getTransferStatusBadge(i.trangThaiID);
-        return b.color === "amber" || i.trangThaiID === 22 || i.trangThaiID === 1;
+        return (
+          b.color === "amber" || i.trangThaiID === 22 || i.trangThaiID === 1
+        );
       }).length,
-    [items, getTransferStatusBadge]
+    [items, getTransferStatusBadge],
   );
   const inTransitCount = useMemo(
     () =>
       items.filter((i) => {
         const b = getTransferStatusBadge(i.trangThaiID);
-        return b.color === "blue" || i.trangThaiID === 23 || i.trangThaiID === 2;
+        return (
+          b.color === "blue" || i.trangThaiID === 23 || i.trangThaiID === 2
+        );
       }).length,
-    [items, getTransferStatusBadge]
+    [items, getTransferStatusBadge],
   );
   const completedCount = useMemo(
     () =>
       items.filter((i) => {
         const b = getTransferStatusBadge(i.trangThaiID);
-        return b.color === "emerald" || i.trangThaiID === 24 || i.trangThaiID === 3;
+        return (
+          b.color === "emerald" || i.trangThaiID === 24 || i.trangThaiID === 3
+        );
       }).length,
-    [items, getTransferStatusBadge]
+    [items, getTransferStatusBadge],
   );
   const canceledCount = useMemo(
     () => items.filter((i) => i.trangThaiID === 4).length,
-    [items]
+    [items],
   );
 
   const columns: Column<KHO_PhieuChuyenKho>[] = [
     {
       key: "maPhieuChuyen",
       title: "Mã phiếu",
-      classNameHeader: "w-32 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-32 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => (
         <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
@@ -157,7 +168,8 @@ function StockTransfersContent() {
     {
       key: "khoXuatID",
       title: "Tuyến điều chuyển (Kho xuất → Kho nhập)",
-      classNameHeader: "min-w-[240px] text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "min-w-[240px] text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex items-center gap-2 text-xs">
@@ -178,7 +190,8 @@ function StockTransfersContent() {
     {
       key: "tongSoLuong",
       title: "Số lượng & Trị giá",
-      classNameHeader: "w-36 text-right text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-36 text-right text-xs font-semibold text-muted-foreground",
       classNameItem: "text-right",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5">
@@ -194,14 +207,17 @@ function StockTransfersContent() {
     {
       key: "nguoiGiaoHang",
       title: "Vận chuyển",
-      classNameHeader: "w-44 text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-44 text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
           {row.nguoiGiaoHang && (
             <div className="flex items-center gap-1">
               <Truck className="w-3 h-3 text-muted-foreground shrink-0" />
-              <span className="text-foreground truncate">{row.nguoiGiaoHang}</span>
+              <span className="text-foreground truncate">
+                {row.nguoiGiaoHang}
+              </span>
             </div>
           )}
           {row.bienSoXeVanChuyen && (
@@ -218,16 +234,13 @@ function StockTransfersContent() {
     {
       key: "ngayXuat",
       title: "Thời gian",
-      classNameHeader: "w-36 text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-36 text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5 text-[11px] text-muted-foreground">
-          {row.ngayXuat && (
-            <span>Xuất: {formatDate(row.ngayXuat)}</span>
-          )}
-          {row.ngayNhan && (
-            <span>Nhận: {formatDate(row.ngayNhan)}</span>
-          )}
+          {row.ngayXuat && <span>Xuất: {formatDate(row.ngayXuat)}</span>}
+          {row.ngayNhan && <span>Nhận: {formatDate(row.ngayNhan)}</span>}
           {!row.ngayXuat && !row.ngayNhan && <span>—</span>}
         </div>
       ),
@@ -235,7 +248,8 @@ function StockTransfersContent() {
     {
       key: "trangThaiID",
       title: "Trạng thái",
-      classNameHeader: "w-36 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-36 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => {
         const badge = getTransferStatusBadge(row.trangThaiID);
@@ -252,7 +266,8 @@ function StockTransfersContent() {
     {
       key: "function",
       title: "Thao tác",
-      classNameHeader: "w-24 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-24 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex gap-1 justify-center items-center">
@@ -271,7 +286,7 @@ function StockTransfersContent() {
   ];
 
   const hasActiveFilters = Boolean(
-    searchInput || khoFilter || statusFilter !== null
+    searchInput || khoFilter || statusFilter !== null,
   );
 
   const handleResetFilters = () => {
@@ -282,7 +297,7 @@ function StockTransfersContent() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header */}
       {isLoading ? (
         <div className="flex flex-col gap-3">
@@ -290,7 +305,7 @@ function StockTransfersContent() {
           <Skeleton className="h-4 w-96" />
         </div>
       ) : (
-        <div className="flex flex-col gap-4 pb-4 border-b border-border/70">
+        <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4 pb-2 sm:pb-4 border-b border-border/70 mb-2 sm:mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
@@ -309,7 +324,8 @@ function StockTransfersContent() {
                     Điều Chuyển Kho Nội Bộ
                   </h1>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Quản lý phiếu luân chuyển xe và linh kiện giữa các kho tổng, chi nhánh showroom và xưởng dịch vụ
+                    Quản lý phiếu luân chuyển xe và linh kiện giữa các kho tổng,
+                    chi nhánh showroom và xưởng dịch vụ
                   </p>
                 </div>
               </div>
@@ -342,7 +358,10 @@ function StockTransfersContent() {
 
           {/* Tab Navigation */}
           <div className="pt-2">
-            <WarehouseNavTabs activeTab="transfers" totalTransfers={totalCount} />
+            <WarehouseNavTabs
+              activeTab="transfers"
+              totalTransfers={totalCount}
+            />
           </div>
         </div>
       )}
@@ -352,7 +371,10 @@ function StockTransfersContent() {
         {[
           {
             title: "Tổng phiếu chuyển",
-            value: transferKpi?.total_PhieuChuyenKho ?? transferKpi?.totalPhieuChuyenKho ?? totalCount,
+            value:
+              transferKpi?.total_PhieuChuyenKho ??
+              transferKpi?.totalPhieuChuyenKho ??
+              totalCount,
             subtext: "Đã khởi tạo trong hệ thống",
             icon: ArrowLeftRight,
             color: "text-foreground",
@@ -361,7 +383,10 @@ function StockTransfersContent() {
           },
           {
             title: "Chờ xuất kho",
-            value: transferKpi?.total_ChoXuatKho ?? transferKpi?.totalChoXuatKho ?? waitingCount,
+            value:
+              transferKpi?.total_ChoXuatKho ??
+              transferKpi?.totalChoXuatKho ??
+              waitingCount,
             subtext: "Chờ thủ kho xuất hàng",
             icon: Clock,
             color: "text-amber-600 dark:text-amber-400",
@@ -370,7 +395,10 @@ function StockTransfersContent() {
           },
           {
             title: "Đang vận chuyển",
-            value: transferKpi?.total_DangVanChuyen ?? transferKpi?.totalDangVanChuyen ?? inTransitCount,
+            value:
+              transferKpi?.total_DangVanChuyen ??
+              transferKpi?.totalDangVanChuyen ??
+              inTransitCount,
             subtext: "Hàng đang đi trên đường",
             icon: Truck,
             color: "text-blue-600 dark:text-blue-400",
@@ -379,7 +407,10 @@ function StockTransfersContent() {
           },
           {
             title: "Đã hoàn tất",
-            value: transferKpi?.total_DaHoanTat ?? transferKpi?.totalDaHoanTat ?? completedCount,
+            value:
+              transferKpi?.total_DaHoanTat ??
+              transferKpi?.totalDaHoanTat ??
+              completedCount,
             subtext: "Kho đích đã nhận đủ hàng",
             icon: CheckCircle2,
             color: "text-emerald-600 dark:text-emerald-400",
@@ -389,17 +420,30 @@ function StockTransfersContent() {
         ].map((card, idx) => {
           const Icon = card.icon;
           return (
-            <Card key={idx} className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+            <Card
+              key={idx}
+              className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs"
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
-                <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center`}>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {card.title}
+                </span>
+                <div
+                  className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center`}
+                >
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
               <div className={`text-2xl font-bold mt-2 ${card.color}`}>
-                {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+                {isLoadingKPI || isLoading ? (
+                  <Skeleton className="h-7 w-12" />
+                ) : (
+                  card.value
+                )}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{card.subtext}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {card.subtext}
+              </p>
             </Card>
           );
         })}
@@ -511,8 +555,10 @@ function StockTransfersContent() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/70 text-sm text-muted-foreground">
                   <div className="text-xs">
-                    Trang <strong className="text-foreground">{page}</strong> / {totalPages}{" "}
-                    (Tổng <strong className="text-foreground">{totalCount}</strong> phiếu chuyển)
+                    Trang <strong className="text-foreground">{page}</strong> /{" "}
+                    {totalPages} (Tổng{" "}
+                    <strong className="text-foreground">{totalCount}</strong>{" "}
+                    phiếu chuyển)
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -546,7 +592,9 @@ function StockTransfersContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page >= totalPages}
                       className="h-8 px-2.5 text-xs cursor-pointer"
                     >
@@ -675,7 +723,10 @@ function StockTransfersContent() {
                       onChange={(val) => {
                         const updated = [...dataCreate.ChiTiets];
                         updated[idx].BienTheSanPhamID = String(val || "");
-                        setDataCreate((prev) => ({ ...prev, ChiTiets: updated }));
+                        setDataCreate((prev) => ({
+                          ...prev,
+                          ChiTiets: updated,
+                        }));
                       }}
                       isLoading={isLoadingVariants}
                     />
@@ -689,8 +740,12 @@ function StockTransfersContent() {
                       value={ct.SoLuongChuyen}
                       onChange={(e) => {
                         const updated = [...dataCreate.ChiTiets];
-                        updated[idx].SoLuongChuyen = parseInt(e.target.value) || 1;
-                        setDataCreate((prev) => ({ ...prev, ChiTiets: updated }));
+                        updated[idx].SoLuongChuyen =
+                          parseInt(e.target.value) || 1;
+                        setDataCreate((prev) => ({
+                          ...prev,
+                          ChiTiets: updated,
+                        }));
                       }}
                       className="text-xs font-mono"
                     />
@@ -765,7 +820,9 @@ function StockTransfersContent() {
                     {selectedPhieu.maPhieuChuyen}
                   </span>
                   {(() => {
-                    const badge = getTransferStatusBadge(selectedPhieu.trangThaiID);
+                    const badge = getTransferStatusBadge(
+                      selectedPhieu.trangThaiID,
+                    );
                     return (
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${badge.bgClass} ${badge.textClass} ${badge.borderClass}`}
@@ -788,7 +845,9 @@ function StockTransfersContent() {
 
                 <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground pt-1 border-t border-border/60">
                   <span>Người giao: {selectedPhieu.nguoiGiaoHang || "—"}</span>
-                  <span>Biển số xe: {selectedPhieu.bienSoXeVanChuyen || "—"}</span>
+                  <span>
+                    Biển số xe: {selectedPhieu.bienSoXeVanChuyen || "—"}
+                  </span>
                   <span>Xuất: {formatDate(selectedPhieu.ngayXuat)}</span>
                   <span>Nhận: {formatDate(selectedPhieu.ngayNhan)}</span>
                 </div>
@@ -804,10 +863,18 @@ function StockTransfersContent() {
                   <table className="w-full text-xs">
                     <thead className="bg-muted/50 border-b border-border text-muted-foreground">
                       <tr>
-                        <th className="p-2 text-left font-semibold">Sản phẩm / Biến thể</th>
-                        <th className="p-2 text-right font-semibold w-24">SL xuất</th>
-                        <th className="p-2 text-right font-semibold w-24">SL nhận</th>
-                        <th className="p-2 text-right font-semibold w-28">Đơn giá vốn</th>
+                        <th className="p-2 text-left font-semibold">
+                          Sản phẩm / Biến thể
+                        </th>
+                        <th className="p-2 text-right font-semibold w-24">
+                          SL xuất
+                        </th>
+                        <th className="p-2 text-right font-semibold w-24">
+                          SL nhận
+                        </th>
+                        <th className="p-2 text-right font-semibold w-28">
+                          Đơn giá vốn
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -846,7 +913,9 @@ function StockTransfersContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleHuyPhieu(selectedPhieu.phieuChuyenKhoID)}
+                      onClick={() =>
+                        handleHuyPhieu(selectedPhieu.phieuChuyenKhoID)
+                      }
                       disabled={isHuyPhieu}
                       className="text-rose-600 hover:text-rose-700 border-rose-200 cursor-pointer text-xs"
                     >
@@ -855,7 +924,9 @@ function StockTransfersContent() {
 
                     <Button
                       size="sm"
-                      onClick={() => handleXuatKho(selectedPhieu.phieuChuyenKhoID)}
+                      onClick={() =>
+                        handleXuatKho(selectedPhieu.phieuChuyenKhoID)
+                      }
                       disabled={isXuatKho}
                       className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer text-xs font-semibold"
                     >

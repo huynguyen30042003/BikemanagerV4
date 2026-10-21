@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SP_HinhAnhSanPham } from "@/types/hinhAnhSanPham";
 import { getImageUrl } from "@/shared/constants/apiConstants";
 
-interface ProductImagesGalleryProps {
+export interface ProductImagesGalleryProps {
   items: SP_HinhAnhSanPham[];
   selectedSanPhamId: string;
   isLoading: boolean;
@@ -48,14 +48,14 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-border/80 bg-card p-8 sm:p-12 flex flex-col items-center justify-center text-center text-muted-foreground shadow-xs">
+      <div className="rounded-xl border border-border/80 bg-card p-6 sm:p-12 flex flex-col items-center justify-center text-center text-muted-foreground shadow-xs">
         <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground mb-3 border border-border/50 shadow-2xs">
           <FolderOpen className="w-7 h-7 stroke-[1.5]" />
         </div>
         <h2 className="font-semibold text-base text-foreground">
           Chưa có hình ảnh trong bộ sưu tập
         </h2>
-        <p className="text-xs text-muted-foreground max-w-sm mt-1">
+        <p className="text-xs text-muted-foreground max-w-sm mt-1 px-2">
           {selectedSanPhamId
             ? "Sản phẩm này chưa có ảnh nào trong album gallery. Hãy bấm nút tải lên ảnh ngay!"
             : "Vui lòng chọn một dòng sản phẩm để xem bộ sưu tập hình ảnh."}
@@ -78,15 +78,18 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
       initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}
-      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4"
+      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 min-w-0"
     >
       {items.map((img) => (
         <Card
           key={img.hinhAnhID}
-          className="group relative rounded-xl border border-border/80 bg-card overflow-hidden shadow-2xs hover:border-blue-500/50 hover:shadow-md transition-all flex flex-col"
+          className="group relative rounded-xl border border-border/80 bg-card overflow-hidden shadow-2xs hover:border-blue-500/50 hover:shadow-md transition-all flex flex-col min-w-0"
         >
-          {/* Media Preview */}
-          <div className="relative aspect-4/3 w-full bg-muted/40 overflow-hidden flex items-center justify-center">
+          {/* Media Preview Box */}
+          <div
+            onClick={() => onZoom(img)}
+            className="relative aspect-4/3 w-full bg-muted/40 overflow-hidden flex items-center justify-center cursor-pointer select-none"
+          >
             {img.duongDanAnh && getImageUrl(img.duongDanAnh) ? (
               <Image
                 src={getImageUrl(img.duongDanAnh)}
@@ -104,24 +107,41 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
 
             {/* Cover Badge */}
             {img.laAnhDaiDien && (
-              <div className="absolute top-2 left-2 bg-amber-500/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 border border-amber-400/40">
+              <div className="absolute top-2 left-2 bg-amber-500/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 border border-amber-400/40 z-10">
                 <Star className="w-3 h-3 fill-white" />
-                Ảnh đại diện
+                <span className="hidden xs:inline">Ảnh đại diện</span>
               </div>
             )}
 
             {/* Order Badge */}
-            <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
+            <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-mono px-1.5 py-0.5 rounded z-10">
               #{img.thuTu}
             </div>
 
-            {/* Hover Action Overlay */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            {/* Mobile Direct Action: Nút Xóa ảnh trực tiếp trên màn hình cảm ứng */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(img.hinhAnhID);
+              }}
+              title="Xóa ảnh này"
+              aria-label="Xóa ảnh này"
+              className="sm:hidden absolute top-2 right-2 z-20 w-7.5 h-7.5 rounded-lg bg-black/60 hover:bg-rose-600 active:bg-rose-700 text-white flex items-center justify-center backdrop-blur-sm shadow-xs cursor-pointer active:scale-95 transition-all"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Desktop Hover Action Overlay (Chỉ kích hoạt trên sm trở lên) */}
+            <div
+              className="hidden sm:flex absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2 z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 type="button"
                 onClick={() => onZoom(img)}
                 title="Xem chi tiết ảnh"
-                className="w-8 h-8 rounded-lg bg-white/90 hover:bg-white text-zinc-900 flex items-center justify-center shadow-xs cursor-pointer transition-transform active:scale-95"
+                className="w-9 h-9 rounded-lg bg-white/95 hover:bg-white text-zinc-900 flex items-center justify-center shadow-xs cursor-pointer transition-transform active:scale-95"
               >
                 <Eye className="w-4 h-4" />
               </button>
@@ -130,7 +150,7 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
                 type="button"
                 onClick={() => onDelete(img.hinhAnhID)}
                 title="Xóa hình ảnh này"
-                className="w-8 h-8 rounded-lg bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-xs cursor-pointer transition-transform active:scale-95"
+                className="w-9 h-9 rounded-lg bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-xs cursor-pointer transition-transform active:scale-95"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -138,21 +158,24 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
           </div>
 
           {/* Caption Footer */}
-          <div className="p-2.5 flex flex-col gap-1 border-t border-border/60 text-xs">
+          <div
+            onClick={() => onZoom(img)}
+            className="p-2 sm:p-2.5 flex flex-col gap-1 border-t border-border/60 text-xs min-w-0 cursor-pointer"
+          >
             <span
-              className="font-semibold text-foreground truncate"
-              title={img.tieuDe || ""}
+              className="font-semibold text-foreground truncate block"
+              title={img.tieuDe || "Không có tiêu đề"}
             >
               {img.tieuDe || "Không có tiêu đề"}
             </span>
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
-              <span>Thứ tự: {img.thuTu}</span>
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono gap-1">
+              <span className="shrink-0">Thứ tự: {img.thuTu}</span>
               {img.tenBienThe ? (
-                <span className="truncate max-w-[110px] text-indigo-600 dark:text-indigo-400 font-medium">
+                <span className="truncate max-w-[120px] text-indigo-600 dark:text-indigo-400 font-medium">
                   {img.tenBienThe}
                 </span>
               ) : (
-                <span className="text-muted-foreground/80">Ảnh chung</span>
+                <span className="text-muted-foreground/80 shrink-0">Ảnh chung</span>
               )}
             </div>
           </div>
@@ -161,3 +184,5 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
     </motion.div>
   );
 };
+
+export default ProductImagesGallery;

@@ -89,15 +89,15 @@ function WarehousesContent() {
 
   const activeCount = useMemo(
     () => items.filter((i) => i.trangThai === true).length,
-    [items]
+    [items],
   );
   const inactiveCount = useMemo(
     () => items.filter((i) => i.trangThai === false).length,
-    [items]
+    [items],
   );
   const defaultWarehouseCount = useMemo(
     () => items.filter((i) => i.laKhoMacDinh === true).length,
-    [items]
+    [items],
   );
 
   const kpiCards = [
@@ -119,7 +119,10 @@ function WarehousesContent() {
     },
     {
       title: "Kho mặc định ưu tiên",
-      value: kpiData?.total_KhoMacDinh ?? kpiData?.totalKhoMacDinh ?? defaultWarehouseCount,
+      value:
+        kpiData?.total_KhoMacDinh ??
+        kpiData?.totalKhoMacDinh ??
+        defaultWarehouseCount,
       subtext: "Tự động chọn khi lập đơn bán",
       icon: Star,
       color: "text-amber-600 dark:text-amber-400",
@@ -127,7 +130,10 @@ function WarehousesContent() {
     },
     {
       title: "Tạm ngưng",
-      value: kpiData?.total_NgungHoatDong ?? kpiData?.totalNgungHoatDong ?? inactiveCount,
+      value:
+        kpiData?.total_NgungHoatDong ??
+        kpiData?.totalNgungHoatDong ??
+        inactiveCount,
       subtext: "Kho bảo trì hoặc dừng hoạt động",
       icon: XCircle,
       color: "text-slate-600 dark:text-slate-400",
@@ -139,7 +145,8 @@ function WarehousesContent() {
     {
       key: "maKho",
       title: "Mã kho",
-      classNameHeader: "w-32 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-32 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v, row) => (
         <div className="flex items-center justify-center gap-1">
@@ -147,7 +154,10 @@ function WarehousesContent() {
             {v ? String(v).toUpperCase() : "—"}
           </span>
           {row.laKhoMacDinh && (
-            <span title="Kho mặc định bán hàng" className="inline-flex items-center">
+            <span
+              title="Kho mặc định bán hàng"
+              className="inline-flex items-center"
+            >
               <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
             </span>
           )}
@@ -180,7 +190,8 @@ function WarehousesContent() {
     {
       key: "loaiKhoID",
       title: "Loại kho",
-      classNameHeader: "w-36 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-36 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => {
         return (
@@ -193,12 +204,16 @@ function WarehousesContent() {
     {
       key: "diaChi",
       title: "Địa chỉ & Liên hệ",
-      classNameHeader: "min-w-[200px] text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "min-w-[200px] text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
           {row.diaChi && (
-            <div className="flex items-center gap-1 truncate" title={row.diaChi}>
+            <div
+              className="flex items-center gap-1 truncate"
+              title={row.diaChi}
+            >
               <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
               <span className="truncate">{row.diaChi}</span>
             </div>
@@ -216,7 +231,8 @@ function WarehousesContent() {
     {
       key: "choPhepTonAm",
       title: "Chính sách xuất",
-      classNameHeader: "w-32 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-32 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) =>
         v ? (
@@ -232,7 +248,8 @@ function WarehousesContent() {
     {
       key: "trangThai",
       title: "Trạng thái",
-      classNameHeader: "w-28 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-28 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) =>
         v ? (
@@ -250,7 +267,8 @@ function WarehousesContent() {
     {
       key: "function",
       title: "Thao tác",
-      classNameHeader: "w-32 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-32 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex gap-1 justify-center items-center">
@@ -295,7 +313,7 @@ function WarehousesContent() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header */}
       {isLoading ? (
         <div className="flex flex-col gap-3">
@@ -303,7 +321,7 @@ function WarehousesContent() {
           <Skeleton className="h-4 w-96" />
         </div>
       ) : (
-        <div className="flex flex-col gap-4 pb-4 border-b border-border/70">
+        <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4 pb-2 sm:pb-4 border-b border-border/70 mb-2 sm:mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
@@ -322,7 +340,8 @@ function WarehousesContent() {
                     Kho Hàng & Bãi Lưu Trữ
                   </h1>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Quản lý mạng lưới kho tổng, kho chi nhánh showroom, kho bảo hành và điểm xuất bán
+                    Quản lý mạng lưới kho tổng, kho chi nhánh showroom, kho bảo
+                    hành và điểm xuất bán
                   </p>
                 </div>
               </div>
@@ -355,7 +374,10 @@ function WarehousesContent() {
 
           {/* Tab Navigation */}
           <div className="pt-2">
-            <WarehouseNavTabs activeTab="warehouses" totalWarehouses={totalCount} />
+            <WarehouseNavTabs
+              activeTab="warehouses"
+              totalWarehouses={totalCount}
+            />
           </div>
         </div>
       )}
@@ -365,17 +387,30 @@ function WarehousesContent() {
         {kpiCards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <Card key={idx} className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+            <Card
+              key={idx}
+              className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs"
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
-                <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.color} flex items-center justify-center`}>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {card.title}
+                </span>
+                <div
+                  className={`w-7 h-7 rounded-lg ${card.bg} ${card.color} flex items-center justify-center`}
+                >
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
               <div className={`text-2xl font-bold mt-2 ${card.color}`}>
-                {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+                {isLoadingKPI || isLoading ? (
+                  <Skeleton className="h-7 w-12" />
+                ) : (
+                  card.value
+                )}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{card.subtext}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {card.subtext}
+              </p>
             </Card>
           );
         })}
@@ -508,8 +543,10 @@ function WarehousesContent() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/70 text-sm text-muted-foreground">
                   <div className="text-xs">
-                    Trang <strong className="text-foreground">{page}</strong> / {totalPages}{" "}
-                    (Tổng <strong className="text-foreground">{totalCount}</strong> kho hàng)
+                    Trang <strong className="text-foreground">{page}</strong> /{" "}
+                    {totalPages} (Tổng{" "}
+                    <strong className="text-foreground">{totalCount}</strong>{" "}
+                    kho hàng)
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -543,7 +580,9 @@ function WarehousesContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page >= totalPages}
                       className="h-8 px-2.5 text-xs cursor-pointer"
                     >
@@ -618,7 +657,10 @@ function WarehousesContent() {
               </label>
               <SearchSelect
                 placeholder="Chọn chi nhánh liên kết..."
-                options={[{ value: "", label: "Kho độc lập / Trung tâm" }, ...locationOptions]}
+                options={[
+                  { value: "", label: "Kho độc lập / Trung tâm" },
+                  ...locationOptions,
+                ]}
                 value={dataAdd.DiaDiemID || ""}
                 onChange={(val) =>
                   setDataAdd((prev) => ({
@@ -829,7 +871,10 @@ function WarehousesContent() {
               </label>
               <SearchSelect
                 placeholder="Chọn chi nhánh liên kết..."
-                options={[{ value: "", label: "Kho độc lập / Trung tâm" }, ...locationOptions]}
+                options={[
+                  { value: "", label: "Kho độc lập / Trung tâm" },
+                  ...locationOptions,
+                ]}
                 value={dataUpdate.DiaDiemID || ""}
                 onChange={(val) =>
                   setDataUpdate((prev) => ({
@@ -868,7 +913,10 @@ function WarehousesContent() {
                 placeholder="0243..."
                 value={dataUpdate.DienThoai || ""}
                 onChange={(e) =>
-                  setDataUpdate((prev) => ({ ...prev, DienThoai: e.target.value }))
+                  setDataUpdate((prev) => ({
+                    ...prev,
+                    DienThoai: e.target.value,
+                  }))
                 }
                 className="text-xs"
               />

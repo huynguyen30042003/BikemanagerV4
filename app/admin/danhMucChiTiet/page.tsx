@@ -71,23 +71,29 @@ function DanhMucChiTietContent() {
 
   // Local modal states
   const [openCreate, setOpenCreate] = useState<boolean>(false);
-  const [editingItem, setEditingItem] = useState<DM_DanhMucChiTiet | null>(null);
+  const [editingItem, setEditingItem] = useState<DM_DanhMucChiTiet | null>(
+    null,
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   // KPI metrics từ API GetKPI hoặc fallback tính cục bộ
   const activeCount = useMemo(
-    () => items.filter((item: DM_DanhMucChiTiet) => item.trangThai === true).length,
-    [items]
+    () =>
+      items.filter((item: DM_DanhMucChiTiet) => item.trangThai === true).length,
+    [items],
   );
   const inactiveCount = useMemo(
-    () => items.filter((item: DM_DanhMucChiTiet) => item.trangThai === false).length,
-    [items]
+    () =>
+      items.filter((item: DM_DanhMucChiTiet) => item.trangThai === false)
+        .length,
+    [items],
   );
 
   const total_DanhMucChiTiet = kpiData?.total_DanhMucChiTiet ?? totalCount;
   const total_HoatDong = kpiData?.total_HoatDong ?? activeCount;
   const total_NgungHoatDong = kpiData?.total_NgungHoatDong ?? inactiveCount;
-  const total_DanhMucChung = kpiData?.total_DanhMucChung ?? parentCategories.length;
+  const total_DanhMucChung =
+    kpiData?.total_DanhMucChung ?? parentCategories.length;
 
   // Filter options for parent category toolbar
   const filterParentOptions: SelectOption[] = useMemo(() => {
@@ -107,7 +113,7 @@ function DanhMucChiTietContent() {
   }, [parentCategoryFilter, parentCategoryMap]);
 
   const hasActiveFilters = Boolean(
-    searchInput || statusFilter !== "all" || parentCategoryFilter
+    searchInput || statusFilter !== "all" || parentCategoryFilter,
   );
 
   const handleResetFilters = () => {
@@ -213,7 +219,9 @@ function DanhMucChiTietContent() {
         open={openCreate}
         onClose={() => setOpenCreate(false)}
         parentCategoryOptions={parentCategoryOptions}
-        defaultParentId={parentCategoryFilter ? Number(parentCategoryFilter) : undefined}
+        defaultParentId={
+          parentCategoryFilter ? Number(parentCategoryFilter) : undefined
+        }
       />
 
       {/* Slide-over Drawer: CẬP NHẬT MỤC CHI TIẾT */}
@@ -242,7 +250,8 @@ function DanhMucChiTietContent() {
             </p>
             <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
               Hành động này không thể hoàn tác. Nếu mục chi tiết đang được gắn
-              vào sản phẩm hoặc nghiệp vụ, hệ thống sẽ từ chối xóa để đảm bảo toàn vẹn dữ liệu.
+              vào sản phẩm hoặc nghiệp vụ, hệ thống sẽ từ chối xóa để đảm bảo
+              toàn vẹn dữ liệu.
             </span>
           </div>
         }

@@ -142,6 +142,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                 setFormData((prev) => ({ ...prev, KhachHangID: String(val) }))
               }
               isLoading={isLoadingCustomers}
+              height={10}
             />
           </div>
 
@@ -156,6 +157,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
               onChange={(val) =>
                 setFormData((prev) => ({ ...prev, DiaDiemID: String(val) }))
               }
+              height={10}
             />
           </div>
 
@@ -171,6 +173,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                 setFormData((prev) => ({ ...prev, KhoXuatID: String(val) }))
               }
               isLoading={isLoadingKhos}
+              height={10}
             />
           </div>
         </div>
@@ -190,6 +193,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                 }))
               }
               isLoading={isLoadingOrderTypes}
+              height={10}
             />
           </div>
 
@@ -307,6 +311,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                         }));
                       }}
                       isLoading={isLoadingVariants}
+                      height={9}
                     />
                   </div>
 

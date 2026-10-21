@@ -150,6 +150,7 @@ export const CreateProductSerialSlideOver: React.FC<
               }))
             }
             isLoading={isLoadingVariants}
+            height={10}
             className={errors.bienTheSanPhamID ? "border-red-500" : ""}
           />
           {errors.bienTheSanPhamID && (

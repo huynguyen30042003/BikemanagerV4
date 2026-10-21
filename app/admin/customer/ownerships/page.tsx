@@ -96,11 +96,11 @@ function OwnershipsContent() {
   }, [kpiData?.total_ThuCuDoiMoi, items]);
 
   const hasActiveFilters = Boolean(
-    searchInput || lyDoFilter !== "all" || vehicleFilter || customerFilter
+    searchInput || lyDoFilter !== "all" || vehicleFilter || customerFilter,
   );
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header, CustomerNavTabs & Filter Toolbar */}
       <CustomerOwnershipsFilterBar
         totalLichSuSoHuu={totalLichSuSoHuu}

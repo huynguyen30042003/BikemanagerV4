@@ -51,6 +51,8 @@ FE/
 │   │   ├── AccessDenied.tsx          # Component hiển thị 403 nội bộ (inline)
 │   │   ├── RoleGuard.tsx             # RoleGuard (component) & AdminRouteGuard (layout)
 │   │   ├── SiderBarAdmin.tsx         # Sidebar động lọc menu theo role của user
+│   │   ├── BaseNavTabs.tsx           # Component cơ sở dùng chung cho mọi thanh NavTabs
+│   │   ├── CustomerNavTabs.tsx       # Navigation tabs quản lý Khách hàng
 │   │   ├── CategoryNavTabs.tsx       # Navigation tabs giữa DanhMucChung & DanhMucChiTiet
 │   │   └── ProductNavTabs.tsx        # Navigation tabs giữa 5 màn hình sản phẩm & kho
 │   ├── ui/                           # Base UI Primitives (Design System)
@@ -657,31 +659,123 @@ interface KpiCardConfig {
 
 Tất cả các trang trong hệ thống phải đảm bảo trải nghiệm hoàn hảo trên Desktop lẫn Mobile (đặc biệt chuẩn màn hình iPhone Xs Max: 414px, iPhone 12/13/14 Pro Max: 428px, và các thiết bị từ 375px trở lên):
 
-1. **Quy tắc Nút 3 gạch (`Menu`) Thu gọn Bộ lọc & Hành động Phụ trên Mobile**:
-   - Trên màn hình nhỏ (`lg:hidden` hoặc `sm:hidden`), **CẤM** để hàng loạt dropdown, ô chọn ngày, nút bấm trải dài làm tràn ngập màn hình trước khi xem được dữ liệu chính.
-   - **BẮT BUỘC**:
-     - Thu gọn toàn bộ bộ lọc chi tiết và nút thao tác phụ vào nút "Bộ lọc" với biểu tượng 3 gạch (`Menu` / `X`).
-     - Khi người dùng click nút 3 gạch: mở rộng khối bộ lọc con (`isMobileMenuOpen = true`). Click lần nữa thì đóng gọn lại.
-     - Luôn giữ nút Tìm kiếm chính hoặc nút Làm mới / Nút Thêm mới ở vị trí trực quan, dễ thao tác bằng 1 tay.
+1. **Quy tắc Phân tách Responsive cho Toolbar / FilterBar (Chuẩn hóa theo `DanhMucChiTietFilterBar.tsx`)**:
+   - Trên màn hình nhỏ (`< lg` hoặc mobile/tablet), **CẤM** để hàng loạt dropdown `SearchSelect` (danh mục cha, chi nhánh, kho, tỉnh thành), ô chọn ngày, dải nút bấm trạng thái trải dài làm tràn ngập màn hình trước khi xem được dữ liệu chính.
+   - **BẮT BUỘC** phân chia rõ ràng 2 khối giao diện riêng biệt trong `...FilterBar.tsx`:
+     - **A. Giao diện Màn hình Nhỏ (`lg:hidden space-y-2`)**:
+       1. **Ô tìm kiếm từ khóa full-width**: Input độ cao chuẩn `h-9.5`, icon `Search` bên trái và nút xóa nhanh `✕` bên phải khi có dữ liệu gõ vào.
+       2. **Dòng điều khiển phụ (Sub-control Bar)**: Nằm ngay dưới ô tìm kiếm trên 1 hàng ngang linh hoạt:
+          - **Nút "Bộ lọc" (`Button variant="outline" size="sm"`)**: Hiển thị icon `Filter` (khi đóng) / `X` (khi mở), nhãn "Bộ lọc", và **huy hiệu đếm số lượng tiêu chí đang lọc** (ví dụ: `<span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-purple-600 text-white">{count}</span>`).
+          - **Cụm chuyển chế độ xem (Dual View Mode Toggle)**: Render qua `.map()` (`viewModeOptions.map(...)`) hiển thị 2 nút icon Lưới (`LayoutGrid`) và Bảng (`List`) trực quan.
+          - **Nút Tải lại (`RefreshCw`)**: Kèm hiệu ứng `animate-spin` khi `isFetching`.
+       3. **Khung Bộ lọc Chi tiết Thu gọn (Collapsible Detailed Filter Panel khi `isMobileMenuOpen = true`)**:
+          - Header panel: Tiêu đề `"Bộ lọc chi tiết"` (icon `Filter`) và nút `"Đặt lại bộ lọc"` (chỉ hiện khi có tiêu chí đang lọc).
+          - Toàn bộ các dropdown `SearchSelect` phụ (như lọc danh mục cha, kho xuất, tỉnh/thành, loại khách hàng) xếp theo cột dọc (`space-y-3`).
+          - Nhóm nút lọc trạng thái chia lưới dạng grid cân đối (`grid grid-cols-3 gap-1`) có badge số lượng và active color nổi bật.
+     - **B. Giao diện Màn hình Lớn (`hidden lg:flex items-center justify-between gap-2.5 w-full`)**:
+       - Toàn bộ thanh công cụ được xếp thẳng hàng trên 1 dòng đơn ngang:
+         - **Cụm bên trái**: Ô tìm kiếm (`max-w-md` hoặc `max-w-xl`) kết hợp các dropdown `SearchSelect` cần lọc nhanh.
+         - **Cụm bên phải**: Dải nút lọc trạng thái (`statusOptions.map(...)`), cụm nút chuyển chế độ xem (`viewModeOptions.map(...)`), và nút Tải lại.
+     - **C. Dải Chip Tiêu chí Đang lọc (Active Filter Chips)**:
+       - Luôn đặt ở đáy Toolbar, chỉ hiển thị khi `hasActiveFilters = true`.
+       - Render bằng `.map()` từng chip tiêu chí: có Icon, nhãn giá trị và nút xóa `✕` cho từng tiêu chí.
+       - Có nút `"Xóa tất cả bộ lọc"` ở cuối để reset nhanh toàn bộ state lọc về mặc định.
+     - **D. Nhúng thanh NavTabs vào FilterBar**:
+       - Container bọc component `...NavTabs` bên dưới Header chỉ cần dùng: `<div className="pt-1 max-w-full">`.
+       - **Tuyệt đối không bọc thêm** `overflow-x-auto whitespace-nowrap` bên ngoài `...NavTabs` vì bản thân `BaseNavTabs` đã tự quản lý cuộn ngang chống tràn, bọc thêm sẽ sinh lỗi thanh cuộn lồng nhau (nested scrollbar).
+
 2. **Dải Tabs & Bộ chọn ngang (Horizontal Scrolling Navigation)**:
-   - Tất cả các thanh điều hướng tab con (ví dụ `CategoryNavTabs`, `ProductNavTabs`, `OrderNavTabs`, Preset thời gian...) **bắt buộc** bọc container có `overflow-x-auto whitespace-nowrap`.
-   - Tuyệt đối không để các tab bị gãy dòng (line-wrap) làm đội giao diện lên 3-4 dòng trên mobile.
+   - Tất cả các thanh điều hướng tab con (ví dụ `CustomerNavTabs`, `CategoryNavTabs`, `ProductNavTabs`, `LocationNavTabs`, `InstallmentNavTabs`, `WarehouseNavTabs`, `ServiceNavTabs`, `PurchaseNavTabs`, `OrderNavTabs`, Preset thời gian...) **bắt buộc** bọc container cuộn ngang: `max-w-full overflow-x-auto no-scrollbar scroll-smooth`.
+   - **Tuyệt đối cấm dùng `flex-wrap`**: Không để các tab bị gãy dòng làm đội giao diện lên 2-4 dòng trên mobile.
 3. **Lưới Thẻ Card & Ribbon Thống Kê (Responsive Grids)**:
    - Dải KPI Ribbon / Thẻ thống kê: dùng `grid-cols-2 md:grid-cols-3 xl:grid-cols-6` hoặc `grid-cols-2 lg:grid-cols-4`.
    - Trên mobile luôn hiển thị đúng **2 cột cân đối**, chữ số co giãn (`text-sm sm:text-base lg:text-xl`), không để 1 cột quá to hoặc 3 cột bị chèn vỡ chữ.
-4. **BẮT BUỘC 100% GIAO DIỆN PHẢI RESPONSIVE (Desktop & Mobile-First: iPhone Xs Max, 12 Pro Max):**
-   - Không một trang nào được phép chỉ hỗ trợ Desktop mà bỏ quên Mobile.
-   - Các nút chức năng, bộ lọc trên mobile **bắt buộc thu gọn vào nút hình 3 gạch (`Menu`)**.
-   - Khi click vào nút 3 gạch thì mở rộng danh sách các nút con/bộ lọc, khi click lần nữa thì thu gọn lại (tiết kiệm không gian dọc).
-   - Dải Tab điều hướng con bắt buộc cuộn ngang (`overflow-x-auto whitespace-nowrap`), tuyệt đối không để rớt dòng làm xấu layout.
-   - Mọi bảng dữ liệu `Table` bắt buộc phải có container chống tràn bề ngang trang web.
-
-5. **Biểu đồ & Khối Trực quan**:
+4. **Bảng Dữ liệu & Biểu đồ chống tràn ngang**:
+   - Mọi bảng dữ liệu `Table` bắt buộc phải có container `overflow-x-auto` và đặt `min-w-[...]` cho table.
    - Container biểu đồ luôn có `min-w-[340px]` kết hợp cuộn ngang để các cột đồ thị không bị nén về 0px trên màn hình nhỏ.
-6. **Quy chuẩn Responsive Mobile (BẮT BUỘC 100% - MANDATORY REQUIREMENT)**:
+5. **Quy chuẩn Responsive Mobile (BẮT BUỘC 100% - MANDATORY REQUIREMENT)**:
    - Mọi trang và component khi tạo mới hoặc cập nhật **BẮT BUỘC PHẢI RESPONSIVE HOÀN HẢO** trên tất cả độ phân giải:
      - Desktop lớn (1440px - 1920px)
      - Laptop & Tablet (768px - 1024px)
      - Mobile (375px - 428px, đặc biệt chuẩn kích thước iPhone Xs Max: 414px và iPhone 12/13/14 Pro Max: 428px).
    - Tuyệt đối cấm để giao diện bị vỡ bố cục, tràn viền ngang (horizontal page blowout), đè chữ hoặc nút bấm bị cắt xén.
-   - Kiểm tra đầy đủ: Nút 3 gạch (`Menu`) thu gọn bộ lọc, dải Tab cuộn ngang mượt mà, bảng dữ liệu bọc `overflow-x-auto min-w-[...]`, thẻ KPI chia 2 cột cân đối.
+
+### 14.4. Quy chuẩn Tách Component Dùng Chung & Responsive Cho Thanh Điều Hướng Tab Con (`BaseNavTabs`)
+
+> [!IMPORTANT]
+> **Quy tắc Tách Component Dùng Chung (Component Extraction Pattern)**:
+> Tuyệt đối cấm viết lại mã nguồn giao diện (container, thẻ `<Link>`, badge đếm số lượng, hiệu ứng skeleton pulse) ở từng file `...NavTabs.tsx` riêng lẻ. Mọi thanh điều hướng tab con trong toàn hệ thống **bắt buộc phải sử dụng component dùng chung** [BaseNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/BaseNavTabs.tsx).
+
+1. **Phân chia Trách nhiệm Kiến trúc (Separation of Concerns)**:
+   - **Component Feature (`CustomerNavTabs.tsx`, `CategoryNavTabs.tsx`, v.v.)**:
+     - Chỉ chịu trách nhiệm: Nhận props, gọi API hooks (lấy số lượng count), dùng `React.useMemo` tạo mảng cấu hình các tab `NavTabItem<Key>[]`.
+     - Tuyệt đối không chứa logic render HTML/JSX chi tiết của từng tab.
+     - Render ủy quyền duy nhất qua:
+       ```tsx
+       return (
+         <BaseNavTabs
+           items={navTabs}
+           activeTab={activeTab}
+           isLoading={isLoading}
+           className={className}
+         />
+       );
+       ```
+   - **Component Dùng Chung (`BaseNavTabs.tsx` tại `components/Common/BaseNavTabs.tsx`)**:
+     - Quản lý toàn bộ:
+       1. **Container cuộn ngang chống gãy dòng**: `flex items-center p-1 rounded-xl bg-muted/70 border border-border/80 shadow-2xs gap-1 max-w-full overflow-x-auto no-scrollbar scroll-smooth`.
+       2. **Tab Link Item**: `group inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap`.
+       3. **Active/Inactive State**: Tự động chuyển đổi màu nền, viền và text gradient theo trạng thái active.
+       4. **Icon**: Luôn có `className="w-3.5 h-3.5 shrink-0"` để không bị co méo.
+       5. **Huy hiệu số lượng (`renderBadge`)**: Tự động hiển thị badge số đếm (`text-[10px] px-1.5 py-0.2 rounded-full font-mono`) hoặc skeleton pulse (`w-5 h-3.5 rounded-full bg-muted/60 animate-pulse`) khi `isLoading = true`.
+
+2. **Giao diện Dữ liệu Chuẩn (`NavTabItem<T>`)**:
+   ```typescript
+   export interface NavTabItem<T extends string = string> {
+     key: T;
+     label: string;
+     href: string;
+     icon: LucideIcon;
+     count?: number;
+     badgeColorClass?: string;
+   }
+   ```
+
+3. **Danh sách các component NavTabs bắt buộc kế thừa `BaseNavTabs`**:
+   - [CustomerNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/CustomerNavTabs.tsx)
+   - [CategoryNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/CategoryNavTabs.tsx)
+   - [ProductNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/ProductNavTabs.tsx)
+   - [LocationNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/LocationNavTabs.tsx)
+   - [InstallmentNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/InstallmentNavTabs.tsx)
+   - [WarehouseNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/WarehouseNavTabs.tsx)
+   - [ServiceNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/ServiceNavTabs.tsx)
+   - [PurchaseNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/PurchaseNavTabs.tsx)
+   - [OrderNavTabs.tsx](file:///d:/Workshop/NextJS/BikeManagerV4/FE/components/Common/OrderNavTabs.tsx)
+
+---
+
+## 15. Quy chuẩn Nghiệp vụ Hợp đồng Trả góp & Đơn hàng Liên kết (Installment Contracts & Orders Business Rules)
+
+1. **Lọc đơn hàng đủ điều kiện vay trong dropdown `SearchSelect`**:
+   - Danh sách đơn hàng liên kết (`orderOptions`) **chỉ lấy các đơn hàng có số tiền nợ khác 0 (`conNo > 0`)**.
+   - Tuyệt đối không hiển thị các đơn hàng đã tất toán hoặc thanh toán đủ (`conNo = 0`).
+   - Format nhãn chọn đơn hàng rõ ràng: `${o.maDonHang} - ${o.tenKhachHang || "Khách"} (Tổng: ... đ | Còn nợ: ... đ)`.
+
+2. **Số tiền vay tín dụng (`SoTienVay`)**:
+   - Khi chọn một đơn hàng: **Số tiền vay tín dụng bắt buộc mặc định lấy bằng số tiền còn nợ (`conNo`) của đơn hàng**.
+   - Tiền trả trước (`TienTraTruoc`) tự động lấy bằng số tiền khách đã thanh toán (`daThanhToan`), tổng giá trị (`TongGiaTriDonHang`) lấy bằng tổng tiền đơn hàng (`tongTien`).
+   - Tự động điền khách hàng liên kết (`KhachHangID`).
+
+3. **Trạng thái để trống khi chưa chọn đơn hàng**:
+   - Khi chưa chọn đơn hàng (hoặc ở trạng thái khởi tạo form): Các trường thông tin khoản vay (`TongGiaTriDonHang`, `TienTraTruoc`, `SoTienVay`, `SoTienTraHangThang`) **bắt buộc phải để trống** (hiển thị placeholder gợi ý, dùng `value={formData.X || ""}` để không hiện số 0 cứng nhắc).
+   - Ngoại trừ các trường có giá trị ít thay đổi / chuẩn mặc định thì giữ nguyên giá trị:
+     - Lãi suất: `0.0%`
+     - Phí bảo hiểm khoản vay: `500.000 đ`
+     - Kỳ hạn vay: `12` tháng
+     - Ngày đến hạn đóng hàng tháng: Mùng `5` hàng tháng
+     - Trạng thái thẩm định ban đầu: `110` (Chờ thẩm định)
+     - Trạng thái giải ngân: `120` (Chưa giải ngân)
+
+4. **Công thức tính tiền trả góp hàng tháng tự động**:
+   - Số tiền góp hàng tháng (`SoTienTraHangThang`) được tính tự động từ: Số tiền vay (`SoTienVay`), kỳ hạn (`SoThangTraGop`), lãi suất (`LaiSuat`) và phí bảo hiểm (`PhiBaoHiemKhoanVay`).
+   - Khi chưa có khoản vay (`SoTienVay <= 0`), ô trả góp hàng tháng hiển thị rỗng kèm placeholder *"Tự động tính theo khoản vay..."*.

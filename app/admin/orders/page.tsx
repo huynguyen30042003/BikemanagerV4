@@ -121,10 +121,10 @@ function OrdersContent() {
     () =>
       Boolean(
         searchInput.trim() ||
-          statusFilter !== null ||
-          paymentStatusFilter !== null ||
-          orderTypeFilter !== null ||
-          khoFilter !== ""
+        statusFilter !== null ||
+        paymentStatusFilter !== null ||
+        orderTypeFilter !== null ||
+        khoFilter !== "",
       ),
     [
       searchInput,
@@ -132,7 +132,7 @@ function OrdersContent() {
       paymentStatusFilter,
       orderTypeFilter,
       khoFilter,
-    ]
+    ],
   );
 
   const handleResetFilters = () => {
@@ -148,7 +148,7 @@ function OrdersContent() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto overflow-x-hidden">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Thanh tiêu đề, Tab điều hướng & Bộ lọc mở rộng */}
       <OrdersFilterBar
         totalCount={totalCount}

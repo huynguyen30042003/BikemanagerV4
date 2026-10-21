@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Store,
   Plus,
@@ -10,7 +10,6 @@ import {
   LayoutGrid,
   List,
   Building2,
-  Menu,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,45 +61,55 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Status Filter Definitions mapped via .map()
-  const statusOptions = [
-    {
-      key: "all",
-      label: "Tất cả",
-      count: totalDiaDiem,
-      activeColor: "text-blue-600 dark:text-blue-400 font-semibold",
-      mobileActiveBg: "bg-blue-500/10 border-blue-500/30 text-blue-600 font-semibold",
-    },
-    {
-      key: "active",
-      label: "Hoạt động",
-      count: totalHoatDong,
-      activeColor: "text-emerald-600 dark:text-emerald-400 font-semibold",
-      mobileActiveBg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 font-semibold",
-    },
-    {
-      key: "inactive",
-      label: "Đóng",
-      count: totalNgungHoatDong,
-      activeColor: "text-slate-700 dark:text-slate-300 font-semibold",
-      mobileActiveBg: "bg-slate-500/15 border-slate-500/30 text-slate-700 font-semibold",
-    },
-  ];
+  const statusOptions = useMemo(
+    () => [
+      {
+        key: "all",
+        label: "Tất cả",
+        count: totalDiaDiem,
+        activeColor: "text-blue-600 dark:text-blue-400 font-semibold",
+      },
+      {
+        key: "active",
+        label: "Hoạt động",
+        count: totalHoatDong,
+        activeColor: "text-emerald-600 dark:text-emerald-400 font-semibold",
+      },
+      {
+        key: "inactive",
+        label: "Đóng",
+        count: totalNgungHoatDong,
+        activeColor: "text-slate-700 dark:text-slate-300 font-semibold",
+      },
+    ],
+    [totalDiaDiem, totalHoatDong, totalNgungHoatDong],
+  );
 
   // View Mode Definitions mapped via .map()
-  const viewModeOptions = [
-    {
-      key: "grid" as const,
-      label: "Lưới thẻ",
-      icon: LayoutGrid,
-      title: "Chế độ xem lưới thẻ (Showcase Grid)",
-    },
-    {
-      key: "table" as const,
-      label: "Bảng dữ liệu",
-      icon: List,
-      title: "Chế độ xem bảng chi tiết (Data Table)",
-    },
-  ];
+  const viewModeOptions = useMemo(
+    () => [
+      {
+        key: "grid" as const,
+        label: "Lưới thẻ",
+        icon: LayoutGrid,
+        title: "Chế độ xem lưới thẻ (Showcase Grid)",
+      },
+      {
+        key: "table" as const,
+        label: "Bảng dữ liệu",
+        icon: List,
+        title: "Chế độ xem bảng chi tiết (Data Table)",
+      },
+    ],
+    [],
+  );
+
+  const activeCount = useMemo(() => {
+    let count = 0;
+    if (tinhFilter) count++;
+    if (statusFilter !== "all") count++;
+    return count;
+  }, [tinhFilter, statusFilter]);
 
   // Active filter chips mapped via .map()
   interface ActiveChip {
@@ -111,44 +120,55 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
     onRemove: () => void;
   }
 
-  const activeChips: ActiveChip[] = [];
-  if (searchInput) {
-    activeChips.push({
-      key: "search",
-      label: `Từ khóa: "${searchInput}"`,
-      icon: Search,
-      colorClass: "bg-muted text-foreground border-border/60",
-      onRemove: () => onSearch(""),
-    });
-  }
-  if (tinhFilter) {
-    activeChips.push({
-      key: "province",
-      label: `Tỉnh: ${currentProvinceName}`,
-      icon: Building2,
-      colorClass:
-        "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20 font-medium",
-      onRemove: () => onTinhFilterChange(""),
-    });
-  }
-  if (statusFilter !== "all") {
-    activeChips.push({
-      key: "status",
-      label: `Trạng thái: ${
-        statusFilter === "active" ? "Đang hoạt động" : "Đã đóng"
-      }`,
-      icon: Filter,
-      colorClass: "bg-muted text-foreground border-border/60",
-      onRemove: () => onStatusFilterChange("all"),
-    });
-  }
+  const activeChips: ActiveChip[] = useMemo(() => {
+    const chips: ActiveChip[] = [];
+    if (searchInput) {
+      chips.push({
+        key: "search",
+        label: `Từ khóa: "${searchInput}"`,
+        icon: Search,
+        colorClass: "bg-muted text-foreground border-border/60",
+        onRemove: () => onSearch(""),
+      });
+    }
+    if (tinhFilter) {
+      chips.push({
+        key: "province",
+        label: `Tỉnh: ${currentProvinceName}`,
+        icon: Building2,
+        colorClass:
+          "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20 font-medium",
+        onRemove: () => onTinhFilterChange(""),
+      });
+    }
+    if (statusFilter !== "all") {
+      chips.push({
+        key: "status",
+        label: `Trạng thái: ${
+          statusFilter === "active" ? "Đang hoạt động" : "Đã đóng"
+        }`,
+        icon: Filter,
+        colorClass: "bg-muted text-foreground border-border/60",
+        onRemove: () => onStatusFilterChange("all"),
+      });
+    }
+    return chips;
+  }, [
+    searchInput,
+    tinhFilter,
+    currentProvinceName,
+    statusFilter,
+    onSearch,
+    onTinhFilterChange,
+    onStatusFilterChange,
+  ]);
 
   const hasActiveFilters = activeChips.length > 0;
 
   return (
     <div className="space-y-4">
       {/* 1. Header & Actions Hub */}
-      <div className="flex flex-col gap-4 pb-4 border-b border-border/70">
+      <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4 pb-2 sm:pb-4 border-b border-border/70 mb-2 sm:mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
           <div>
             <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
@@ -165,14 +185,15 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
                   Chi nhánh & Showroom
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">
-                  Quản lý mạng lưới showroom bán hàng, trạm dịch vụ kỹ thuật và kho chi nhánh
+                  Quản lý mạng lưới showroom bán hàng, trạm dịch vụ kỹ thuật và
+                  kho chi nhánh
                 </p>
               </div>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -184,7 +205,9 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
               />
-              <span className="text-xs font-medium hidden xs:inline">Làm mới</span>
+              <span className="text-xs font-medium hidden xs:inline">
+                Làm mới
+              </span>
             </Button>
 
             <Button
@@ -199,69 +222,65 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
         </div>
 
         {/* Quick Tab Switcher with Horizontal Scroll */}
-        <div className="flex items-center justify-between pt-1 overflow-x-auto whitespace-nowrap">
+        <div className="pt-1 max-w-full">
           <LocationNavTabs activeTab="diaDiem" total_DiaDiem={totalDiaDiem} />
         </div>
       </div>
 
       {/* 2. Toolbar: Search, Province Select, Status Filter & View Toggle */}
-      <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs space-y-2.5">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
-          {/* Ô tìm kiếm từ khóa & Bộ lọc Tỉnh */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
-            {/* Search Box */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-              <Input
-                placeholder="Tìm theo tên cơ sở, địa chỉ..."
-                value={searchInput}
-                onChange={(e) => onSearch(e.target.value)}
-                className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-sm focus-visible:ring-blue-500/20"
-              />
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={() => onSearch("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground w-4 h-4 rounded-full flex items-center justify-center hover:bg-muted cursor-pointer transition-colors"
-                  title="Xóa tìm kiếm"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Filter Tỉnh / Thành phố */}
-            <div className="w-full sm:w-60 lg:w-64">
-              <SearchSelect
-                options={filterProvinceOptions}
-                value={tinhFilter}
-                onChange={(val) => onTinhFilterChange(val)}
-                placeholder="Lọc theo Tỉnh / TP..."
-                className="h-9.5 text-xs"
-              />
-            </div>
+      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs space-y-2.5">
+        {/* === GIAO DIỆN MÀN HÌNH NHỎ (Mobile/Tablet < lg) === */}
+        <div className="lg:hidden space-y-2">
+          {/* Ô tìm kiếm từ khóa trên Mobile */}
+          <div className="relative w-full">
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <Input
+              placeholder="Tìm theo tên cơ sở, địa chỉ..."
+              value={searchInput}
+              onChange={(e) => onSearch(e.target.value)}
+              className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-sm focus-visible:ring-blue-500/20"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => onSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground w-4 h-4 rounded-full flex items-center justify-center hover:bg-muted cursor-pointer transition-colors"
+                title="Xóa tìm kiếm"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Nút 3 gạch mở rộng bộ lọc trên Mobile */}
-          <div className="lg:hidden flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+          {/* Dòng điều khiển: Nút mở bộ lọc + Chuyển đổi View + Tải lại */}
+          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="h-8 px-2.5 gap-1.5 text-xs border-border/80 cursor-pointer"
+              className={`h-8.5 px-3 gap-1.5 text-xs font-medium border-border/80 cursor-pointer transition-colors ${
+                activeCount > 0
+                  ? "border-blue-500/50 bg-blue-50/50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300"
+                  : "text-muted-foreground"
+              }`}
             >
               {isMobileMenuOpen ? (
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5 text-rose-500" />
               ) : (
-                <Menu className="w-3.5 h-3.5" />
+                <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               )}
-              <span>Bộ lọc trạng thái</span>
+              <span>Bộ lọc</span>
+              {activeCount > 0 && (
+                <span className="w-4.5 h-4.5 rounded-full bg-blue-600 text-white dark:bg-blue-500 text-[10px] flex items-center justify-center font-bold">
+                  {activeCount}
+                </span>
+              )}
             </Button>
 
-            {/* View Switcher on mobile via .map() */}
+            {/* View Switcher & Reload on mobile */}
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5">
+              <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shadow-2xs">
                 {viewModeOptions.map((opt) => {
                   const Icon = opt.icon;
                   const isActive = viewMode === opt.key;
@@ -271,7 +290,7 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
                       type="button"
                       onClick={() => onViewModeChange(opt.key)}
                       title={opt.title}
-                      className={`flex items-center justify-center w-7 h-7 rounded-md transition-all cursor-pointer ${
+                      className={`flex items-center justify-center w-7.5 h-7.5 rounded-md transition-all cursor-pointer ${
                         isActive
                           ? "bg-background text-foreground shadow-2xs font-semibold"
                           : "text-muted-foreground hover:text-foreground"
@@ -288,7 +307,7 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
                 size="icon"
                 onClick={onRefresh}
                 disabled={isFetching || isLoadingKPI}
-                className="h-8 w-8 cursor-pointer"
+                className="h-8.5 w-8.5 cursor-pointer shadow-2xs"
                 title="Tải lại"
               >
                 <RefreshCw
@@ -298,8 +317,109 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
             </div>
           </div>
 
-          {/* Desktop Controls (hidden on mobile, visible on lg+) */}
-          <div className="hidden lg:flex items-center gap-2 shrink-0">
+          {/* KHUNG BỘ LỌC CHI TIẾT KHI MÀN HÌNH NHỎ (Thu gọn / Mở rộng) */}
+          {isMobileMenuOpen && (
+            <div className="flex flex-col gap-3 p-3 rounded-xl bg-muted/40 border border-border/70 animate-in fade-in-50 slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between pb-1 border-b border-border/40">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  Bộ lọc chi tiết
+                </span>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={onResetFilters}
+                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+                  >
+                    Đặt lại bộ lọc
+                  </button>
+                )}
+              </div>
+
+              {/* 1. Lọc theo Tỉnh / TP */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Tỉnh / Thành phố
+                </label>
+                <SearchSelect
+                  options={filterProvinceOptions}
+                  value={tinhFilter}
+                  onChange={(val) => onTinhFilterChange(val)}
+                  placeholder="Lọc theo Tỉnh / TP..."
+                  className="h-9.5 text-xs w-full"
+                  height={9.5}
+                />
+              </div>
+
+              {/* 2. Lọc theo trạng thái */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Trạng thái hoạt động
+                </label>
+                <div className="grid grid-cols-3 gap-1 bg-background/80 p-1 rounded-lg border border-border/60 text-xs">
+                  {statusOptions.map((opt) => {
+                    const isActive = statusFilter === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => onStatusFilterChange(opt.key)}
+                        className={`px-2 py-1.5 rounded-md font-medium text-center transition-all cursor-pointer ${
+                          isActive
+                            ? `bg-card shadow-xs ${opt.activeColor}`
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {opt.label} ({opt.count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* === GIAO DIỆN MÀN HÌNH LỚN (Desktop >= lg) === */}
+        <div className="hidden lg:flex items-center justify-between gap-2.5 w-full">
+          {/* Ô tìm kiếm từ khóa & Bộ lọc Tỉnh */}
+          <div className="flex items-center gap-2 flex-1 max-w-xl">
+            {/* Search Box */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                placeholder="Tìm theo tên cơ sở, địa chỉ..."
+                value={searchInput}
+                onChange={(e) => onSearch(e.target.value)}
+                className="pl-9 pr-8 h-9.5 w-full bg-background/80 text-sm focus-visible:ring-blue-500/20"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => onSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground w-4 h-4 rounded-full flex items-center justify-center hover:bg-muted cursor-pointer transition-colors"
+                  title="Xóa tìm kiếm"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Tỉnh / Thành phố */}
+            <div className="w-[220px] shrink-0">
+              <SearchSelect
+                options={filterProvinceOptions}
+                value={tinhFilter}
+                onChange={(val) => onTinhFilterChange(val)}
+                placeholder="Lọc theo Tỉnh / TP..."
+                className="h-9.5 text-xs w-full"
+                height={9.5}
+              />
+            </div>
+          </div>
+
+          {/* Desktop Controls (Dải bộ lọc trạng thái & View Toggle & Reload) */}
+          <div className="flex items-center gap-2 shrink-0">
             {/* Status Segment Control via .map() */}
             <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
               <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
@@ -361,41 +481,12 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
           </div>
         </div>
 
-        {/* Khối bộ lọc mở rộng trên Mobile khi nhấn nút 3 gạch via .map() */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden pt-2 border-t border-border/60 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
-            <span className="text-[11px] font-medium text-muted-foreground block">
-              Trạng thái hoạt động:
-            </span>
-            <div className="grid grid-cols-3 gap-1.5">
-              {statusOptions.map((opt) => {
-                const isActive = statusFilter === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => {
-                      onStatusFilterChange(opt.key);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all cursor-pointer ${
-                      isActive
-                        ? opt.mobileActiveBg
-                        : "border-border/60 bg-muted/40 text-muted-foreground"
-                    }`}
-                  >
-                    {opt.label} ({opt.count})
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {/* Active Filter Chips via .map() */}
         {hasActiveFilters && (
           <div className="flex items-center gap-2 pt-1 border-t border-border/50 text-xs flex-wrap">
-            <span className="text-muted-foreground font-medium">Đang lọc:</span>
+            <span className="text-muted-foreground font-medium text-[11px] mr-1">
+              Đang lọc:
+            </span>
             {activeChips.map((chip) => {
               const Icon = chip.icon;
               return (
@@ -411,7 +502,7 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
                     className="hover:text-red-500 cursor-pointer ml-0.5"
                     title="Xóa tiêu chí này"
                   >
-                    ✕
+                    <X className="w-3 h-3" />
                   </button>
                 </span>
               );
@@ -429,3 +520,4 @@ export const DiaDiemFilterBar: React.FC<DiaDiemFilterBarProps> = ({
     </div>
   );
 };
+export default DiaDiemFilterBar;

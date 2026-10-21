@@ -14,6 +14,7 @@ import {
 import {
   SC_DichVu,
   CreateDichVuPayload,
+  UpdateDichVuPayload,
   SC_PhieuSuaChua,
   CreatePhieuSuaChuaPayload,
   ThanhToanSuaChuaPayload,
@@ -54,14 +55,22 @@ export const useDichVuHook = () => {
     TrangThai: true,
   });
 
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
   const queryParams = useMemo(() => {
     return {
       TuKhoa: searchInput,
       DanhMucChiTietID: categoryFilter,
+      TrangThai:
+        statusFilter === "all"
+          ? null
+          : statusFilter === "active"
+            ? true
+            : false,
       PageIndex: page,
       PageSize: pageSize,
     };
-  }, [searchInput, categoryFilter, page, pageSize]);
+  }, [searchInput, categoryFilter, statusFilter, page, pageSize]);
 
   const { data, isLoading, isFetching, refetch } = useGetDichVu(queryParams);
 
@@ -112,14 +121,15 @@ export const useDichVuHook = () => {
     setOpenEdit(true);
   };
 
-  const handleSubmitAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.TenDichVu.trim()) {
+  const handleSubmitAdd = async (e?: React.FormEvent, customData?: CreateDichVuPayload) => {
+    e?.preventDefault?.();
+    const payload = customData || formData;
+    if (!payload.TenDichVu.trim()) {
       toast.warning("Vui lòng nhập tên dịch vụ!");
       return;
     }
     try {
-      await createMutation.mutateAsync(formData);
+      await createMutation.mutateAsync(payload);
       toast.success("Thêm dịch vụ thành công!");
       setOpenAdd(false);
       refetch();
@@ -128,14 +138,18 @@ export const useDichVuHook = () => {
     }
   };
 
-  const handleSubmitEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedItem) return;
+  const handleSubmitEdit = async (
+    e?: React.FormEvent,
+    customData?: UpdateDichVuPayload
+  ) => {
+    e?.preventDefault?.();
+    const payload = customData || (selectedItem ? {
+      ...formData,
+      DichVuID: selectedItem.dichVuID,
+    } : null);
+    if (!payload) return;
     try {
-      await updateMutation.mutateAsync({
-        ...formData,
-        DichVuID: selectedItem.dichVuID,
-      });
+      await updateMutation.mutateAsync(payload);
       toast.success("Cập nhật dịch vụ thành công!");
       setOpenEdit(false);
       refetch();
@@ -145,7 +159,6 @@ export const useDichVuHook = () => {
   };
 
   const handleDelete = async (item: SC_DichVu) => {
-    if (!confirm(`Bạn có chắc muốn xóa dịch vụ "${item.tenDichVu}"?`)) return;
     try {
       await deleteMutation.mutateAsync(item.dichVuID);
       toast.success("Đã xóa dịch vụ thành công!");
@@ -164,6 +177,8 @@ export const useDichVuHook = () => {
     setSearchInput,
     categoryFilter,
     setCategoryFilter,
+    statusFilter,
+    setStatusFilter,
     serviceTypeOptions,
     getServiceTypeLabel,
     isLoadingServiceTypes,
@@ -390,18 +405,22 @@ export const usePhieuSuaChuaHook = () => {
     }));
   };
 
-  const handleSubmitCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!dataCreate.KhachHangID) {
+  const handleSubmitCreate = async (
+    e?: React.FormEvent,
+    customData?: CreatePhieuSuaChuaPayload
+  ) => {
+    e?.preventDefault?.();
+    const payload = customData || dataCreate;
+    if (!payload.KhachHangID) {
       toast.warning("Vui lòng chọn khách hàng!");
       return;
     }
-    if (!dataCreate.MoTaVanDe?.trim()) {
+    if (!payload.MoTaVanDe?.trim()) {
       toast.warning("Vui lòng ghi nhận tình trạng xe / vấn đề!");
       return;
     }
     try {
-      await createMutation.mutateAsync(dataCreate);
+      await createMutation.mutateAsync(payload);
       toast.success("Lập phiếu sửa chữa thành công!");
       setOpenCreate(false);
       refetch();
@@ -420,10 +439,18 @@ export const usePhieuSuaChuaHook = () => {
     setOpenStatusModal(true);
   };
 
-  const handleSubmitStatusChange = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitStatusChange = async (
+    e?: React.FormEvent,
+    customData?: {
+      PhieuSuaChuaID: string;
+      TrangThaiID: number;
+      GhiChu?: string;
+    }
+  ) => {
+    e?.preventDefault?.();
+    const payload = customData || dataStatusChange;
     try {
-      await statusMutation.mutateAsync(dataStatusChange);
+      await statusMutation.mutateAsync(payload);
       toast.success("Cập nhật trạng thái phiếu sửa chữa thành công!");
       setOpenStatusModal(false);
       refetch();
@@ -444,14 +471,18 @@ export const usePhieuSuaChuaHook = () => {
     setOpenPaymentModal(true);
   };
 
-  const handleSubmitPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (dataPayment.SoTien <= 0) {
+  const handleSubmitPayment = async (
+    e?: React.FormEvent,
+    customData?: ThanhToanSuaChuaPayload
+  ) => {
+    e?.preventDefault?.();
+    const payload = customData || dataPayment;
+    if (payload.SoTien <= 0) {
       toast.warning("Số tiền thanh toán phải lớn hơn 0!");
       return;
     }
     try {
-      await paymentMutation.mutateAsync(dataPayment);
+      await paymentMutation.mutateAsync(payload);
       toast.success("Thanh toán phiếu dịch vụ thành công!");
       setOpenPaymentModal(false);
       refetch();
@@ -461,7 +492,6 @@ export const usePhieuSuaChuaHook = () => {
   };
 
   const handleDelete = async (ticket: SC_PhieuSuaChua) => {
-    if (!confirm(`Bạn có chắc muốn hủy phiếu sửa chữa "${ticket.maPhieuSuaChua}"?`)) return;
     try {
       await deleteMutation.mutateAsync(ticket.phieuSuaChuaID);
       toast.success("Đã hủy phiếu sửa chữa thành công!");

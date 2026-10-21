@@ -2,7 +2,6 @@
 
 import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   useHinhAnhSanPham,
@@ -15,6 +14,7 @@ import {
   ProductImagesGallery,
   UploadProductImageSlideOver,
   ProductImageViewerModal,
+  ProductImagesSkeleton,
 } from "@/components/ProductImages";
 
 function ImagesContent() {
@@ -53,12 +53,12 @@ function ImagesContent() {
   const selectedProductTitle = useMemo(() => {
     const found = productOptions.find(
       (p: { value: string | number; label: string }) =>
-        String(p.value) === String(selectedSanPhamId)
+        String(p.value) === String(selectedSanPhamId),
     );
     return found ? found.label : "Chưa chọn sản phẩm";
   }, [productOptions, selectedSanPhamId]);
 
-  // KPI Metrics prioritization (Backend KPI first, fallback to current dataset)
+  // Thống kê KPI ưu tiên từ Backend API GetKPI, fallback sang dataset hiện hành
   const totalHinhAnhSanPham = useMemo(() => {
     return kpiData?.total_HinhAnhSanPham ?? items.length;
   }, [kpiData?.total_HinhAnhSanPham, items.length]);
@@ -79,8 +79,7 @@ function ImagesContent() {
 
   const totalAnhChung = useMemo(() => {
     return (
-      kpiData?.total_AnhChung ??
-      items.filter((i) => !i.bienTheSanPhamID).length
+      kpiData?.total_AnhChung ?? items.filter((i) => !i.bienTheSanPhamID).length
     );
   }, [kpiData?.total_AnhChung, items]);
 
@@ -96,7 +95,7 @@ function ImagesContent() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header, Navigation Tabs & Product Selectors */}
       <ProductImagesFilterBar
         selectedSanPhamId={selectedSanPhamId}
@@ -117,7 +116,7 @@ function ImagesContent() {
         isLoadingKPI={isLoadingKPI}
       />
 
-      {/* 2. Interactive KPI Cards Grid (.map() based, responsive down to 390px) */}
+      {/* 2. Dải KPI Ribbon tương tác (.map() based, dùng KpiRibbon chuẩn) */}
       <ProductImagesKpiGrid
         totalHinhAnhSanPham={totalHinhAnhSanPham}
         totalAnhDaiDien={totalAnhDaiDien}
@@ -129,7 +128,7 @@ function ImagesContent() {
         isLoading={isLoading}
       />
 
-      {/* 3. Main Data Content: Gallery Grid */}
+      {/* 3. Nội dung dữ liệu chính: Album Gallery Grid (Responsive 2 đến 5 cột) */}
       <ProductImagesGallery
         items={items}
         selectedSanPhamId={selectedSanPhamId}
@@ -139,7 +138,7 @@ function ImagesContent() {
         onDelete={(id) => setDeletingImageId(id)}
       />
 
-      {/* 4. SlideOver: Tải lên hình ảnh mới (State Isolation) */}
+      {/* 4. SlideOver: Tải lên hình ảnh mới (State Form cô lập hoàn toàn) */}
       <UploadProductImageSlideOver
         open={openAdd}
         onClose={() => setOpenAdd(false)}
@@ -153,19 +152,25 @@ function ImagesContent() {
         }}
       />
 
-      {/* 5. Lightbox Modal: Xem chi tiết ảnh */}
+      {/* 5. Lightbox Modal: Xem chi tiết ảnh phóng to (Hỗ trợ Touch Swipe, Next/Prev và Xóa ảnh trên Mobile) */}
       <ProductImageViewerModal
         image={zoomImage}
+        images={items}
         onClose={() => setZoomImage(null)}
+        onNavigate={(nextImg) => setZoomImage(nextImg)}
+        onDelete={(id) => {
+          setZoomImage(null);
+          setDeletingImageId(id);
+        }}
       />
 
-      {/* 6. Modal xác nhận xóa ảnh */}
+      {/* 6. Modal xác nhận xóa ảnh an toàn */}
       <ConfirmModal
         open={Boolean(deletingImageId)}
         onClose={() => setDeletingImageId(null)}
         onConfirm={handleDeleteConfirm}
         title="Xác nhận xóa hình ảnh"
-        description="Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập gallery không?"
+        description="Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập gallery không? Thao tác này không thể hoàn tác."
         confirmText="Xác nhận xóa"
         variant="danger"
         isLoading={deleteMutation.isPending}
@@ -176,14 +181,7 @@ function ImagesContent() {
 
 export default function ImagesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-8 space-y-6 max-w-[1600px] mx-auto">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-96 w-full rounded-xl" />
-        </div>
-      }
-    >
+    <Suspense fallback={<ProductImagesSkeleton />}>
       <ImagesContent />
     </Suspense>
   );

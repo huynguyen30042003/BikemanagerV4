@@ -53,7 +53,7 @@ export interface DH_DonHang {
   maDonHang: string;
   khachHangID: string;
   tenKhachHang?: string | null;
-  soDienThoaiKhachHang?: string | null;
+  dienThoaiKhachHang?: string | null;
   diaDiemID: string;
   tenDiaDiem?: string | null;
   khoXuatID: string;

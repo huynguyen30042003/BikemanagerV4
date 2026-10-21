@@ -238,6 +238,7 @@ export const CreateBrandSlideOver: React.FC<CreateBrandSlideOverProps> = ({
               }));
             }}
             placeholder="Chọn quốc gia xuất xứ"
+            height={10}
           />
         </div>
 

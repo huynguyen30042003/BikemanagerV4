@@ -79,7 +79,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
               {row.tenKhachHang || row.tenNguoiNhan || "Khách lẻ"}
             </span>
             <span className="text-xs text-muted-foreground">
-              SĐT: {row.soDienThoaiKhachHang || row.dienThoaiNguoiNhan || "—"}
+              SĐT: {row.dienThoaiKhachHang || row.dienThoaiNguoiNhan || "—"}
             </span>
           </div>
         ),
@@ -236,7 +236,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
       onOpenPayment,
       onHoanThanhVaGiaoXe,
       onDelete,
-    ]
+    ],
   );
 
   if (items.length === 0) {

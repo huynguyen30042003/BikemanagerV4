@@ -51,9 +51,9 @@ export const OrderDetailSlideOver: React.FC<OrderDetailSlideOverProps> = ({
                 <strong className="text-foreground text-xs">
                   {selectedOrder.tenKhachHang || "Khách lẻ"}
                 </strong>
-                {selectedOrder.soDienThoaiKhachHang && (
+                {selectedOrder.dienThoaiKhachHang && (
                   <span className="block font-mono text-[11px] text-muted-foreground">
-                    SĐT: {selectedOrder.soDienThoaiKhachHang}
+                    SĐT: {selectedOrder.dienThoaiKhachHang}
                   </span>
                 )}
               </div>
@@ -62,7 +62,8 @@ export const OrderDetailSlideOver: React.FC<OrderDetailSlideOverProps> = ({
                   Địa chỉ giao
                 </span>
                 <span className="text-foreground text-[11px]">
-                  {selectedOrder.diaChiGiaoHang || "Nhận trực tiếp tại showroom"}
+                  {selectedOrder.diaChiGiaoHang ||
+                    "Nhận trực tiếp tại showroom"}
                 </span>
               </div>
             </div>
@@ -113,13 +114,18 @@ export const OrderDetailSlideOver: React.FC<OrderDetailSlideOverProps> = ({
                     <th className="p-2 text-left font-medium">Sản phẩm</th>
                     <th className="p-2 text-center font-medium w-14">SL</th>
                     <th className="p-2 text-right font-medium w-24">Đơn giá</th>
-                    <th className="p-2 text-right font-medium w-20">Giảm giá</th>
+                    <th className="p-2 text-right font-medium w-20">
+                      Giảm giá
+                    </th>
                     <th className="p-2 text-right font-medium w-16">VAT</th>
-                    <th className="p-2 text-right font-medium w-28">Thành tiền</th>
+                    <th className="p-2 text-right font-medium w-28">
+                      Thành tiền
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {selectedOrder.chiTiets && selectedOrder.chiTiets.length > 0 ? (
+                  {selectedOrder.chiTiets &&
+                  selectedOrder.chiTiets.length > 0 ? (
                     selectedOrder.chiTiets.map((ct, idx) => (
                       <tr key={idx} className="hover:bg-muted/30">
                         <td className="p-2 text-foreground font-medium">
@@ -193,7 +199,8 @@ export const OrderDetailSlideOver: React.FC<OrderDetailSlideOverProps> = ({
                     </div>
                     {s.soKhung && (
                       <div className="text-muted-foreground font-mono text-[10px]">
-                        Khung: <span className="text-foreground">{s.soKhung}</span>
+                        Khung:{" "}
+                        <span className="text-foreground">{s.soKhung}</span>
                       </div>
                     )}
                     {s.soMay && (

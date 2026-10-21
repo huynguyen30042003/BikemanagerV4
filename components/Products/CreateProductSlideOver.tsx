@@ -225,6 +225,7 @@ export const CreateProductSlideOver: React.FC<CreateProductSlideOverProps> = ({
             }
             placeholder="Chọn hãng sản xuất"
             isLoading={isLoadingBrands}
+            height={10}
             className={
               errors.thuongHieuID ? "border-rose-500 ring-1 ring-rose-500/20" : ""
             }
@@ -253,6 +254,7 @@ export const CreateProductSlideOver: React.FC<CreateProductSlideOverProps> = ({
             }
             placeholder="Chọn ngành hàng"
             isLoading={isLoadingCategories}
+            height={10}
             className={
               errors.danhMucChiTietID
                 ? "border-rose-500 ring-1 ring-rose-500/20"

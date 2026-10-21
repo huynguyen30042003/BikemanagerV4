@@ -274,7 +274,7 @@ function StockAuditsContent() {
   ];
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header */}
       {isLoading ? (
         <div className="flex flex-col gap-3">
@@ -282,7 +282,7 @@ function StockAuditsContent() {
           <Skeleton className="h-4 w-96" />
         </div>
       ) : (
-        <div className="flex flex-col gap-4 pb-4 border-b border-border/70">
+        <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4 pb-2 sm:pb-4 border-b border-border/70 mb-2 sm:mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">
@@ -335,7 +335,14 @@ function StockAuditsContent() {
 
           {/* Tab Navigation */}
           <div className="pt-2">
-            <WarehouseNavTabs activeTab="audits" totalAudits={auditKpi?.total_PhieuKiemKe ?? auditKpi?.totalPhieuKiemKe ?? totalCount} />
+            <WarehouseNavTabs
+              activeTab="audits"
+              totalAudits={
+                auditKpi?.total_PhieuKiemKe ??
+                auditKpi?.totalPhieuKiemKe ??
+                totalCount
+              }
+            />
           </div>
         </div>
       )}
@@ -345,7 +352,10 @@ function StockAuditsContent() {
         {[
           {
             title: "Đợt kiểm kê",
-            value: auditKpi?.total_PhieuKiemKe ?? auditKpi?.totalPhieuKiemKe ?? totalCount,
+            value:
+              auditKpi?.total_PhieuKiemKe ??
+              auditKpi?.totalPhieuKiemKe ??
+              totalCount,
             subtext: "Biên bản đã lập",
             icon: ClipboardCheck,
             color: "text-foreground",
@@ -354,7 +364,10 @@ function StockAuditsContent() {
           },
           {
             title: "Đang kiểm đếm",
-            value: auditKpi?.total_DangKiemKe ?? auditKpi?.totalDangKiemKe ?? inProgressCount,
+            value:
+              auditKpi?.total_DangKiemKe ??
+              auditKpi?.totalDangKiemKe ??
+              inProgressCount,
             subtext: "Chưa duyệt cân bằng kho",
             icon: Clock,
             color: "text-amber-600 dark:text-amber-400",
@@ -363,7 +376,10 @@ function StockAuditsContent() {
           },
           {
             title: "Đã cân bằng",
-            value: auditKpi?.total_DaCanBang ?? auditKpi?.totalDaCanBang ?? balancedCount,
+            value:
+              auditKpi?.total_DaCanBang ??
+              auditKpi?.totalDaCanBang ??
+              balancedCount,
             subtext: "Tồn kho đã được điều chỉnh",
             icon: CheckCircle2,
             color: "text-emerald-600 dark:text-emerald-400",
@@ -372,7 +388,10 @@ function StockAuditsContent() {
           },
           {
             title: "Tổng sai lệch SL",
-            value: auditKpi?.total_TongSoLuongLech ?? auditKpi?.totalTongSoLuongLech ?? totalDiscrepancy,
+            value:
+              auditKpi?.total_TongSoLuongLech ??
+              auditKpi?.totalTongSoLuongLech ??
+              totalDiscrepancy,
             subtext: "Chênh lệch giữa đếm và sổ sách",
             icon: AlertTriangle,
             color: "text-rose-600 dark:text-rose-400",
@@ -382,17 +401,30 @@ function StockAuditsContent() {
         ].map((card, idx) => {
           const Icon = card.icon;
           return (
-            <Card key={idx} className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs">
+            <Card
+              key={idx}
+              className="p-4 bg-card/60 backdrop-blur-sm border-border/80 shadow-2xs"
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
-                <div className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center`}>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {card.title}
+                </span>
+                <div
+                  className={`w-7 h-7 rounded-lg ${card.bg} ${card.iconColor} flex items-center justify-center`}
+                >
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
               <div className={`text-2xl font-bold mt-2 ${card.color}`}>
-                {isLoadingKPI || isLoading ? <Skeleton className="h-7 w-12" /> : card.value}
+                {isLoadingKPI || isLoading ? (
+                  <Skeleton className="h-7 w-12" />
+                ) : (
+                  card.value
+                )}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{card.subtext}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {card.subtext}
+              </p>
             </Card>
           );
         })}

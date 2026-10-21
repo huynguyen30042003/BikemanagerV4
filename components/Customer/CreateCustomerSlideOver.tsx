@@ -402,6 +402,7 @@ export function CreateCustomerSlideOver({
               }
               placeholder="Chọn Tỉnh / TP"
               isLoading={isLoadingTinh}
+              height={10}
             />
           </div>
 
@@ -423,6 +424,7 @@ export function CreateCustomerSlideOver({
               }
               disabled={!dataAdd.TinhID}
               isLoading={isLoadingXaAdd}
+              height={10}
             />
           </div>
 

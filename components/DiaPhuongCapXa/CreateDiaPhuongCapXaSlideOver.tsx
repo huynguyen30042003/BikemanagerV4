@@ -153,6 +153,7 @@ export function CreateDiaPhuongCapXaSlideOver({
               if (errors.tinhID) setErrors((prev) => ({ ...prev, tinhID: "" }));
             }}
             placeholder="-- Chọn Tỉnh / TP --"
+            height={10}
           />
           {errors.tinhID && (
             <p className="text-xs text-red-600 flex items-center gap-1">
@@ -194,6 +195,7 @@ export function CreateDiaPhuongCapXaSlideOver({
               setFormData((prev) => ({ ...prev, Loai: Number(val) || 1 }))
             }
             placeholder="Chọn loại..."
+            height={10}
           />
         </div>
 

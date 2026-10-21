@@ -80,6 +80,7 @@ export function Pagination({
             value={pageSize}
             onChange={handleSelectPageSize}
             className="w-[98px] h-8 text-[11px]"
+            height={8}
           />
         </div>
       </div>
@@ -96,6 +97,7 @@ export function Pagination({
             value={pageSize}
             onChange={handleSelectPageSize}
             className="w-24 h-8 text-xs"
+            height={8}
           />
         </div>
 

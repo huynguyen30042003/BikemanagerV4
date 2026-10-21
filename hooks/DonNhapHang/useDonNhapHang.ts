@@ -408,26 +408,31 @@ export function useDonNhapHang() {
     setOpenStatusModal(true);
   };
 
-  const handleSubmitCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!dataCreate.NhaCungCapID) {
+  const handleSubmitCreate = async (
+    e?: React.FormEvent,
+    customPayload?: CreateDonNhapHangPayload
+  ) => {
+    if (e) e.preventDefault();
+    const payload = customPayload || dataCreate;
+
+    if (!payload.NhaCungCapID) {
       toast.warning("Vui lòng chọn nhà cung cấp!");
       return;
     }
-    if (!dataCreate.KhoID) {
+    if (!payload.KhoID) {
       toast.warning("Vui lòng chọn kho tiếp nhận!");
       return;
     }
-    if (dataCreate.ChiTiets.some((c) => !c.BienTheSanPhamID || c.SoLuong <= 0)) {
+    if (payload.ChiTiets.some((c) => !c.BienTheSanPhamID || c.SoLuong <= 0)) {
       toast.warning("Vui lòng kiểm tra thông tin mặt hàng và số lượng nhập!");
       return;
     }
 
     try {
       const sanitizedPayload: CreateDonNhapHangPayload = {
-        ...dataCreate,
-        ChiPhiVanChuyen: Number(dataCreate.ChiPhiVanChuyen) || 0,
-        ChiTiets: dataCreate.ChiTiets.map((ct) => ({
+        ...payload,
+        ChiPhiVanChuyen: Number(payload.ChiPhiVanChuyen) || 0,
+        ChiTiets: payload.ChiTiets.map((ct) => ({
           ...ct,
           SoLuong: Number(ct.SoLuong) || 1,
           DonGiaNhap: Number(ct.DonGiaNhap) || 0,
@@ -444,15 +449,25 @@ export function useDonNhapHang() {
     }
   };
 
-  const handleSubmitStatusChange = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitStatusChange = async (
+    payloadOrEvent?: React.FormEvent | ChuyenTrangThaiDonNhapPayload
+  ) => {
+    let payload = dataStatusChange;
+    if (payloadOrEvent && "DonNhapHangID" in payloadOrEvent) {
+      payload = payloadOrEvent;
+    } else if (payloadOrEvent && "preventDefault" in payloadOrEvent) {
+      payloadOrEvent.preventDefault();
+    }
+
     if (isCompletedStatus(selectedOrder?.trangThaiID)) {
-      toast.warning("Đơn hàng đã ở trạng thái hoàn thành (nhập kho thành công), không thể thay đổi trạng thái!");
+      toast.warning(
+        "Đơn hàng đã ở trạng thái hoàn thành (nhập kho thành công), không thể thay đổi trạng thái!"
+      );
       setOpenStatusModal(false);
       return;
     }
     try {
-      await statusMutation.mutateAsync(dataStatusChange);
+      await statusMutation.mutateAsync(payload);
       toast.success("Cập nhật trạng thái đơn nhập thành công!");
       setOpenStatusModal(false);
     } catch {
@@ -470,14 +485,22 @@ export function useDonNhapHang() {
     }
   };
 
-  const handleSubmitPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (dataPayment.SoTien <= 0) {
+  const handleSubmitPayment = async (
+    payloadOrEvent?: React.FormEvent | ThanhToanDonNhapPayload
+  ) => {
+    let payload = dataPayment;
+    if (payloadOrEvent && "DonNhapHangID" in payloadOrEvent) {
+      payload = payloadOrEvent;
+    } else if (payloadOrEvent && "preventDefault" in payloadOrEvent) {
+      payloadOrEvent.preventDefault();
+    }
+
+    if (payload.SoTien <= 0) {
       toast.warning("Số tiền thanh toán phải lớn hơn 0!");
       return;
     }
     try {
-      await paymentMutation.mutateAsync(dataPayment);
+      await paymentMutation.mutateAsync(payload);
       toast.success("Ghi nhận thanh toán tiền hàng thành công!");
       setOpenPaymentModal(false);
     } catch {

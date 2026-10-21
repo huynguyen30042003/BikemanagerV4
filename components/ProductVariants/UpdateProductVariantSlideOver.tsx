@@ -174,6 +174,7 @@ export const UpdateProductVariantSlideOver: React.FC<
             }
             placeholder="Chọn dòng sản phẩm cha..."
             isLoading={isLoadingProducts}
+            height={10}
             className={errors.sanPhamID ? "border-red-500" : ""}
           />
           {errors.sanPhamID && (

@@ -137,6 +137,7 @@ export function CreateDanhMucChiTietSlideOver({
             }
             placeholder="Chọn danh mục chung cha"
             className="w-full"
+            height={10}
           />
           {errors.danhMucID && (
             <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5">

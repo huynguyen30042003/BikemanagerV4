@@ -2,8 +2,8 @@
 
 import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   useBienTheSanPham,
@@ -17,6 +17,7 @@ import {
   ProductVariantsTable,
   CreateProductVariantSlideOver,
   UpdateProductVariantSlideOver,
+  ProductVariantsSkeleton,
 } from "@/components/ProductVariants";
 
 type ViewMode = "grid" | "table";
@@ -70,12 +71,13 @@ function VariantsContent() {
     try {
       await deleteMutation.mutateAsync(deletingVariant.bienTheSanPhamID);
       setDeletingVariant(null);
+      refetchKPI();
     } catch {
       // Toast notification is handled in mutation
     }
   };
 
-  // KPI Metrics prioritization (Backend KPI first, fallback to current dataset)
+  // Thống kê KPI ưu tiên từ Backend API GetKPI, fallback sang dataset client
   const totalBienTheSanPham = useMemo(() => {
     return kpiData?.total_BienTheSanPham ?? totalCount;
   }, [kpiData?.total_BienTheSanPham, totalCount]);
@@ -105,7 +107,7 @@ function VariantsContent() {
   const hasActiveFilters = Boolean(searchInput || sanPhamFilter);
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header, Navigation Tabs & Multi-Filter Toolbar */}
       <ProductVariantsFilterBar
         totalBienThe={totalBienTheSanPham}
@@ -132,7 +134,7 @@ function VariantsContent() {
         hasActiveFilters={hasActiveFilters}
       />
 
-      {/* 2. Interactive KPI Cards Grid (.map() based, responsive down to 390px) */}
+      {/* 2. Dải KPI Ribbon tương tác (.map() based, dùng KpiRibbon chuẩn) */}
       <ProductVariantsKpiGrid
         totalBienTheSanPham={totalBienTheSanPham}
         totalQuanLyTheoSerial={totalQuanLyTheoSerial}
@@ -147,7 +149,7 @@ function VariantsContent() {
         isLoading={isLoading}
       />
 
-      {/* 3. Main Data Content (Grid vs Table) */}
+      {/* 3. Nội dung dữ liệu chính (Chế độ xem kép: Grid thẻ & Table) */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -191,7 +193,7 @@ function VariantsContent() {
         />
       )}
 
-      {/* 4. SlideOver: Thêm biến thể mới (State Isolation) */}
+      {/* 4. SlideOver: Thêm biến thể mới (State Form cô lập hoàn toàn) */}
       <CreateProductVariantSlideOver
         open={openAdd}
         onClose={() => setOpenAdd(false)}
@@ -204,7 +206,7 @@ function VariantsContent() {
         }}
       />
 
-      {/* 5. SlideOver: Cập nhật biến thể (State Isolation) */}
+      {/* 5. SlideOver: Cập nhật biến thể (State Form cô lập hoàn toàn) */}
       <UpdateProductVariantSlideOver
         open={Boolean(editingVariant)}
         onClose={() => setEditingVariant(null)}
@@ -248,14 +250,7 @@ function VariantsContent() {
 
 export default function VariantsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-8 space-y-6 max-w-[1600px] mx-auto">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-96 w-full rounded-xl" />
-        </div>
-      }
-    >
+    <Suspense fallback={<ProductVariantsSkeleton />}>
       <VariantsContent />
     </Suspense>
   );

@@ -86,7 +86,7 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
           "bg-zinc-500/10 border-zinc-500/30 text-zinc-700 dark:text-zinc-300 font-semibold",
       },
     ],
-    [totalThuongHieu, activeCount, inactiveCount]
+    [totalThuongHieu, activeCount, inactiveCount],
   );
 
   // Cấu hình các chế độ hiển thị (Grid / Table) để dùng .map()
@@ -95,13 +95,13 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
       { id: "grid" as const, title: "Chế độ xem lưới", icon: LayoutGrid },
       { id: "table" as const, title: "Chế độ xem bảng", icon: List },
     ],
-    []
+    [],
   );
 
   return (
     <div className="space-y-4">
       {/* 1. Header Section */}
-      <div className="flex flex-col gap-4 pb-4 border-b border-border/70">
+      <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4 pb-2 sm:pb-4 border-b border-border/70 mb-2 sm:mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider mb-1">
@@ -120,7 +120,8 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
                   Hãng sản xuất & Thương hiệu
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">
-                  Hồ sơ thương hiệu xe điện, phụ tùng và xuất xứ quốc gia được công nhận
+                  Hồ sơ thương hiệu xe điện, phụ tùng và xuất xứ quốc gia được
+                  công nhận
                 </p>
               </div>
             </div>
@@ -137,7 +138,9 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""}`}
               />
-              <span className="text-xs font-medium hidden xs:inline">Làm mới</span>
+              <span className="text-xs font-medium hidden xs:inline">
+                Làm mới
+              </span>
             </Button>
 
             <Button
@@ -151,17 +154,18 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
           </div>
         </div>
 
-        {/* Product Navigation Tabs with horizontal scroll */}
-        <div className="flex items-center justify-between pt-1 overflow-x-auto whitespace-nowrap">
+        {/* Product Navigation Tabs */}
+        <div className="pt-1 max-w-full">
           <ProductNavTabs activeTab="brands" />
         </div>
       </div>
 
       {/* 2. Toolbar */}
-      <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs space-y-2.5">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Search Box */}
-          <div className="relative flex-1 max-w-lg">
+      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs space-y-2.5">
+        {/* === GIAO DIỆN MÀN HÌNH NHỎ (Mobile/Tablet < lg) === */}
+        <div className="lg:hidden space-y-2">
+          {/* Ô tìm kiếm từ khóa trên Mobile */}
+          <div className="relative w-full">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               placeholder="Tìm theo tên thương hiệu hoặc mã (HONDA, VINFAST...)..."
@@ -181,57 +185,155 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
             )}
           </div>
 
-          {/* Mobile Status Menu Button & View Mode */}
-          <div className="sm:hidden flex items-center justify-between gap-2 pt-1 border-t border-border/40">
+          {/* Dòng điều khiển: Nút mở bộ lọc + Chuyển đổi View + Tải lại */}
+          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="h-8 px-2.5 gap-1.5 text-xs border-border/80"
+              className="h-8.5 px-3 gap-1.5 text-xs font-medium border-border/80 cursor-pointer"
             >
               {isMobileMenuOpen ? (
                 <X className="w-3.5 h-3.5" />
               ) : (
-                <Menu className="w-3.5 h-3.5" />
+                <Filter className="w-3.5 h-3.5" />
               )}
-              <span>Lọc trạng thái</span>
+              <span>Bộ lọc</span>
+              {statusFilter !== "all" && (
+                <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-600 text-white">
+                  1
+                </span>
+              )}
             </Button>
 
-            {/* View Mode on Mobile (.map based) */}
-            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 shrink-0">
-              {viewModeOptions.map((mode) => {
-                const IconComponent = mode.icon;
-                return (
-                  <button
-                    key={mode.id}
-                    type="button"
-                    onClick={() => onViewModeChange(mode.id)}
-                    title={mode.title}
-                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                      viewMode === mode.id
-                        ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                  </button>
-                );
-              })}
+            {/* View Switcher on mobile via .map() */}
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shadow-2xs">
+                {viewModeOptions.map((mode) => {
+                  const IconComponent = mode.icon;
+                  const isActive = viewMode === mode.id;
+                  return (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      onClick={() => onViewModeChange(mode.id)}
+                      title={mode.title}
+                      className={`flex items-center justify-center w-7.5 h-7.5 rounded-md transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-background text-foreground shadow-2xs font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <IconComponent className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onRefresh}
+                disabled={isFetching || isLoadingKPI}
+                title="Tải lại dữ liệu"
+                className="h-8.5 w-8.5 cursor-pointer shadow-2xs"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${
+                    isFetching || isLoadingKPI
+                      ? "animate-spin text-blue-500"
+                      : ""
+                  }`}
+                />
+              </Button>
             </div>
           </div>
 
-          {/* Desktop Filter & Switcher Controls */}
-          <div className="hidden sm:flex items-center gap-2">
+          {/* KHUNG BỘ LỌC CHI TIẾT KHI MÀN HÌNH NHỎ (Thu gọn / Mở rộng) */}
+          {isMobileMenuOpen && (
+            <div className="flex flex-col gap-3 p-3 rounded-xl bg-muted/40 border border-border/70 animate-in fade-in-50 slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between pb-1 border-b border-border/40">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  Bộ lọc chi tiết
+                </span>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={onResetFilters}
+                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+                  >
+                    Đặt lại bộ lọc
+                  </button>
+                )}
+              </div>
+
+              {/* Lọc theo trạng thái */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Trạng thái sử dụng
+                </label>
+                <div className="grid grid-cols-3 gap-1 bg-background/80 p-1 rounded-lg border border-border/60 text-xs">
+                  {statusOptions.map((opt) => {
+                    const isActive = statusFilter === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => onStatusFilterChange(opt.id)}
+                        className={`px-2 py-1.5 rounded-md font-medium text-center transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-card shadow-xs text-blue-600 dark:text-blue-400 font-semibold"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {opt.label} ({opt.count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* === GIAO DIỆN MÀN HÌNH LỚN (Desktop >= lg) === */}
+        <div className="hidden lg:flex items-center justify-between gap-2.5 w-full">
+          {/* Left: Ô tìm kiếm từ khóa */}
+          <div className="flex items-center gap-2 flex-1 max-w-lg">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                placeholder="Tìm theo tên thương hiệu hoặc mã (HONDA, VINFAST...)..."
+                value={searchInput}
+                onChange={(e) => onSearch(e.target.value)}
+                className="pl-9 pr-8 h-9.5 w-full bg-background/90 text-sm focus-visible:ring-blue-500/20"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => onSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground w-4 h-4 rounded-full flex items-center justify-center hover:bg-muted cursor-pointer transition-colors"
+                  aria-label="Xóa từ khóa tìm kiếm"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Dải bộ lọc trạng thái & View Mode Switcher & Reload */}
+          <div className="flex items-center gap-2 shrink-0">
             {/* Status Filter Segment (.map based) */}
             <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 text-xs shrink-0">
-              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5" />
+              <Filter className="w-3.5 h-3.5 text-muted-foreground ml-1 mr-0.5 shrink-0" />
               {statusOptions.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => onStatusFilterChange(opt.id)}
-                  className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer shrink-0 ${
                     statusFilter === opt.id
                       ? opt.desktopActiveClass
                       : "text-muted-foreground hover:text-foreground"
@@ -242,19 +344,20 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
               ))}
             </div>
 
-            {/* View Mode Switcher (.map based) */}
-            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border/60 shrink-0">
+            {/* Desktop View Switcher (.map based) */}
+            <div className="flex items-center rounded-lg border border-border/80 bg-muted/60 p-0.5 shrink-0 shadow-2xs">
               {viewModeOptions.map((mode) => {
                 const IconComponent = mode.icon;
+                const isActive = viewMode === mode.id;
                 return (
                   <button
                     key={mode.id}
                     type="button"
                     onClick={() => onViewModeChange(mode.id)}
                     title={mode.title}
-                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                      viewMode === mode.id
-                        ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs"
+                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-background text-foreground shadow-2xs font-semibold"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -263,31 +366,23 @@ export const BrandsFilterBar: React.FC<BrandsFilterBarProps> = ({
                 );
               })}
             </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isFetching || isLoadingKPI}
+              title="Tải lại dữ liệu"
+              className="h-9 w-9 shrink-0 cursor-pointer shadow-2xs"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${
+                  isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""
+                }`}
+              />
+            </Button>
           </div>
         </div>
-
-        {/* Mobile expanded status options (.map based) */}
-        {isMobileMenuOpen && (
-          <div className="sm:hidden pt-2 border-t border-border/60 grid grid-cols-3 gap-1.5">
-            {statusOptions.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => {
-                  onStatusFilterChange(opt.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`py-1.5 px-2 rounded-lg text-xs font-medium text-center border transition-all ${
-                  statusFilter === opt.id
-                    ? opt.mobileActiveClass
-                    : "border-border/60 bg-muted/40 text-muted-foreground"
-                }`}
-              >
-                {opt.label} ({opt.count})
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Active Filter Chips */}
         {hasActiveFilters && (

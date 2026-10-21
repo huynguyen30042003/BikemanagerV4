@@ -121,6 +121,7 @@ export const ChangeSerialStatusSlideOver: React.FC<
               }))
             }
             isLoading={isLoadingSerialStatuses}
+            height={10}
           />
         </div>
 

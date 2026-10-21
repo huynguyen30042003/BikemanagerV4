@@ -167,6 +167,7 @@ export function UpdateDiaPhuongCapTinhSlideOver({
               setFormData((prev) => ({ ...prev, Loai: Number(val) || 1 }))
             }
             placeholder="Chọn loại..."
+            height={10}
           />
         </div>
 

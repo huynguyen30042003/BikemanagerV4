@@ -149,6 +149,7 @@ export const ActivateWarrantySlideOver: React.FC<
               }))
             }
             isLoading={isLoadingCustomers}
+            height={10}
           />
           <p className="text-[11px] text-muted-foreground mt-0.5">
             Tra cứu hồ sơ khách hàng đã đăng ký trong hệ thống

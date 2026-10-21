@@ -194,6 +194,7 @@ export function CreateDiaDiemSlideOver({
             }
             placeholder="Chọn loại cơ sở..."
             isLoading={isLoadingLoaiDiaDiem}
+            height={10}
           />
         </div>
 
@@ -214,6 +215,7 @@ export function CreateDiaDiemSlideOver({
               }))
             }
             placeholder="Chọn cơ sở cha..."
+            height={10}
           />
         </div>
 
@@ -232,6 +234,7 @@ export function CreateDiaDiemSlideOver({
               }))
             }
             placeholder="-- Chọn Tỉnh / TP --"
+            height={10}
           />
           {errors.tinhID && (
             <p className="text-xs text-red-600 flex items-center gap-1">
@@ -255,6 +258,7 @@ export function CreateDiaDiemSlideOver({
               formData.TinhID ? "-- Chọn Phường / Xã --" : "Vui lòng chọn Tỉnh trước"
             }
             isLoading={isLoadingXa}
+            height={10}
           />
           {errors.xaID && (
             <p className="text-xs text-red-600 flex items-center gap-1">

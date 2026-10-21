@@ -1,7 +1,10 @@
 "use client";
 
 import React, { Suspense, useState, useMemo } from "react";
-import { useThuongHieu, useDeleteThuongHieu } from "@/hooks/ThuongHieu/useThuongHieu";
+import {
+  useThuongHieu,
+  useDeleteThuongHieu,
+} from "@/hooks/ThuongHieu/useThuongHieu";
 import { SP_ThuongHieu } from "@/types/thuongHieu";
 import {
   BrandsKpiGrid,
@@ -43,7 +46,9 @@ function BrandsContent() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [openAdd, setOpenAdd] = useState(false);
   const [editingBrand, setEditingBrand] = useState<SP_ThuongHieu | null>(null);
-  const [deletingBrand, setDeletingBrand] = useState<SP_ThuongHieu | null>(null);
+  const [deletingBrand, setDeletingBrand] = useState<SP_ThuongHieu | null>(
+    null,
+  );
 
   const deleteMutation = useDeleteThuongHieu();
 
@@ -92,7 +97,7 @@ function BrandsContent() {
   const hasActiveFilters = Boolean(searchInput || statusFilter !== "all");
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header, Navigation Tabs & Toolbar */}
       <BrandsFilterBar
         totalThuongHieu={totalThuongHieu}

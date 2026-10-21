@@ -111,6 +111,7 @@ export const UpdateCustomerStatisticsSlideOver: React.FC<UpdateCustomerStatistic
                   HangKhachHang: String(val),
                 }))
               }
+              height={10}
             />
           </div>
 

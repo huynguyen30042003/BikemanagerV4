@@ -4,3 +4,4 @@ export * from "./ProductsGrid";
 export * from "./ProductsTable";
 export * from "./CreateProductSlideOver";
 export * from "./UpdateProductSlideOver";
+export * from "./ProductsSkeleton";

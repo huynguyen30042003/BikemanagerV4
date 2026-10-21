@@ -71,6 +71,7 @@ export const OrderStatusChangeModal: React.FC<OrderStatusChangeModalProps> = ({
               }))
             }
             isLoading={isLoadingOrderStatuses}
+            height={10}
           />
         </div>
 

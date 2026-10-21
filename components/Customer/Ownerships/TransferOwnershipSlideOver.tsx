@@ -156,6 +156,7 @@ export const TransferOwnershipSlideOver: React.FC<TransferOwnershipSlideOverProp
               onChange={(val) => handleChange("PhuongTienKhachHangID", String(val))}
               placeholder="Chọn xe cần sang tên"
               isLoading={isLoadingVehicles}
+              height={10}
               className={errors.phuongTienKhachHangID ? "border-red-500 ring-1 ring-red-500/30" : ""}
             />
             {errors.phuongTienKhachHangID && (
@@ -177,6 +178,7 @@ export const TransferOwnershipSlideOver: React.FC<TransferOwnershipSlideOverProp
               onChange={(val) => handleChange("KhachHangMoiID", String(val))}
               placeholder="Chọn người nhận quyền sở hữu mới"
               isLoading={isLoadingCustomers}
+              height={10}
               className={errors.khachHangMoiID ? "border-red-500 ring-1 ring-red-500/30" : ""}
             />
             {errors.khachHangMoiID && (
@@ -196,6 +198,7 @@ export const TransferOwnershipSlideOver: React.FC<TransferOwnershipSlideOverProp
               options={LY_DO_OPTIONS}
               value={formData.LyDo}
               onChange={(val) => handleChange("LyDo", String(val))}
+              height={10}
               className={errors.lyDo ? "border-red-500" : ""}
             />
             {errors.lyDo && (

@@ -74,23 +74,25 @@ function InventoryContent() {
         (i) =>
           i.soLuongToiThieu != null &&
           i.soLuongKhaDung <= i.soLuongToiThieu &&
-          i.soLuongKhaDung > 0
+          i.soLuongKhaDung > 0,
       ).length,
-    [items]
+    [items],
   );
 
   const outOfStockCount = useMemo(
     () => items.filter((i) => i.soLuongKhaDung <= 0).length,
-    [items]
+    [items],
   );
 
   const totalAvailable = useMemo(
     () => items.reduce((sum, i) => sum + (i.soLuongKhaDung || 0), 0),
-    [items]
+    [items],
   );
 
   const hasActiveFilters = Boolean(
-    searchInput || khoFilter || (activeTab === "stock" && warningFilter !== "all")
+    searchInput ||
+    khoFilter ||
+    (activeTab === "stock" && warningFilter !== "all"),
   );
 
   const handleResetFilters = () => {
@@ -111,7 +113,7 @@ function InventoryContent() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
       {/* 1. Header, SubTabs switcher & Filter Toolbar */}
       <InventoryFilterBar
         totalCount={totalCount}
@@ -155,8 +157,8 @@ function InventoryContent() {
       )}
 
       {/* 3. Bảng dữ liệu chính tùy theo SubTab */}
-      {activeTab === "stock" && (
-        isLoading ? (
+      {activeTab === "stock" &&
+        (isLoading ? (
           <InventorySkeleton />
         ) : (
           <InventoryStockTable
@@ -170,11 +172,10 @@ function InventoryContent() {
             onOpenTheKho={handleOpenTheKho}
             onOpenDinhMuc={handleOpenDinhMuc}
           />
-        )
-      )}
+        ))}
 
-      {activeTab === "costs" && (
-        isLoadingLoChiPhis ? (
+      {activeTab === "costs" &&
+        (isLoadingLoChiPhis ? (
           <InventorySkeleton />
         ) : (
           <InventoryCostsTable
@@ -185,11 +186,10 @@ function InventoryContent() {
             setPage={setPage}
             setPageSize={setPageSize}
           />
-        )
-      )}
+        ))}
 
-      {activeTab === "transactions" && (
-        isLoadingAllGiaoDichs ? (
+      {activeTab === "transactions" &&
+        (isLoadingAllGiaoDichs ? (
           <InventorySkeleton />
         ) : (
           <InventoryTransactionsTable
@@ -200,8 +200,7 @@ function InventoryContent() {
             setPage={setPage}
             setPageSize={setPageSize}
           />
-        )
-      )}
+        ))}
 
       {/* 4. SlideOver Cập nhật Định mức tồn tối thiểu & Vị trí kệ */}
       <UpdateDinhMucSlideOver
