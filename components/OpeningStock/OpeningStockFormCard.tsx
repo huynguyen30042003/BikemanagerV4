@@ -311,17 +311,17 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
       // }
 
       // Check duplicate within the list
-      const serialSet = new Set<string>();
-      for (const s of serials) {
-        const trimmed = s.MaSerial.trim().toUpperCase();
-        if (serialSet.has(trimmed)) {
-          toast.error(
-            `Mã Serial [${trimmed}] bị trùng lặp trong danh sách nhập!`,
-          );
-          return;
-        }
-        serialSet.add(trimmed);
-      }
+      // const serialSet = new Set<string>();
+      // for (const s of serials) {
+      //   const trimmed = s.MaSerial.trim().toUpperCase();
+      //   if (serialSet.has(trimmed)) {
+      //     toast.error(
+      //       `Mã Serial [${trimmed}] bị trùng lặp trong danh sách nhập!`,
+      //     );
+      //     return;
+      //   }
+      //   serialSet.add(trimmed);
+      // }
     }
 
     setShowConfirmSubmit(true);
