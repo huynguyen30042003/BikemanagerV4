@@ -304,11 +304,11 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
         return;
       }
 
-      const emptySerial = serials.some((s) => !s.MaSerial.trim());
-      if (emptySerial) {
-        toast.error("Tất cả các dòng Serial bắt buộc phải có Mã Serial!");
-        return;
-      }
+      // const emptySerial = serials.some((s) => !s.MaSerial.trim());
+      // if (emptySerial) {
+      //   toast.error("Tất cả các dòng Serial bắt buộc phải có Mã Serial!");
+      //   return;
+      // }
 
       // Check duplicate within the list
       const serialSet = new Set<string>();
@@ -641,7 +641,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
                         #
                       </th>
                       <th className="p-2.5 text-left font-semibold min-w-[160px]">
-                        Mã Serial <span className="text-rose-500">*</span>
+                        Mã Serial
                       </th>
                       <th className="p-2.5 text-left font-semibold min-w-[140px]">
                         Số Khung
