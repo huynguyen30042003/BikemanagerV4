@@ -128,9 +128,63 @@ export const chuyenTrangThaiSerialApi = async (payload: ChuyenTrangThaiSerialPay
 };
 
 /**
- * Lấy số liệu KPI tổng quan số serial / số khung xe
- * POST /api/SoSerialApi/GetKPI
+ * Lấy danh sách hình ảnh đính kèm theo Serial / Đơn hàng / Phiếu bảo hành
+ * POST /api/SoSerialApi/GetsHinhAnh
  */
+export const getSoSerialHinhAnhApi = async (filter: {
+  SoSerialID?: string;
+  DonHangID?: string;
+  PhieuBaoHanhID?: string;
+  LoaiAnhID?: number;
+}) => {
+  const response = await api.post(
+    `${APP_URL}/SoSerialApi/GetsHinhAnh`,
+    filter,
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Upload hình ảnh phương tiện gắn với Số Serial (Ảnh bàn giao, số khung/pin, hiện trạng xe)
+ * POST /api/SoSerialApi/UploadHinhAnh
+ */
+export const uploadSoSerialHinhAnhApi = async (formData: FormData) => {
+  const token = getAccessToken();
+  const response = await api.post(
+    `${APP_URL}/SoSerialApi/UploadHinhAnh`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Xóa hình ảnh của serial
+ * DELETE /api/SoSerialApi/DeleteHinhAnh/{id}
+ */
+export const deleteSoSerialHinhAnhApi = async (id: string) => {
+  const response = await api.delete(
+    `${APP_URL}/SoSerialApi/DeleteHinhAnh/${id}`,
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
 export const getSoSerialKPIApi = async () => {
   const response = await api.post(
     `${APP_URL}/SoSerialApi/GetKPI`,
@@ -143,4 +197,5 @@ export const getSoSerialKPIApi = async () => {
 
   return response.data;
 };
+
 

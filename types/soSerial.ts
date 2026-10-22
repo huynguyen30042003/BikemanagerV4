@@ -25,6 +25,30 @@ export interface SP_SoSerial {
   ngayKetThucBaoHanh?: string | null;
   ghiChu?: string | null;
   ngayTao?: string;
+  hinhAnhs?: SP_SoSerial_HinhAnh[];
+}
+
+export interface SP_SoSerial_HinhAnh {
+  id: string;
+  soSerialID: string;
+  donHangID?: string | null;
+  phieuBaoHanhID?: string | null;
+  loaiAnhID: number; // 1: Số khung/máy/pin, 2: Bàn giao xe, 3: Ngoại quan lúc bán, 4: Lỗi bảo hành, 5: Sau sửa chữa
+  tenLoaiAnh?: string;
+  duongDanAnh: string;
+  tieuDe?: string | null;
+  ghiChu?: string | null;
+  nguoiTaoLap?: number | null;
+  ngayTaoLap: string;
+}
+
+export interface UploadHinhAnhSerialPayload {
+  soSerialID: string;
+  donHangID?: string | null;
+  phieuBaoHanhID?: string | null;
+  loaiAnhID: number;
+  ghiChu?: string | null;
+  files: File[];
 }
 
 export interface SoSerialFilter {

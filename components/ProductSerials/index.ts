@@ -5,4 +5,5 @@ export * from "./ProductSerialsTable";
 export * from "./CreateProductSerialSlideOver";
 export * from "./ActivateWarrantySlideOver";
 export * from "./ChangeSerialStatusSlideOver";
+export * from "./SerialImagesSlideOver";
 export * from "./ProductSerialsSkeleton";

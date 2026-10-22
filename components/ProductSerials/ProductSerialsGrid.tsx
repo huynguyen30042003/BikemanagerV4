@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   ArrowRightLeft,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -47,6 +48,7 @@ interface ProductSerialsGridProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onOpenWarranty: (item: SP_SoSerial) => void;
   onOpenChangeStatus: (item: SP_SoSerial) => void;
+  onOpenImages?: (item: SP_SoSerial) => void;
   onOpenAdd: () => void;
   onResetFilters: () => void;
   hasActiveFilters: boolean;
@@ -68,6 +70,7 @@ export const ProductSerialsGrid: React.FC<ProductSerialsGridProps> = ({
   setPageSize,
   onOpenWarranty,
   onOpenChangeStatus,
+  onOpenImages,
   onOpenAdd,
   onResetFilters,
   hasActiveFilters,
@@ -277,6 +280,17 @@ export const ProductSerialsGrid: React.FC<ProductSerialsGridProps> = ({
 
               {/* Actions */}
               <div className="flex items-center gap-1.5 pt-2 border-t border-border/50">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOpenImages?.(serial)}
+                  className="h-8 px-2 text-xs flex items-center justify-center gap-1 hover:text-primary hover:bg-primary/10 cursor-pointer shadow-2xs"
+                  title="Xem và tải lên hình ảnh xe/bảo hành"
+                >
+                  <Camera className="w-3.5 h-3.5 text-primary" />
+                  <span className="hidden sm:inline">Ảnh xe</span>
+                </Button>
+
                 <Button
                   variant="outline"
                   size="sm"

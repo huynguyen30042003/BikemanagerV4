@@ -106,9 +106,9 @@ export function SlideOver({
                 {title}
               </h2>
               {description && (
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                <div className="text-xs text-muted-foreground mt-0.5 truncate">
                   {description}
-                </p>
+                </div>
               )}
             </div>
           </div>

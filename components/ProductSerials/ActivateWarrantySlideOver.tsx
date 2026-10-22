@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
-import { ShieldCheck, RefreshCw } from "lucide-react";
+import { ShieldCheck, RefreshCw, Camera, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
-import { useKichHoatBaoHanh } from "@/hooks/SoSerial/useSoSerialApi";
+import { useKichHoatBaoHanh, useUploadSoSerialHinhAnh } from "@/hooks/SoSerial/useSoSerialApi";
 import { KichHoatBaoHanhPayload, SP_SoSerial } from "@/types/soSerial";
 
 interface ActivateWarrantySlideOverProps {
@@ -44,7 +45,12 @@ export const ActivateWarrantySlideOver: React.FC<
     BienSoXe: "",
   });
 
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const warrantyMutation = useKichHoatBaoHanh();
+  const uploadMutation = useUploadSoSerialHinhAnh();
 
   useEffect(() => {
     if (open && serial) {
@@ -55,8 +61,29 @@ export const ActivateWarrantySlideOver: React.FC<
         TrangThaiDaBanID: 61,
         BienSoXe: serial.bienSoXe || "",
       });
+      setSelectedFiles([]);
+      setPreviews([]);
     }
   }, [open, serial]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const filesArray = Array.from(e.target.files);
+      const newFiles = [...selectedFiles, ...filesArray];
+      setSelectedFiles(newFiles);
+
+      const newUrls = filesArray.map((f) => URL.createObjectURL(f));
+      setPreviews((prev) => [...prev, ...newUrls]);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const handleSubmit = async () => {
     if (!formData.KhachHangID) {
@@ -66,6 +93,23 @@ export const ActivateWarrantySlideOver: React.FC<
 
     try {
       await warrantyMutation.mutateAsync(formData);
+
+      // Nếu có chọn ảnh bàn giao, upload ngay
+      if (selectedFiles.length > 0 && serial?.soSerialID) {
+        try {
+          const uploadFd = new FormData();
+          uploadFd.append("soSerialID", serial.soSerialID);
+          uploadFd.append("loaiAnhID", "2"); // 2: Bàn giao xe
+          uploadFd.append("ghiChu", "Ảnh chụp bàn giao xe và kích hoạt bảo hành");
+          selectedFiles.forEach((file) => {
+            uploadFd.append("files", file);
+          });
+          await uploadMutation.mutateAsync(uploadFd);
+        } catch {
+          toast.warning("Bảo hành đã kích hoạt nhưng có lỗi khi tải lên một số ảnh.");
+        }
+      }
+
       onClose();
       onSuccess?.();
     } catch {
@@ -86,16 +130,16 @@ export const ActivateWarrantySlideOver: React.FC<
             variant="outline"
             className="flex-1 cursor-pointer"
             onClick={onClose}
-            disabled={warrantyMutation.isPending}
+            disabled={warrantyMutation.isPending || uploadMutation.isPending}
           >
             Hủy bỏ
           </Button>
           <Button
             className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer font-semibold"
             onClick={handleSubmit}
-            disabled={warrantyMutation.isPending}
+            disabled={warrantyMutation.isPending || uploadMutation.isPending}
           >
-            {warrantyMutation.isPending ? (
+            {warrantyMutation.isPending || uploadMutation.isPending ? (
               <RefreshCw className="w-4 h-4 animate-spin mr-1.5" />
             ) : null}
             Kích hoạt bảo hành
@@ -172,6 +216,74 @@ export const ActivateWarrantySlideOver: React.FC<
             }
             className="text-xs font-mono font-bold uppercase"
           />
+        </div>
+
+        {/* Ảnh bàn giao xe & Ngoại quan lúc bán */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-semibold text-foreground">
+              Ảnh bàn giao & Ngoại quan xe{" "}
+              <span className="text-muted-foreground font-normal">(tùy chọn)</span>
+            </label>
+            <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400">
+              {selectedFiles.length} ảnh đã chọn
+            </span>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border border-dashed border-border hover:border-blue-500 rounded-lg p-3 text-center cursor-pointer transition-colors bg-muted/20 hover:bg-muted/40"
+          >
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Camera className="w-4 h-4 text-blue-500" />
+              <span>Chụp ảnh hoặc bấm để chọn ảnh xe khi bàn giao</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Ảnh công tơ mét ODO, số khung, toàn cảnh xe, trầy xước lúc bán
+            </p>
+          </div>
+
+          {/* Danh sách ảnh previews */}
+          {previews.length > 0 && (
+            <div className="grid grid-cols-4 gap-2 mt-2.5">
+              {previews.map((previewUrl, idx) => (
+                <div
+                  key={idx}
+                  className="relative group rounded-md overflow-hidden border border-border aspect-square bg-muted"
+                >
+                  <Image
+                    src={previewUrl}
+                    alt={`Preview ${idx + 1}`}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFile(idx);
+                    }}
+                    className="absolute top-1 right-1 p-0.5 rounded-full bg-black/70 hover:bg-rose-600 text-white transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  <span className="absolute bottom-1 left-1 text-[9px] bg-black/60 text-white px-1 py-0.2 rounded font-mono">
+                    #{idx + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-800 dark:text-emerald-300">

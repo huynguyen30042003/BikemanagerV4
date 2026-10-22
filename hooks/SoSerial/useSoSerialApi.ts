@@ -5,16 +5,20 @@ import { toast } from "sonner";
 import {
   chuyenTrangThaiSerialApi,
   createSoSerialApi,
+  deleteSoSerialHinhAnhApi,
   getSoSerialApi,
   getSoSerialByIdApi,
+  getSoSerialHinhAnhApi,
   getSoSerialKPIApi,
   kichHoatBaoHanhApi,
   traCuuBaoHanhApi,
+  uploadSoSerialHinhAnhApi,
 } from "@/shared/api/SoSerial";
 import {
   ChuyenTrangThaiSerialPayload,
   CreateSoSerialPayload,
   KichHoatBaoHanhPayload,
+  SP_SoSerial_HinhAnh,
   SoSerialFilter,
   SoSerialKPI,
 } from "@/types/soSerial";
@@ -27,6 +31,7 @@ export const SO_SERIAL_QUERY_KEYS = {
   details: () => [...SO_SERIAL_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...SO_SERIAL_QUERY_KEYS.details(), id] as const,
   kpi: () => [...SO_SERIAL_QUERY_KEYS.all, "kpi"] as const,
+  images: (serialId: string) => [...SO_SERIAL_QUERY_KEYS.all, "images", serialId] as const,
 };
 
 export const useGetSoSerial = (params: SoSerialFilter) => {
@@ -102,6 +107,64 @@ export const useChuyenTrangThaiSerial = () => {
     },
     onError: (error: Error) => {
       toast.error(error?.message || "Không thể chuyển trạng thái thiết bị!");
+    },
+  });
+};
+
+export const useGetSoSerialHinhAnh = (soSerialID?: string) => {
+  return useQuery({
+    queryKey: SO_SERIAL_QUERY_KEYS.images(soSerialID || ""),
+    queryFn: async () => {
+      if (!soSerialID) return [];
+      const res = await getSoSerialHinhAnhApi({ SoSerialID: soSerialID });
+      return (res?.data ?? res ?? []) as SP_SoSerial_HinhAnh[];
+    },
+    enabled: !!soSerialID,
+  });
+};
+
+export const useUploadSoSerialHinhAnh = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (formData: FormData) => uploadSoSerialHinhAnhApi(formData),
+    onSuccess: (_, variables) => {
+      const serialId = variables.get("soSerialID") as string;
+      if (serialId) {
+        queryClient.invalidateQueries({
+          queryKey: SO_SERIAL_QUERY_KEYS.images(serialId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: SO_SERIAL_QUERY_KEYS.detail(serialId),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: SO_SERIAL_QUERY_KEYS.lists() });
+      toast.success("Tải lên hình ảnh thành công!");
+    },
+    onError: (error: Error) => {
+      toast.error(error?.message || "Không thể tải lên hình ảnh!");
+    },
+  });
+};
+
+export const useDeleteSoSerialHinhAnh = (soSerialID?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteSoSerialHinhAnhApi(id),
+    onSuccess: () => {
+      if (soSerialID) {
+        queryClient.invalidateQueries({
+          queryKey: SO_SERIAL_QUERY_KEYS.images(soSerialID),
+        });
+        queryClient.invalidateQueries({
+          queryKey: SO_SERIAL_QUERY_KEYS.detail(soSerialID),
+        });
+      }
+      toast.success("Đã xóa hình ảnh!");
+    },
+    onError: (error: Error) => {
+      toast.error(error?.message || "Không thể xóa hình ảnh!");
     },
   });
 };

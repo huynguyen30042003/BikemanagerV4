@@ -14,6 +14,7 @@ import {
   CreateProductSerialSlideOver,
   ActivateWarrantySlideOver,
   ChangeSerialStatusSlideOver,
+  SerialImagesSlideOver,
   ProductSerialsSkeleton,
 } from "@/components/ProductSerials";
 
@@ -63,6 +64,7 @@ function SerialsContent() {
     null,
   );
   const [statusSerial, setStatusSerial] = useState<SP_SoSerial | null>(null);
+  const [imageSerial, setImageSerial] = useState<SP_SoSerial | null>(null);
 
   const handleResetFilters = () => {
     handleSearch("");
@@ -218,6 +220,7 @@ function SerialsContent() {
           setPageSize={setPageSize}
           onOpenWarranty={(serial) => setWarrantySerial(serial)}
           onOpenChangeStatus={(serial) => setStatusSerial(serial)}
+          onOpenImages={(serial) => setImageSerial(serial)}
           onOpenAdd={() => setOpenAdd(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -234,6 +237,7 @@ function SerialsContent() {
           setPageSize={setPageSize}
           onOpenWarranty={(serial) => setWarrantySerial(serial)}
           onOpenChangeStatus={(serial) => setStatusSerial(serial)}
+          onOpenImages={(serial) => setImageSerial(serial)}
           getSerialStatusBadge={getSerialStatusBadge}
         />
       )}
@@ -277,6 +281,13 @@ function SerialsContent() {
           refetch();
           refetchKPI();
         }}
+      />
+
+      {/* 7. SlideOver: Thư viện & Upload Hình ảnh Xe theo Serial */}
+      <SerialImagesSlideOver
+        open={Boolean(imageSerial)}
+        onClose={() => setImageSerial(null)}
+        serial={imageSerial}
       />
     </div>
   );

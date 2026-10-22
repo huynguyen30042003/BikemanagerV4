@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   ArrowRightLeft,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
@@ -42,6 +43,7 @@ interface ProductSerialsTableProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onOpenWarranty: (item: SP_SoSerial) => void;
   onOpenChangeStatus: (item: SP_SoSerial) => void;
+  onOpenImages?: (item: SP_SoSerial) => void;
   getSerialStatusBadge: (statusId?: number | null) => {
     bgClass: string;
     textClass: string;
@@ -60,6 +62,7 @@ export const ProductSerialsTable: React.FC<ProductSerialsTableProps> = ({
   setPageSize,
   onOpenWarranty,
   onOpenChangeStatus,
+  onOpenImages,
   getSerialStatusBadge,
 }) => {
   const columns: Column<SP_SoSerial>[] = [
@@ -259,10 +262,20 @@ export const ProductSerialsTable: React.FC<ProductSerialsTableProps> = ({
       key: "function",
       title: "Thao tác",
       classNameHeader:
-        "w-28 text-center text-xs font-semibold text-muted-foreground",
+        "w-36 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex gap-1 justify-center items-center">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onOpenImages?.(row)}
+            title="Xem và tải lên hình ảnh xe / thiết bị"
+            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+          >
+            <Camera className="w-4 h-4 text-primary" />
+          </Button>
+
           <Button
             variant="ghost"
             size="icon-sm"

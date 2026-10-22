@@ -15,6 +15,7 @@ import {
   CreateWarrantySlideOver,
   DeleteWarrantyModal,
 } from "@/components/Warranties";
+import { SerialImagesSlideOver } from "@/components/ProductSerials";
 import { ShieldCheck, Plus, RefreshCw } from "lucide-react";
 
 function WarrantiesContent() {
@@ -45,6 +46,12 @@ function WarrantiesContent() {
   // Dialog states (Isolated from page re-renders)
   const [openCreate, setOpenCreate] = useState(false);
   const [deleteItem, setDeleteItem] = useState<BH_BaoHanh | null>(null);
+  const [imageSerial, setImageSerial] = useState<{
+    soSerialID: string;
+    maSerial?: string;
+    soKhung?: string;
+    tenBienThe?: string;
+  } | null>(null);
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen">
@@ -132,7 +139,22 @@ function WarrantiesContent() {
         onPageSizeChange={setPageSize}
         onDelete={(item) => setDeleteItem(item)}
         onAddNew={() => setOpenCreate(true)}
+        onOpenImages={(item) =>
+          setImageSerial({
+            soSerialID: item.soSerialID,
+            maSerial: item.maSerial || "",
+            soKhung: item.soKhung || "",
+            tenBienThe: item.tenBienThe || "",
+          })
+        }
         getWarrantyStatusBadge={getWarrantyStatusBadge}
+      />
+
+      {/* Slide-over xem & tải lên thư viện ảnh xe / bảo hành */}
+      <SerialImagesSlideOver
+        open={Boolean(imageSerial)}
+        onClose={() => setImageSerial(null)}
+        serial={imageSerial}
       />
 
       {/* SlideOver Kích hoạt sổ mới (Isolated state) */}

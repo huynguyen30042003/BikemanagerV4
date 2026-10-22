@@ -14,6 +14,7 @@ import {
   Trash2,
   FolderOpen,
   Plus,
+  Camera,
 } from "lucide-react";
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -36,6 +37,7 @@ interface WarrantiesTableProps {
   onPageSizeChange: (size: number | ((prev: number) => number)) => void;
   onDelete: (item: BH_BaoHanh) => void;
   onAddNew: () => void;
+  onOpenImages?: (item: BH_BaoHanh) => void;
   getWarrantyStatusBadge: (statusId: number) => { label: string; className: string };
 }
 
@@ -50,6 +52,7 @@ export function WarrantiesTable({
   onPageSizeChange,
   onDelete,
   onAddNew,
+  onOpenImages,
   getWarrantyStatusBadge,
 }: WarrantiesTableProps) {
   const columns: Column<BH_BaoHanh>[] = [
@@ -141,10 +144,21 @@ export function WarrantiesTable({
     {
       key: "actions",
       title: "Thao tác",
-      classNameHeader: "w-20 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader: "w-24 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-1">
+          {row.soSerialID && onOpenImages && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => onOpenImages(row)}
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer"
+              title="Xem ảnh xe & lịch sử bảo hành"
+            >
+              <Camera className="w-3.5 h-3.5" />
+            </Button>
+          )}
           <RoleGuard allowedRoles={["Administrator", "AdminAccess"]}>
             <Button
               variant="ghost"
