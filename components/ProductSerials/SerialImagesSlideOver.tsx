@@ -333,40 +333,34 @@ export function SerialImagesSlideOver({
           </div>
 
           {/* 2. BỘ LỌC PHÂN LOẠI ALBUM ẢNH */}
-          <div className="flex items-center justify-between border-b border-border/80 pb-3">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/80 pb-3 gap-2.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <Layers className="w-4 h-4 text-primary" />
               <h3 className="text-sm font-semibold text-foreground">
                 Thư viện ảnh đã lưu ({images.length})
               </h3>
             </div>
 
-            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 max-w-[65%] scrollbar-none">
-              <Button
-                variant={filterType === "all" ? "default" : "ghost"}
-                size="sm"
-                className="h-7 text-xs px-2.5 shrink-0 cursor-pointer"
-                onClick={() => setFilterType("all")}
-              >
-                Tất cả
-              </Button>
-              {loaiAnhOptions.map((opt) => {
-                const cleanLabel = opt.label
-                  .split("(")[0]
-                  .replace(/^[^\p{L}\p{N}]+/u, "")
-                  .trim();
-                return (
-                  <Button
-                    key={opt.value}
-                    variant={filterType === opt.value ? "default" : "ghost"}
-                    size="sm"
-                    className="h-7 text-xs px-2.5 shrink-0 whitespace-nowrap cursor-pointer"
-                    onClick={() => setFilterType(opt.value)}
-                  >
-                    {cleanLabel}
-                  </Button>
-                );
-              })}
+            <div className="w-full sm:w-64">
+              <SearchSelect
+                placeholder="Lọc theo loại hình ảnh..."
+                options={[
+                  { value: "all", label: `Tất cả album (${images.length})` },
+                  ...loaiAnhOptions.map((opt) => {
+                    const count = images.filter(
+                      (img) => String(img.loaiAnhID) === opt.value
+                    ).length;
+                    return {
+                      value: opt.value,
+                      label: `${opt.label} (${count})`,
+                    };
+                  }),
+                ]}
+                value={filterType}
+                onChange={(val) => setFilterType(String(val || "all"))}
+                isClear={false}
+                height={8}
+              />
             </div>
           </div>
 
@@ -400,10 +394,10 @@ export function SerialImagesSlideOver({
                     {/* Thumbnail Image */}
                     <div
                       className="relative aspect-video bg-muted/30 cursor-pointer overflow-hidden"
-                      onClick={() => setPreviewModalImg(img.duongDanAnh)}
+                      onClick={() => setPreviewModalImg(imgUrl)}
                     >
                       <Image
-                        src={img.duongDanAnh}
+                        src={imgUrl}
                         alt={imgUrl || "Ảnh xe"}
                         fill
                         unoptimized
@@ -446,7 +440,7 @@ export function SerialImagesSlideOver({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleCopyLink(img.duongDanAnh, img.id)}
+                          onClick={() => handleCopyLink(imgUrl, img.id)}
                           className="h-7 text-[11px] flex-1 gap-1"
                         >
                           {copiedId === img.id ? (
@@ -486,7 +480,7 @@ export function SerialImagesSlideOver({
       {previewModalImg && (
         <div
           onClick={() => setPreviewModalImg(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-100 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
         >
           <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex flex-col items-center justify-center">
             <button
