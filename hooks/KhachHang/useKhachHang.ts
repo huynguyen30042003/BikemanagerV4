@@ -244,8 +244,8 @@ export function useKhachHang(initialTinhId?: string | number) {
       DienThoai: "",
       HopThu: "",
       DiaChi: "",
-      TinhID: null,
-      XaID: null,
+      TinhID: 20,
+      XaID: 1819,
       GhiChu: "",
       TrangThai: true,
 
@@ -254,8 +254,8 @@ export function useKhachHang(initialTinhId?: string | number) {
       NoiCapMaDinhDanh: "",
       NgaySinh: "",
       GioiTinhID: null,
-      QuocTichID: null,
-      DanTocID: null,
+      QuocTichID: 10,
+      DanTocID: 8,
       anhChanDung: null,
 
       MaSoThue: "",
