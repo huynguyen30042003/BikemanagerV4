@@ -21,17 +21,16 @@ const STATUS_COLORS = [
   "#f97316", // orange
 ];
 
-export const DashboardOrderStatusCard: React.FC<DashboardOrderStatusCardProps> = ({
-  dashboard,
-  kpi,
-}) => {
+export const DashboardOrderStatusCard: React.FC<
+  DashboardOrderStatusCardProps
+> = ({ dashboard, kpi }) => {
   const hasStatusList =
     dashboard?.coCauTrangThaiDonHang &&
     dashboard.coCauTrangThaiDonHang.length > 0;
 
   const latestMonthData =
     dashboard?.doanhThuTheoThang && dashboard.doanhThuTheoThang.length > 0
-      ? dashboard.doanhThuTheoThang[0]
+      ? dashboard.doanhThuTheoThang[dashboard.doanhThuTheoThang.length - 2]
       : null;
 
   return (
@@ -42,7 +41,9 @@ export const DashboardOrderStatusCard: React.FC<DashboardOrderStatusCardProps> =
             <PieChart className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 shrink-0" />
             <span>Cơ Cấu Trạng Thái Đơn Hàng</span>
           </h2>
-          <span className="text-[11px] sm:text-xs text-muted-foreground">Phân bổ</span>
+          <span className="text-[11px] sm:text-xs text-muted-foreground">
+            Phân bổ
+          </span>
         </div>
 
         {/* List trạng thái */}
@@ -110,7 +111,9 @@ export const DashboardOrderStatusCard: React.FC<DashboardOrderStatusCardProps> =
               </div>
             </div>
             <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20">
-              <div className="text-[10px] text-muted-foreground">Chi phí nhập</div>
+              <div className="text-[10px] text-muted-foreground">
+                Chi phí nhập
+              </div>
               <div className="text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400 mt-0.5 truncate">
                 {formatCurrency(latestMonthData.chiPhiNhap)}
               </div>

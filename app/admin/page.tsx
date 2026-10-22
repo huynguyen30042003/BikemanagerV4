@@ -145,6 +145,7 @@ export default function AdminDashboardPage() {
           dashboard={dashboard}
           kpi={dashboard?.kpi}
           maxDayChartValue={maxDayChartValue}
+          timeRange={timeRange}
         />
         <DashboardOrderStatusCard
           dashboard={dashboard}
