@@ -42,6 +42,8 @@ interface OpeningStockFormCardProps {
   onSelectKhoId?: (khoId: string) => void;
   presetVariantId?: string;
   onSuccessNhapTon?: (res: KHO_TonKho_NhapTonDauKy_Response) => void;
+  soLuongToiThieu: number;
+  setSoLuongToiThieu: (soLuongToiThieu: number) => void;
 }
 
 const QUICK_LOCATIONS = [
@@ -70,13 +72,14 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
   onSelectKhoId,
   presetVariantId,
   onSuccessNhapTon,
+  soLuongToiThieu,
+  setSoLuongToiThieu,
 }) => {
   // Form state
   const [khoId, setKhoId] = useState<string>(selectedKhoId || "");
   const [bienTheId, setBienTheId] = useState<string>(presetVariantId || "");
   const [soLuong, setSoLuong] = useState<number>(1);
   const [donGiaVon, setDonGiaVon] = useState<number>(0);
-  const [soLuongToiThieu, setSoLuongToiThieu] = useState<number>(5);
   const [viTriLuuTru, setViTriLuuTru] = useState<string>("");
   const [ghiChu, setGhiChu] = useState<string>("");
   const [trangThaiSerialId] = useState<number>(59); // Mặc định 59: Trong kho / Tồn kho

@@ -27,7 +27,11 @@ interface OpeningStockReferenceTableProps {
   onKhoFilterChange: (khoId: string) => void;
   khoOptions: Array<{ value: string; label: string }>;
   isLoadingKhos: boolean;
-  onSelectVariant: (bienTheId: string, khoId?: string) => void;
+  onSelectVariant: (
+    bienTheId: string,
+    khoId?: string,
+    soLuongToiThieu?: number,
+  ) => void;
 }
 
 function formatCurrency(val: number | null | undefined): string {
@@ -163,7 +167,13 @@ export const OpeningStockReferenceTable: React.FC<
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => onSelectVariant(row.bienTheSanPhamID, row.khoID)}
+          onClick={() =>
+            onSelectVariant(
+              row.bienTheSanPhamID,
+              row.khoID,
+              row.soLuongToiThieu || 5,
+            )
+          }
           className="h-7 px-2.5 text-xs text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer font-medium"
         >
           <Plus className="w-3.5 h-3.5 mr-1" />
@@ -183,7 +193,8 @@ export const OpeningStockReferenceTable: React.FC<
             Tra Cứu Tồn Kho Hiện Tại Để Đối Chiếu
           </h3>
           <p className="text-xs text-muted-foreground">
-            Xem số lượng tồn hiện có trong kho trước khi thực hiện khởi tạo số dư đầu kỳ
+            Xem số lượng tồn hiện có trong kho trước khi thực hiện khởi tạo số
+            dư đầu kỳ
           </p>
         </div>
 
@@ -244,7 +255,8 @@ export const OpeningStockReferenceTable: React.FC<
             Chưa có dữ liệu tồn kho nào
           </p>
           <p className="text-xs text-muted-foreground max-w-sm mt-0.5">
-            Kho hàng được chọn hiện chưa có dữ liệu tồn. Bạn có thể sử dụng biểu mẫu phía trên để nhập số dư đầu kỳ ngay!
+            Kho hàng được chọn hiện chưa có dữ liệu tồn. Bạn có thể sử dụng biểu
+            mẫu phía trên để nhập số dư đầu kỳ ngay!
           </p>
         </div>
       ) : (

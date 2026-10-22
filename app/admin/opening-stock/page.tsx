@@ -16,6 +16,7 @@ import {
 function OpeningStockContent() {
   const [selectedKhoId, setSelectedKhoId] = useState<string>("");
   const [presetVariantId, setPresetVariantId] = useState<string>("");
+  const [soLuongToiThieu, setSoLuongToiThieu] = useState<number>(5);
 
   // 1. Lấy danh sách kho hàng
   const { data: dataKhos, isLoading: isLoadingKhos } = useGetKho({
@@ -26,11 +27,18 @@ function OpeningStockContent() {
 
   const khoOptions = useMemo(() => {
     const list = dataKhos?.data ?? dataKhos?.items ?? [];
-    return list.map((k: { khoID: string; tenKho: string; maKho: string; diaDiemID?: string }) => ({
-      value: k.khoID,
-      label: `${k.tenKho} [${k.maKho}]`,
-      diaDiemID: k.diaDiemID,
-    }));
+    return list.map(
+      (k: {
+        khoID: string;
+        tenKho: string;
+        maKho: string;
+        diaDiemID?: string;
+      }) => ({
+        value: k.khoID,
+        label: `${k.tenKho} [${k.maKho}]`,
+        diaDiemID: k.diaDiemID,
+      }),
+    );
   }, [dataKhos]);
 
   // 2. Lấy danh sách biến thể xe / sản phẩm
@@ -48,9 +56,14 @@ function OpeningStockContent() {
   // 3. Lấy KPI tổng quan tồn kho
   const { data: tonKhoKpi, isLoading: isLoadingKPI } = useGetTonKhoKPI();
 
-  const handleSelectVariantFromTable = (bienTheId: string, khoId?: string) => {
+  const handleSelectVariantFromTable = (
+    bienTheId: string,
+    khoId?: string,
+    soLuongToiThieu?: number,
+  ) => {
     setPresetVariantId(bienTheId);
     if (khoId) setSelectedKhoId(khoId);
+    if (soLuongToiThieu) setSoLuongToiThieu(soLuongToiThieu);
 
     // Scroll smoothly to form
     window.scrollTo({ top: 120, behavior: "smooth" });
@@ -78,7 +91,8 @@ function OpeningStockContent() {
                   Khởi Tạo Tồn Kho Đầu Kỳ
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Thiết lập số dư ban đầu, cập nhật số lượng tồn thực tế, giá vốn và danh sách số Serial/Khung cho các kho bãi
+                  Thiết lập số dư ban đầu, cập nhật số lượng tồn thực tế, giá
+                  vốn và danh sách số Serial/Khung cho các kho bãi
                 </p>
               </div>
             </div>
@@ -107,6 +121,8 @@ function OpeningStockContent() {
         selectedKhoId={selectedKhoId}
         onSelectKhoId={setSelectedKhoId}
         presetVariantId={presetVariantId}
+        soLuongToiThieu={soLuongToiThieu}
+        setSoLuongToiThieu={setSoLuongToiThieu}
       />
 
       {/* 4. Bảng Tra Cứu Tồn Kho Hiện Tại Để Đối Chiếu */}
