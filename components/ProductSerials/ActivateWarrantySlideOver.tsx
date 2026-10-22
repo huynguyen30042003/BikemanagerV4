@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { useKichHoatBaoHanh, useUploadSoSerialHinhAnh } from "@/hooks/SoSerial/useSoSerialApi";
+import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
 import { KichHoatBaoHanhPayload, SP_SoSerial } from "@/types/soSerial";
 
 interface ActivateWarrantySlideOverProps {
@@ -51,6 +52,7 @@ export const ActivateWarrantySlideOver: React.FC<
 
   const warrantyMutation = useKichHoatBaoHanh();
   const uploadMutation = useUploadSoSerialHinhAnh();
+  const { options: imageTypeOptions } = useDanhMucChiTietLookup(25);
 
   useEffect(() => {
     if (open && serial) {
@@ -97,9 +99,14 @@ export const ActivateWarrantySlideOver: React.FC<
       // Nếu có chọn ảnh bàn giao, upload ngay
       if (selectedFiles.length > 0 && serial?.soSerialID) {
         try {
+          const banGiaoOption = imageTypeOptions.find((o) =>
+            o.label.toLowerCase().includes("bàn giao")
+          );
+          const loaiAnhIdToSave = banGiaoOption ? String(banGiaoOption.value) : "129";
+
           const uploadFd = new FormData();
           uploadFd.append("soSerialID", serial.soSerialID);
-          uploadFd.append("loaiAnhID", "2"); // 2: Bàn giao xe
+          uploadFd.append("loaiAnhID", loaiAnhIdToSave);
           uploadFd.append("ghiChu", "Ảnh chụp bàn giao xe và kích hoạt bảo hành");
           selectedFiles.forEach((file) => {
             uploadFd.append("files", file);

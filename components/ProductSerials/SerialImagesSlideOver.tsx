@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import Image from "next/image";
 import {
   Camera,
@@ -12,7 +12,6 @@ import {
   FileImage,
   Layers,
   Sparkles,
-  AlertCircle,
   X,
   RefreshCw,
 } from "lucide-react";
@@ -22,12 +21,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SearchSelect } from "@/components/ui/selectSearch";
-import { SP_SoSerial, SP_SoSerial_HinhAnh } from "@/types/soSerial";
+import { SP_SoSerial } from "@/types/soSerial";
 import {
   useGetSoSerialHinhAnh,
   useUploadSoSerialHinhAnh,
   useDeleteSoSerialHinhAnh,
 } from "@/hooks/SoSerial/useSoSerialApi";
+import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
+import { getImageUrl } from "@/shared/constants/apiConstants";
 
 interface SerialImagesSlideOverProps {
   open: boolean;
@@ -35,13 +36,7 @@ interface SerialImagesSlideOverProps {
   serial: Partial<SP_SoSerial> | null;
 }
 
-const LOAI_ANH_OPTIONS = [
-  { value: "1", label: "🔢 Số Khung / Số Máy / Mã Pin" },
-  { value: "2", label: "🤝 Bàn giao xe cho khách hàng" },
-  { value: "3", label: "🔍 Ngoại quan xe lúc bán (Trầy xước/Odo)" },
-  { value: "4", label: "⚠️ Ảnh lỗi tiếp nhận bảo hành" },
-  { value: "5", label: "✨ Sau sửa chữa / Thay thế hoàn thiện" },
-];
+const DANH_MUC_LOAI_ANH_ID = 25;
 
 export function SerialImagesSlideOver({
   open,
@@ -53,7 +48,42 @@ export function SerialImagesSlideOver({
   const uploadMutation = useUploadSoSerialHinhAnh();
   const deleteMutation = useDeleteSoSerialHinhAnh(serialId);
 
-  const [selectedLoaiAnh, setSelectedLoaiAnh] = useState("2");
+  // Truy vấn động danh mục chi tiết loại hình ảnh từ DM_DanhMucChiTiet (DanhMucID = 25)
+  const {
+    options: loaiAnhLookupOptions,
+    getBadge: getLoaiAnhBadge,
+    isLoading: isLoadingLoaiAnh,
+  } = useDanhMucChiTietLookup(DANH_MUC_LOAI_ANH_ID);
+
+  const loaiAnhOptions = useMemo(() => {
+    if (loaiAnhLookupOptions.length > 0) {
+      return loaiAnhLookupOptions.map((o) => ({
+        value: String(o.value),
+        label: o.label,
+      }));
+    }
+    return []
+  }, [loaiAnhLookupOptions]);
+
+  const defaultLoaiAnh = useMemo(() => {
+    const banGiao = loaiAnhOptions.find((o) =>
+      o.label.toLowerCase().includes("bàn giao")
+    );
+    return banGiao
+      ? String(banGiao.value)
+      : loaiAnhOptions[0]?.value
+        ? String(loaiAnhOptions[0].value)
+        : "129";
+  }, [loaiAnhOptions]);
+
+  const [selectedLoaiAnh, setSelectedLoaiAnh] = useState(defaultLoaiAnh);
+
+  useEffect(() => {
+    if (defaultLoaiAnh) {
+      setSelectedLoaiAnh(defaultLoaiAnh);
+    }
+  }, [defaultLoaiAnh]);
+
   const [ghiChu, setGhiChu] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -139,19 +169,13 @@ export function SerialImagesSlideOver({
   });
 
   const getLoaiBadge = (loaiId: number) => {
-    switch (loaiId) {
-      case 1:
-        return { label: "Số khung / Pin", color: "bg-blue-500/10 text-blue-600 border-blue-200" };
-      case 2:
-        return { label: "Bàn giao xe", color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" };
-      case 3:
-        return { label: "Ngoại quan lúc bán", color: "bg-amber-500/10 text-amber-600 border-amber-200" };
-      case 4:
-        return { label: "Lỗi bảo hành", color: "bg-rose-500/10 text-rose-600 border-rose-200" };
-      case 5:
-        return { label: "Sau sửa chữa", color: "bg-purple-500/10 text-purple-600 border-purple-200" };
-      default:
-        return { label: "Ảnh xe", color: "bg-muted text-foreground border-border" };
+    const dynamicBadge = getLoaiAnhBadge(loaiId);
+    if (
+      dynamicBadge &&
+      !dynamicBadge.label.startsWith("Trạng thái #") &&
+      dynamicBadge.label !== "Chưa thiết lập"
+    ) {
+      return { label: dynamicBadge.label, color: dynamicBadge.className };
     }
   };
 
@@ -200,7 +224,7 @@ export function SerialImagesSlideOver({
                   Phân loại hình ảnh <span className="text-destructive">*</span>
                 </label>
                 <SearchSelect
-                  options={LOAI_ANH_OPTIONS}
+                  options={loaiAnhOptions}
                   value={selectedLoaiAnh}
                   onChange={(val) => setSelectedLoaiAnh(String(val))}
                   placeholder="Chọn loại hình ảnh..."
@@ -317,39 +341,32 @@ export function SerialImagesSlideOver({
               </h3>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 max-w-[65%] scrollbar-none">
               <Button
                 variant={filterType === "all" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 text-xs px-2.5"
+                className="h-7 text-xs px-2.5 shrink-0 cursor-pointer"
                 onClick={() => setFilterType("all")}
               >
                 Tất cả
               </Button>
-              <Button
-                variant={filterType === "2" ? "default" : "ghost"}
-                size="sm"
-                className="h-7 text-xs px-2.5"
-                onClick={() => setFilterType("2")}
-              >
-                Bàn giao
-              </Button>
-              <Button
-                variant={filterType === "1" ? "default" : "ghost"}
-                size="sm"
-                className="h-7 text-xs px-2.5"
-                onClick={() => setFilterType("1")}
-              >
-                Số khung/Pin
-              </Button>
-              <Button
-                variant={filterType === "4" ? "default" : "ghost"}
-                size="sm"
-                className="h-7 text-xs px-2.5"
-                onClick={() => setFilterType("4")}
-              >
-                Bảo hành
-              </Button>
+              {loaiAnhOptions.map((opt) => {
+                const cleanLabel = opt.label
+                  .split("(")[0]
+                  .replace(/^[^\p{L}\p{N}]+/u, "")
+                  .trim();
+                return (
+                  <Button
+                    key={opt.value}
+                    variant={filterType === opt.value ? "default" : "ghost"}
+                    size="sm"
+                    className="h-7 text-xs px-2.5 shrink-0 whitespace-nowrap cursor-pointer"
+                    onClick={() => setFilterType(opt.value)}
+                  >
+                    {cleanLabel}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 
@@ -373,6 +390,8 @@ export function SerialImagesSlideOver({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {filteredImages.map((img) => {
                 const badge = getLoaiBadge(img.loaiAnhID);
+                const imgUrl = getImageUrl(img.duongDanAnh);
+
                 return (
                   <div
                     key={img.id}
@@ -385,7 +404,7 @@ export function SerialImagesSlideOver({
                     >
                       <Image
                         src={img.duongDanAnh}
-                        alt={img.tieuDe || "Ảnh xe"}
+                        alt={imgUrl || "Ảnh xe"}
                         fill
                         unoptimized
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -393,9 +412,9 @@ export function SerialImagesSlideOver({
                       <div className="absolute top-2 left-2">
                         <Badge
                           variant="outline"
-                          className={`text-[10px] font-medium border shadow-xs backdrop-blur-xs ${badge.color}`}
+                          className={`text-[10px] font-medium border shadow-xs backdrop-blur-xs ${badge?.color}`}
                         >
-                          {badge.label}
+                          {badge?.label}
                         </Badge>
                       </div>
 
