@@ -53,6 +53,7 @@ export interface CreateBienThePayload {
 export interface UpdateBienThePayload extends CreateBienThePayload {
   BienTheSanPhamID: string;
   XoaFile?: boolean;
+  HinhAnh?: string;
 }
 
 export interface BienTheSanPhamKPI {

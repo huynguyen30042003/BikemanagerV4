@@ -29,10 +29,10 @@ const getAuthFormDataHeaders = () => {
  * POST /api/BienTheSanPhamApi/Gets
  */
 export const getBienTheSanPhamApi = async (
-  filter: BienTheFilter = { PageIndex: 1, PageSize: 50, TuKhoa: "" }
+  filter: BienTheFilter = { PageIndex: 1, PageSize: 50, TuKhoa: "" },
 ) => {
   const response = await api.post(
-    `${APP_URL}/BienTheSanPhamApi/Gets`,  
+    `${APP_URL}/BienTheSanPhamApi/Gets`,
     {
       QuanLyTheoSerial: filter.QuanLyTheoSerial ?? null,
       SanPhamID: filter.SanPhamID ?? null,
@@ -48,7 +48,7 @@ export const getBienTheSanPhamApi = async (
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -65,7 +65,7 @@ export const getBienTheByIdApi = async (id: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -75,7 +75,10 @@ export const getBienTheByIdApi = async (id: string) => {
  * Tra cứu theo Barcode hoặc SKU
  * POST /api/BienTheSanPhamApi/GetByBarcodeOrSKU
  */
-export const getBienTheByBarcodeOrSKUApi = async (tuKhoa: string, khoId?: string | null) => {
+export const getBienTheByBarcodeOrSKUApi = async (
+  tuKhoa: string,
+  khoId?: string | null,
+) => {
   const response = await api.post(
     `${APP_URL}/BienTheSanPhamApi/GetByBarcodeOrSKU`,
     {
@@ -85,7 +88,7 @@ export const getBienTheByBarcodeOrSKUApi = async (tuKhoa: string, khoId?: string
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -102,8 +105,10 @@ export const createBienTheApi = async (payload: CreateBienThePayload) => {
   if (payload.MaVach) formData.append("MaVach", payload.MaVach);
   formData.append("TenBienThe", payload.TenBienThe);
   if (payload.MauSac) formData.append("MauSac", payload.MauSac);
-  if (payload.DungLuongPin) formData.append("DungLuongPin", payload.DungLuongPin);
-  if (payload.CongSuatDongCo) formData.append("CongSuatDongCo", payload.CongSuatDongCo);
+  if (payload.DungLuongPin)
+    formData.append("DungLuongPin", payload.DungLuongPin);
+  if (payload.CongSuatDongCo)
+    formData.append("CongSuatDongCo", payload.CongSuatDongCo);
   formData.append("GiaNhap", String(payload.GiaNhap ?? 0));
   formData.append("GiaBan", String(payload.GiaBan ?? 0));
   formData.append("GiaBanSi", String(payload.GiaBanSi ?? 0));
@@ -121,7 +126,7 @@ export const createBienTheApi = async (payload: CreateBienThePayload) => {
     {
       headers: getAuthFormDataHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -139,15 +144,19 @@ export const updateBienTheApi = async (payload: UpdateBienThePayload) => {
   if (payload.MaVach) formData.append("MaVach", payload.MaVach);
   formData.append("TenBienThe", payload.TenBienThe);
   if (payload.MauSac) formData.append("MauSac", payload.MauSac);
-  if (payload.DungLuongPin) formData.append("DungLuongPin", payload.DungLuongPin);
-  if (payload.CongSuatDongCo) formData.append("CongSuatDongCo", payload.CongSuatDongCo);
+  if (payload.DungLuongPin)
+    formData.append("DungLuongPin", payload.DungLuongPin);
+  if (payload.CongSuatDongCo)
+    formData.append("CongSuatDongCo", payload.CongSuatDongCo);
   formData.append("GiaNhap", String(payload.GiaNhap ?? 0));
   formData.append("GiaBan", String(payload.GiaBan ?? 0));
   formData.append("GiaBanSi", String(payload.GiaBanSi ?? 0));
   formData.append("SoThangBaoHanh", String(payload.SoThangBaoHanh ?? 12));
   formData.append("QuanLyTheoSerial", String(payload.QuanLyTheoSerial));
   formData.append("TrangThai", String(payload.TrangThai));
-  if (payload.XoaFile != null) formData.append("XoaFile", String(payload.XoaFile));
+  formData.append("HinhAnh", String(payload.HinhAnh));
+  if (payload.XoaFile != null)
+    formData.append("XoaFile", String(payload.XoaFile));
 
   if (payload.file) {
     formData.append("file", payload.file);
@@ -159,7 +168,7 @@ export const updateBienTheApi = async (payload: UpdateBienThePayload) => {
     {
       headers: getAuthFormDataHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -176,7 +185,7 @@ export const deleteBienTheApi = async (id: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -200,7 +209,7 @@ export const getHinhAnhsApi = async (filter: HinhAnhFilter) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -213,7 +222,8 @@ export const getHinhAnhsApi = async (filter: HinhAnhFilter) => {
 export const addHinhAnhApi = async (payload: CreateHinhAnhPayload) => {
   const formData = new FormData();
   formData.append("SanPhamID", payload.SanPhamID);
-  if (payload.BienTheSanPhamID) formData.append("BienTheSanPhamID", payload.BienTheSanPhamID);
+  if (payload.BienTheSanPhamID)
+    formData.append("BienTheSanPhamID", payload.BienTheSanPhamID);
   if (payload.TieuDe) formData.append("TieuDe", payload.TieuDe);
   formData.append("ThuTuSapXep", String(payload.ThuTuSapXep ?? 1));
   formData.append("LaAnhDaiDien", String(payload.LaAnhDaiDien));
@@ -225,7 +235,7 @@ export const addHinhAnhApi = async (payload: CreateHinhAnhPayload) => {
     {
       headers: getAuthFormDataHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -242,7 +252,7 @@ export const deleteHinhAnhApi = async (hinhAnhId: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -259,7 +269,7 @@ export const getBienTheSanPhamKPIApi = async () => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -276,9 +286,8 @@ export const getHinhAnhSanPhamKPIApi = async () => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
 };
-

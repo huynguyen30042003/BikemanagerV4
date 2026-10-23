@@ -11,7 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { useUpdateBienThe } from "@/hooks/BienTheSanPham/useBienTheSanPhamApi";
-import { SP_BienTheSanPham, UpdateBienThePayload } from "@/types/bienTheSanPham";
+import {
+  SP_BienTheSanPham,
+  UpdateBienThePayload,
+} from "@/types/bienTheSanPham";
 import { getImageUrl } from "@/shared/constants/apiConstants";
 
 const bienTheSchema = z.object({
@@ -82,6 +85,7 @@ export const UpdateProductVariantSlideOver: React.FC<
         TrangThai: variant.trangThai,
         XoaFile: false,
         file: null,
+        HinhAnh: variant?.hinhAnh || "",
       });
       setImagePreview(null);
       setErrors({});
@@ -93,7 +97,7 @@ export const UpdateProductVariantSlideOver: React.FC<
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, file, XoaFile: false }));
+      setFormData((prev) => ({ ...prev, file, XoaFile: true }));
       setImagePreview(URL.createObjectURL(file));
     }
   };

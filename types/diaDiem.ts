@@ -56,6 +56,7 @@ export interface UpdateDiaDiemPayload {
   TrangThai: boolean;
   XoaFile?: boolean;
   file?: File | null;
+  AnhDaiDien?: string;
 }
 
 export interface DD_NavTabs {

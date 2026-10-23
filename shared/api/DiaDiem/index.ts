@@ -9,7 +9,6 @@ import {
   DiaDiemKPI,
 } from "@/types/diaDiem";
 
-
 const getAuthHeaders = () => {
   const token = getAccessToken();
   return {
@@ -31,7 +30,13 @@ const getAuthFormDataHeaders = () => {
  * POST /api/DiaDiemApi/Gets
  */
 export const getDiaDiemApi = async (
-  filter: DiaDiemFilter = { PageIndex: 1, PageSize: 20, TuKhoa: "", TrangThai: null, TinhID: null }
+  filter: DiaDiemFilter = {
+    PageIndex: 1,
+    PageSize: 20,
+    TuKhoa: "",
+    TrangThai: null,
+    TinhID: null,
+  },
 ) => {
   const response = await api.post(
     `${APP_URL}/DiaDiemApi/Gets`,
@@ -45,7 +50,7 @@ export const getDiaDiemApi = async (
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -62,7 +67,7 @@ export const getDiaDiemByIdApi = async (id: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -74,7 +79,8 @@ export const getDiaDiemByIdApi = async (id: string) => {
  */
 export const createDiaDiemApi = async (payload: CreateDiaDiemPayload) => {
   const formData = new FormData();
-  if (payload.DiaDiemCapChaID) formData.append("DiaDiemCapChaID", payload.DiaDiemCapChaID);
+  if (payload.DiaDiemCapChaID)
+    formData.append("DiaDiemCapChaID", payload.DiaDiemCapChaID);
   formData.append("LoaiDiaDiemID", String(payload.LoaiDiaDiemID));
   formData.append("TenDiaDiem", payload.TenDiaDiem);
   if (payload.MoTa) formData.append("MoTa", payload.MoTa);
@@ -89,14 +95,10 @@ export const createDiaDiemApi = async (payload: CreateDiaDiemPayload) => {
     formData.append("file", payload.file);
   }
 
-  const response = await api.post(
-    `${APP_URL}/DiaDiemApi/Add`,
-    formData,
-    {
-      headers: getAuthFormDataHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.post(`${APP_URL}/DiaDiemApi/Add`, formData, {
+    headers: getAuthFormDataHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -108,7 +110,8 @@ export const createDiaDiemApi = async (payload: CreateDiaDiemPayload) => {
 export const updateDiaDiemApi = async (payload: UpdateDiaDiemPayload) => {
   const formData = new FormData();
   formData.append("DiaDiemID", payload.DiaDiemID);
-  if (payload.DiaDiemCapChaID) formData.append("DiaDiemCapChaID", payload.DiaDiemCapChaID);
+  if (payload.DiaDiemCapChaID)
+    formData.append("DiaDiemCapChaID", payload.DiaDiemCapChaID);
   formData.append("LoaiDiaDiemID", String(payload.LoaiDiaDiemID));
   formData.append("TenDiaDiem", payload.TenDiaDiem);
   if (payload.MoTa) formData.append("MoTa", payload.MoTa);
@@ -118,20 +121,17 @@ export const updateDiaDiemApi = async (payload: UpdateDiaDiemPayload) => {
   if (payload.ViDo != null) formData.append("ViDo", String(payload.ViDo));
   formData.append("DiaChiSo", payload.DiaChiSo);
   formData.append("TrangThai", String(payload.TrangThai));
+  formData.append("AnhDaiDien", String(payload.AnhDaiDien));
   formData.append("XoaFile", String(Boolean(payload.XoaFile)));
 
   if (payload.file) {
     formData.append("file", payload.file);
   }
 
-  const response = await api.post(
-    `${APP_URL}/DiaDiemApi/Edit`,
-    formData,
-    {
-      headers: getAuthFormDataHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.post(`${APP_URL}/DiaDiemApi/Edit`, formData, {
+    headers: getAuthFormDataHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -141,14 +141,11 @@ export const updateDiaDiemApi = async (payload: UpdateDiaDiemPayload) => {
  * DELETE /api/DiaDiemApi/Delete?DiaDiemID={id}
  */
 export const deleteDiaDiemApi = async (diaDiemId: string) => {
-  const response = await api.delete(
-    `${APP_URL}/DiaDiemApi/Delete`,
-    {
-      params: { DiaDiemID: diaDiemId },
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.delete(`${APP_URL}/DiaDiemApi/Delete`, {
+    params: { DiaDiemID: diaDiemId },
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -197,7 +194,7 @@ export const getDiaDiemKPIApi = async (): Promise<DiaDiemKPI> => {
           {
             headers: getAuthHeaders(),
             withCredentials: true,
-          }
+          },
         );
         if (response?.data?.data) {
           return response.data.data;
@@ -213,4 +210,3 @@ export const getDiaDiemKPIApi = async (): Promise<DiaDiemKPI> => {
 
   throw new Error("Không thể tải dữ liệu KPI địa điểm");
 };
-

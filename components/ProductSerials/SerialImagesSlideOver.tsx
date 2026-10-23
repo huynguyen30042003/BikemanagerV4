@@ -164,6 +164,7 @@ export function SerialImagesSlideOver({
   const handleSubmitDelete = async () => {
     if (!!selectDelete?.id) {
       await deleteMutation.mutateAsync(selectDelete?.id);
+      setOpenDelete(false);
       setSelectDelete(undefined);
     }
   };

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
-import { Store, RefreshCw, AlertCircle, Upload, X } from "lucide-react";
+import { Store, RefreshCw, AlertCircle, Upload, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,9 +54,10 @@ export function CreateDiaDiemSlideOver({
     file: null,
   });
 
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Reset form khi modal mở
+  // Reset form khi modal đóng/mở
   useEffect(() => {
     if (open) {
       setFormData({
@@ -72,11 +74,55 @@ export function CreateDiaDiemSlideOver({
         file: null,
       });
       setErrors({});
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    } else {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
     }
   }, [open, defaultTinhId]);
+
+  // Thu hồi bộ nhớ blob URL khi unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    if (file) {
+      setPreviewUrl(URL.createObjectURL(file));
+      setFormData((prev) => ({ ...prev, file }));
+    } else {
+      setPreviewUrl(null);
+      setFormData((prev) => ({ ...prev, file: null }));
+    }
+  };
+
+  const handleRemoveFile = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    setFormData((prev) => ({ ...prev, file: null }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   // Lấy danh sách xã/phường phụ thuộc theo TỉnhID đã chọn trong form
   const { data: dataXa, isLoading: isLoadingXa } = useGetDiaPhuongCapXa({
@@ -336,38 +382,77 @@ export function CreateDiaDiemSlideOver({
             ref={fileInputRef}
             accept="image/*"
             className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0] || null;
-              setFormData((prev) => ({ ...prev, file }));
-            }}
+            onChange={handleFileChange}
           />
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-border/80 rounded-xl p-4 text-center hover:bg-muted/30 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5 relative"
-          >
-            <Upload className="w-5 h-5 text-muted-foreground" />
-            <span className="text-xs font-medium text-foreground">
-              {formData.file
-                ? formData.file.name
-                : "Nhấn để chọn ảnh đại diện showroom (PNG, JPG)"}
-            </span>
-            <span className="text-[11px] text-muted-foreground">Kích thước tối đa 5MB</span>
-            {formData.file && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs text-red-500 hover:text-red-600 mt-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setFormData((prev) => ({ ...prev, file: null }));
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-              >
-                <X className="w-3.5 h-3.5 mr-1" /> Bỏ chọn ảnh
-              </Button>
-            )}
-          </div>
+
+          {previewUrl ? (
+            <div className="relative w-full h-44 rounded-xl overflow-hidden border border-border/80 bg-muted/40 group shadow-2xs">
+              <Image
+                src={previewUrl}
+                alt="Ảnh xem trước showroom"
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-8 text-xs cursor-pointer shadow bg-white/95 hover:bg-white text-zinc-900"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="w-3.5 h-3.5 mr-1" /> Đổi ảnh khác
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="h-8 text-xs cursor-pointer shadow"
+                  onClick={handleRemoveFile}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Bỏ chọn ảnh
+                </Button>
+              </div>
+
+              {/* Tag thông tin file ở góc dưới */}
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                <div className="px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-xs text-[11px] text-white flex items-center gap-1.5 max-w-[80%]">
+                  <span className="truncate">{formData.file?.name}</span>
+                  {formData.file && (
+                    <span className="text-zinc-300 shrink-0">
+                      ({(formData.file.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="pointer-events-auto p-1.5 rounded-md bg-black/70 hover:bg-red-600 text-white transition-colors cursor-pointer sm:hidden"
+                  title="Bỏ chọn ảnh"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-border/80 rounded-xl p-5 text-center hover:bg-muted/30 hover:border-primary/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2"
+            >
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                <Upload className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-medium text-foreground">
+                  Nhấn để chọn ảnh đại diện showroom (PNG, JPG, WebP)
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  Kích thước tối đa 5MB • Khuyến nghị ảnh phong cảnh 16:9
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="col-span-2 flex flex-col gap-1.5">

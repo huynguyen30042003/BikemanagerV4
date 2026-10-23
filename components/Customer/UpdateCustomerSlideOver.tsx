@@ -187,18 +187,6 @@ export function UpdateCustomerSlideOver({
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center overflow-hidden shrink-0">
-                    {/* {avatarPreviewUpdate ? (
-                      <Image
-                        src={avatarPreviewUpdate}
-                        alt="Avatar preview"
-                        width={56}
-                        height={56}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <User className="w-6 h-6 text-muted-foreground/60" />
-                    )} */}
                     {!!avatarPreviewUpdate ? (
                       <Image
                         src={avatarPreviewUpdate}
