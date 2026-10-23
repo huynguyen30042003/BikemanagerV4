@@ -2,7 +2,17 @@
 
 import React from "react";
 import Image from "next/image";
-import { Users, User, Building2, RefreshCw, Upload, AlertCircle, CreditCard, Briefcase } from "lucide-react";
+import {
+  Users,
+  User,
+  Building2,
+  RefreshCw,
+  Upload,
+  AlertCircle,
+  CreditCard,
+  Briefcase,
+  Package,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -142,8 +152,7 @@ export function CreateCustomerSlideOver({
 
           <div className="col-span-1 flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
-              Số điện thoại (dùng Zalo){" "}
-              <span className="text-red-500">*</span>
+              Số điện thoại (dùng Zalo) <span className="text-red-500">*</span>
             </label>
             <Input
               value={dataAdd.DienThoai}

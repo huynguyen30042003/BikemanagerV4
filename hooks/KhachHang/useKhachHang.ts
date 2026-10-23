@@ -44,7 +44,9 @@ export function useKhachHang(initialTinhId?: string | number) {
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [loaiFilter, setLoaiFilter] = useState<string>("all"); // "all", "1", "2"
-  const [tinhFilter, setTinhFilter] = useState<string | number>(initialTinhId ?? "");
+  const [tinhFilter, setTinhFilter] = useState<string | number>(
+    initialTinhId ?? "",
+  );
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -163,11 +165,12 @@ export function useKhachHang(initialTinhId?: string | number) {
 
   // Query xã cho form Edit
   const updateTinhId = dataUpdate.TinhID;
-  const { data: dataXaUpdate, isLoading: isLoadingXaUpdate } = useGetDiaPhuongCapXa({
-    TinhID: updateTinhId ? Number(updateTinhId) : undefined,
-    PageIndex: 1,
-    PageSize: 200,
-  });
+  const { data: dataXaUpdate, isLoading: isLoadingXaUpdate } =
+    useGetDiaPhuongCapXa({
+      TinhID: updateTinhId ? Number(updateTinhId) : undefined,
+      PageIndex: 1,
+      PageSize: 200,
+    });
 
   const communesUpdate: DM_DiaPhuongCapXa[] = useMemo(() => {
     return dataXaUpdate?.data ?? dataXaUpdate?.items ?? [];
@@ -287,13 +290,15 @@ export function useKhachHang(initialTinhId?: string | number) {
       XoaAnhBieuTrung: false,
 
       MaDinhDanh: item.maDinhDanh || "",
-      NgayCapMaDinhDanh: item.ngayCapMaDinhDanh ? item.ngayCapMaDinhDanh.substring(0, 10) : "",
+      NgayCapMaDinhDanh: item.ngayCapMaDinhDanh
+        ? item.ngayCapMaDinhDanh.substring(0, 10)
+        : "",
       NoiCapMaDinhDanh: item.noiCapMaDinhDanh || "",
       NgaySinh: item.ngaySinh ? item.ngaySinh.substring(0, 10) : "",
       GioiTinhID: item.gioiTinhID || null,
       QuocTichID: item.quocTichID || null,
       DanTocID: item.danTocID || null,
-      anhChanDung: null,
+      anhChanDung: item?.anhChanDung,
 
       MaSoThue: item.maSoThue || "",
       NguoiDaiDien: item.nguoiDaiDien || "",

@@ -1,7 +1,14 @@
 "use client";
 
 import React from "react";
-import { SquarePen, RefreshCw, Upload, AlertCircle } from "lucide-react";
+import {
+  SquarePen,
+  RefreshCw,
+  Upload,
+  AlertCircle,
+  User,
+  Package,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -9,6 +16,8 @@ import { SlideOver } from "@/components/ui/SlideOver";
 import { SearchSelect } from "@/components/ui/selectSearch";
 import { DatePickerInput } from "@/components/ui/DatePickerInput";
 import { UpdateKhachHangPayload } from "@/types/khachHang";
+import Image from "next/image";
+import { getImageUrl } from "@/shared/constants/apiConstants";
 
 interface UpdateCustomerSlideOverProps {
   open: boolean;
@@ -26,6 +35,7 @@ interface UpdateCustomerSlideOverProps {
   logoPreviewUpdate: string | null;
   handleAvatarChangeUpdate: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleLogoChangeUpdate: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleClearAvatar: () => void;
 }
 
 export function UpdateCustomerSlideOver({
@@ -44,6 +54,7 @@ export function UpdateCustomerSlideOver({
   logoPreviewUpdate,
   handleAvatarChangeUpdate,
   handleLogoChangeUpdate,
+  handleClearAvatar,
 }: UpdateCustomerSlideOverProps) {
   return (
     <SlideOver
@@ -175,6 +186,41 @@ export function UpdateCustomerSlideOver({
                   Đổi ảnh chân dung
                 </label>
                 <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center overflow-hidden shrink-0">
+                    {/* {avatarPreviewUpdate ? (
+                      <Image
+                        src={avatarPreviewUpdate}
+                        alt="Avatar preview"
+                        width={56}
+                        height={56}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-muted-foreground/60" />
+                    )} */}
+                    {!!avatarPreviewUpdate ? (
+                      <Image
+                        src={avatarPreviewUpdate}
+                        alt="Ảnh mới"
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : !dataUpdate.XoaAnhChanDung && dataUpdate.anhChanDung ? (
+                      <Image
+                        src={getImageUrl(String(dataUpdate.anhChanDung))}
+                        alt="Ảnh hiện tại"
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-muted-foreground/60" />
+                    )}
+                  </div>
                   <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-xs font-medium cursor-pointer transition-colors shadow-2xs">
                     <Upload className="w-3.5 h-3.5" />
                     Chọn ảnh mới
@@ -185,10 +231,15 @@ export function UpdateCustomerSlideOver({
                       onChange={handleAvatarChangeUpdate}
                     />
                   </label>
-                  {avatarPreviewUpdate && (
-                    <span className="text-xs text-emerald-600 font-medium">
-                      Đã chọn ảnh mới
-                    </span>
+                  {(avatarPreviewUpdate || !dataUpdate?.fileAnhChanDung) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearAvatar}
+                      className="h-8 px-2 text-xs text-rose-600 hover:text-rose-800 hover:bg-rose-500/10 cursor-pointer"
+                    >
+                      Xóa ảnh hiện tại
+                    </Button>
                   )}
                 </div>
               </div>

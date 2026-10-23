@@ -140,7 +140,7 @@ function CustomerContent() {
     if (file) {
       setDataAdd((prev: CreateKhachHangPayload) => ({
         ...prev,
-        anhChanDung: file,
+        fileAnhChanDung: file,
       }));
       setAvatarPreviewAdd(URL.createObjectURL(file));
     }
@@ -151,7 +151,7 @@ function CustomerContent() {
     if (file) {
       setDataAdd((prev: CreateKhachHangPayload) => ({
         ...prev,
-        anhBieuTrung: file,
+        fileAnhBieuTrung: file,
       }));
       setLogoPreviewAdd(URL.createObjectURL(file));
     }
@@ -162,8 +162,8 @@ function CustomerContent() {
     if (file) {
       setDataUpdate((prev: UpdateKhachHangPayload) => ({
         ...prev,
-        anhChanDung: file,
-        XoaAnhChanDung: false,
+        fileAnhChanDung: file,
+        XoaAnhChanDung: true,
       }));
       setAvatarPreviewUpdate(URL.createObjectURL(file));
     }
@@ -174,13 +174,21 @@ function CustomerContent() {
     if (file) {
       setDataUpdate((prev: UpdateKhachHangPayload) => ({
         ...prev,
-        anhBieuTrung: file,
-        XoaAnhBieuTrung: false,
+        fileAnhBieuTrung: file,
+        XoaAnhBieuTrung: true,
       }));
       setLogoPreviewUpdate(URL.createObjectURL(file));
     }
   };
+  const handleClearAvatar = () => {
 
+    setDataUpdate((prev: UpdateKhachHangPayload) => ({
+      ...prev,
+      fileAnhChanDung: null,
+      XoaAnhChanDung: true,
+    }));
+    setAvatarPreviewUpdate(null);
+  };
   const hasActiveFilters = Boolean(
     searchInput || statusFilter !== "all" || loaiFilter !== "all" || tinhFilter,
   );
@@ -328,6 +336,7 @@ function CustomerContent() {
         logoPreviewUpdate={logoPreviewUpdate}
         handleAvatarChangeUpdate={handleAvatarChangeUpdate}
         handleLogoChangeUpdate={handleLogoChangeUpdate}
+        handleClearAvatar={handleClearAvatar}
       />
 
       {/* Modal Xác nhận Xóa */}

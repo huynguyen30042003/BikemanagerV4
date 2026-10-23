@@ -62,7 +62,8 @@ export interface CreateKhachHangPayload {
   GioiTinhID?: number | null;
   QuocTichID?: number | null;
   DanTocID?: number | null;
-  anhChanDung?: File | null;
+  anhChanDung?: File | string | null;
+  fileAnhChanDung?: File | string | null;
 
   // Doanh nghiệp
   MaSoThue?: string;
@@ -93,7 +94,3 @@ export interface KhachHangKPI {
   total_ToChuc: number;
   total_HoatDong: number;
 }
-
-
-
-

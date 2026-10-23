@@ -9,8 +9,6 @@ import {
   KhachHangKPI,
 } from "@/types/khachHang";
 
-
-
 const getAuthHeaders = () => {
   const token = getAccessToken();
   return {
@@ -32,7 +30,13 @@ const getAuthFormDataHeaders = () => {
  * POST /api/KhachHangApi/Gets
  */
 export const getKhachHangApi = async (
-  filter: KhachHangFilter = { PageIndex: 1, PageSize: 20, TuKhoa: "", TrangThai: null, TinhID: null }
+  filter: KhachHangFilter = {
+    PageIndex: 1,
+    PageSize: 20,
+    TuKhoa: "",
+    TrangThai: null,
+    TinhID: null,
+  },
 ) => {
   const response = await api.post(
     `${APP_URL}/KhachHangApi/Gets`,
@@ -46,7 +50,7 @@ export const getKhachHangApi = async (
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -63,7 +67,7 @@ export const getKhachHangByIdApi = async (khachHangId: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -88,36 +92,44 @@ export const createKhachHangApi = async (payload: CreateKhachHangPayload) => {
   // Cá nhân
   if (payload.LoaiKhachHang === 1) {
     if (payload.MaDinhDanh) formData.append("MaDinhDanh", payload.MaDinhDanh);
-    if (payload.NgayCapMaDinhDanh) formData.append("NgayCapMaDinhDanh", payload.NgayCapMaDinhDanh);
-    if (payload.NoiCapMaDinhDanh) formData.append("NoiCapMaDinhDanh", payload.NoiCapMaDinhDanh);
+    if (payload.NgayCapMaDinhDanh)
+      formData.append("NgayCapMaDinhDanh", payload.NgayCapMaDinhDanh);
+    if (payload.NoiCapMaDinhDanh)
+      formData.append("NoiCapMaDinhDanh", payload.NoiCapMaDinhDanh);
     if (payload.NgaySinh) formData.append("NgaySinh", payload.NgaySinh);
-    if (payload.GioiTinhID != null) formData.append("GioiTinhID", String(payload.GioiTinhID));
-    if (payload.QuocTichID != null) formData.append("QuocTichID", String(payload.QuocTichID));
-    if (payload.DanTocID != null) formData.append("DanTocID", String(payload.DanTocID));
+    if (payload.GioiTinhID != null)
+      formData.append("GioiTinhID", String(payload.GioiTinhID));
+    if (payload.QuocTichID != null)
+      formData.append("QuocTichID", String(payload.QuocTichID));
+    if (payload.DanTocID != null)
+      formData.append("DanTocID", String(payload.DanTocID));
     if (payload.anhChanDung) {
       formData.append("anhChanDung", payload.anhChanDung);
+    }
+    if (payload.fileAnhChanDung) {
+      formData.append("fileAnhChanDung", payload.fileAnhChanDung);
     }
   } else {
     // Doanh nghiệp
     if (payload.MaSoThue) formData.append("MaSoThue", payload.MaSoThue);
-    if (payload.NguoiDaiDien) formData.append("NguoiDaiDien", payload.NguoiDaiDien);
-    if (payload.DienThoaiNguoiDaiDien) formData.append("DienThoaiNguoiDaiDien", payload.DienThoaiNguoiDaiDien);
-    if (payload.ToChucCapChaID) formData.append("ToChucCapChaID", payload.ToChucCapChaID);
-    if (payload.LoaiToChucID != null) formData.append("LoaiToChucID", String(payload.LoaiToChucID));
+    if (payload.NguoiDaiDien)
+      formData.append("NguoiDaiDien", payload.NguoiDaiDien);
+    if (payload.DienThoaiNguoiDaiDien)
+      formData.append("DienThoaiNguoiDaiDien", payload.DienThoaiNguoiDaiDien);
+    if (payload.ToChucCapChaID)
+      formData.append("ToChucCapChaID", payload.ToChucCapChaID);
+    if (payload.LoaiToChucID != null)
+      formData.append("LoaiToChucID", String(payload.LoaiToChucID));
     if (payload.TrangChu) formData.append("TrangChu", payload.TrangChu);
     if (payload.anhBieuTrung) {
       formData.append("anhBieuTrung", payload.anhBieuTrung);
     }
   }
 
-  const response = await api.post(
-    `${APP_URL}/KhachHangApi/Add`,
-    formData,
-    {
-      headers: getAuthFormDataHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.post(`${APP_URL}/KhachHangApi/Add`, formData, {
+    headers: getAuthFormDataHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -139,40 +151,50 @@ export const updateKhachHangApi = async (payload: UpdateKhachHangPayload) => {
   if (payload.GhiChu) formData.append("GhiChu", payload.GhiChu);
   formData.append("TrangThai", String(payload.TrangThai));
 
-  if (payload.XoaAnhChanDung != null) formData.append("XoaAnhChanDung", String(payload.XoaAnhChanDung));
-  if (payload.XoaAnhBieuTrung != null) formData.append("XoaAnhBieuTrung", String(payload.XoaAnhBieuTrung));
+  if (payload.XoaAnhChanDung != null)
+    formData.append("XoaAnhChanDung", String(payload.XoaAnhChanDung));
+  if (payload.XoaAnhBieuTrung != null)
+    formData.append("XoaAnhBieuTrung", String(payload.XoaAnhBieuTrung));
 
   if (payload.LoaiKhachHang === 1) {
     if (payload.MaDinhDanh) formData.append("MaDinhDanh", payload.MaDinhDanh);
-    if (payload.NgayCapMaDinhDanh) formData.append("NgayCapMaDinhDanh", payload.NgayCapMaDinhDanh);
-    if (payload.NoiCapMaDinhDanh) formData.append("NoiCapMaDinhDanh", payload.NoiCapMaDinhDanh);
+    if (payload.NgayCapMaDinhDanh)
+      formData.append("NgayCapMaDinhDanh", payload.NgayCapMaDinhDanh);
+    if (payload.NoiCapMaDinhDanh)
+      formData.append("NoiCapMaDinhDanh", payload.NoiCapMaDinhDanh);
     if (payload.NgaySinh) formData.append("NgaySinh", payload.NgaySinh);
-    if (payload.GioiTinhID != null) formData.append("GioiTinhID", String(payload.GioiTinhID));
-    if (payload.QuocTichID != null) formData.append("QuocTichID", String(payload.QuocTichID));
-    if (payload.DanTocID != null) formData.append("DanTocID", String(payload.DanTocID));
+    if (payload.GioiTinhID != null)
+      formData.append("GioiTinhID", String(payload.GioiTinhID));
+    if (payload.QuocTichID != null)
+      formData.append("QuocTichID", String(payload.QuocTichID));
+    if (payload.DanTocID != null)
+      formData.append("DanTocID", String(payload.DanTocID));
     if (payload.anhChanDung) {
       formData.append("anhChanDung", payload.anhChanDung);
     }
+    if (payload.fileAnhChanDung) {
+      formData.append("fileAnhChanDung", payload.fileAnhChanDung);
+    }
   } else {
     if (payload.MaSoThue) formData.append("MaSoThue", payload.MaSoThue);
-    if (payload.NguoiDaiDien) formData.append("NguoiDaiDien", payload.NguoiDaiDien);
-    if (payload.DienThoaiNguoiDaiDien) formData.append("DienThoaiNguoiDaiDien", payload.DienThoaiNguoiDaiDien);
-    if (payload.ToChucCapChaID) formData.append("ToChucCapChaID", payload.ToChucCapChaID);
-    if (payload.LoaiToChucID != null) formData.append("LoaiToChucID", String(payload.LoaiToChucID));
+    if (payload.NguoiDaiDien)
+      formData.append("NguoiDaiDien", payload.NguoiDaiDien);
+    if (payload.DienThoaiNguoiDaiDien)
+      formData.append("DienThoaiNguoiDaiDien", payload.DienThoaiNguoiDaiDien);
+    if (payload.ToChucCapChaID)
+      formData.append("ToChucCapChaID", payload.ToChucCapChaID);
+    if (payload.LoaiToChucID != null)
+      formData.append("LoaiToChucID", String(payload.LoaiToChucID));
     if (payload.TrangChu) formData.append("TrangChu", payload.TrangChu);
     if (payload.anhBieuTrung) {
       formData.append("anhBieuTrung", payload.anhBieuTrung);
     }
   }
 
-  const response = await api.post(
-    `${APP_URL}/KhachHangApi/Edit`,
-    formData,
-    {
-      headers: getAuthFormDataHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.post(`${APP_URL}/KhachHangApi/Edit`, formData, {
+    headers: getAuthFormDataHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -187,7 +209,7 @@ export const deleteKhachHangApi = async (khachHangId: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -218,7 +240,7 @@ export const getKhachHangKPIApi = async (): Promise<KhachHangKPI> => {
       {
         headers: getAuthHeaders(),
         withCredentials: true,
-      }
+      },
     );
     return response.data?.data ?? response.data;
   } catch (error: unknown) {
@@ -236,7 +258,7 @@ export const getKhachHangKPIApi = async (): Promise<KhachHangKPI> => {
           {
             headers: getAuthHeaders(),
             withCredentials: true,
-          }
+          },
         );
         return response.data?.data ?? response.data;
       } catch {
@@ -253,7 +275,7 @@ export const getKhachHangKPIApi = async (): Promise<KhachHangKPI> => {
             {
               headers: getAuthHeaders(),
               withCredentials: true,
-            }
+            },
           );
           return response.data?.data ?? response.data;
         }
@@ -261,5 +283,3 @@ export const getKhachHangKPIApi = async (): Promise<KhachHangKPI> => {
     }
   }
 };
-
-
