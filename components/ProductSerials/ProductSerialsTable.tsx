@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   ArrowRightLeft,
   Camera,
+  Edit2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
@@ -43,6 +44,8 @@ interface ProductSerialsTableProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onOpenWarranty: (item: SP_SoSerial) => void;
   onOpenChangeStatus: (item: SP_SoSerial) => void;
+  onOpenEdit: () => void;
+  setSelectSerial: (item: SP_SoSerial) => void;
   onOpenImages?: (item: SP_SoSerial) => void;
   getSerialStatusBadge: (statusId?: number | null) => {
     bgClass: string;
@@ -62,6 +65,8 @@ export const ProductSerialsTable: React.FC<ProductSerialsTableProps> = ({
   setPageSize,
   onOpenWarranty,
   onOpenChangeStatus,
+  onOpenEdit,
+  setSelectSerial,
   onOpenImages,
   getSerialStatusBadge,
 }) => {
@@ -156,7 +161,8 @@ export const ProductSerialsTable: React.FC<ProductSerialsTableProps> = ({
           {row.soPin ? (
             <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300">
               <span className="font-medium text-muted-foreground/80 w-12 shrink-0 flex items-center gap-0.5">
-                <BatteryCharging className="w-2.5 h-2.5 text-emerald-500" /> Pin:
+                <BatteryCharging className="w-2.5 h-2.5 text-emerald-500" />{" "}
+                Pin:
               </span>
               <span className="font-mono font-medium px-1.5 py-0.5 rounded bg-muted border border-border/50">
                 {row.soPin}
@@ -294,6 +300,18 @@ export const ProductSerialsTable: React.FC<ProductSerialsTableProps> = ({
             className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowRightLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => {
+              onOpenEdit();
+              setSelectSerial(row);
+            }}
+            title="Chuyển trạng thái serial"
+            className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
+          >
+            <Edit2 className="w-4 h-4" />
           </Button>
         </div>
       ),

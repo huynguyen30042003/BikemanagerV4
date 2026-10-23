@@ -104,7 +104,7 @@ export function ConfirmModal({
         aria-modal="true"
         className={cn(
           "relative z-50 w-full max-w-md rounded-2xl bg-card border border-border/80 p-6 shadow-2xl",
-          "animate-in zoom-in-95 duration-200 ease-out space-y-4"
+          "animate-in zoom-in-95 duration-200 ease-out space-y-4",
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -112,7 +112,7 @@ export function ConfirmModal({
           <div
             className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border",
-              variantConfig.iconWrapper
+              variantConfig.iconWrapper,
             )}
           >
             <Icon className="w-5 h-5" />
@@ -153,6 +153,6 @@ export function ConfirmModal({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

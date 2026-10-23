@@ -255,33 +255,50 @@ function SalesContent() {
         ? Math.min(receivedCash, grandTotal)
         : grandTotal;
 
+    // NgayBan: ngày chọn (cho phép nhập bù) + giờ hiện tại, gửi dạng ISO UTC (vd 2024-02-15T10:30:00Z)
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const saleDateTime = saleDate
+      ? new Date(
+          `${saleDate}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+        )
+      : now;
+    const ngayBanIso = (
+      isNaN(saleDateTime.getTime()) ? now : saleDateTime
+    ).toISOString();
+
+    const chiTiets = cart.map((i) => ({
+      ID: crypto.randomUUID(),
+      BienTheSanPhamID: i.bienTheSanPhamID,
+      MaSKU: i.sku,
+      TenSanPham: i.tenBienThe,
+      SoLuong: i.soLuong,
+      DonGiaBan: i.donGia,
+      TienGiamGia: 0,
+      ThueVAT: 0,
+      TienThueVAT: 0,
+      ThanhTien: i.thanhTien,
+      QuanLyTheoSerial: false,
+      LaPhuongTien: false,
+    }));
+
     const payload: CreateDonHangPayload = {
+      MaDonHang: null, // Backend tự sinh mã
       KhachHangID: selectedCustomerId,
-      KhoXuatID: khoId,
       DiaDiemID: diaDiemId,
+      KhoXuatID: khoId,
       LoaiDonHangID: 87, // Bán lẻ tại quầy
-      TrangThaiDonHangID: 72, // Hoàn thành ngay tại quầy
+      TrangThaiDonHangID: 72,
       TrangThaiThanhToanID: 83,
-      NgayBan: saleDate || null,
+      NgayBan: ngayBanIso,
       TamTinh: subTotal,
       TienGiamGia: discountAmount,
       PhiVanChuyen: deliveryFee,
       PhiDichVuBienSo: registrationFee,
       TongTien: grandTotal,
       DaThanhToan: actualPaid,
-      ChiTiets: cart.map((i) => ({
-        BienTheSanPhamID: i.bienTheSanPhamID,
-        MaSKU: i.sku,
-        TenSanPham: i.tenBienThe,
-        SoLuong: i.soLuong,
-        DonGiaBan: i.donGia,
-        TienGiamGia: 0,
-        ThueVAT: 0,
-        TienThueVAT: 0,
-        ThanhTien: i.thanhTien,
-        QuanLyTheoSerial: false,
-        LaPhuongTien: false,
-      })),
+      ChiTiets: chiTiets,
+      Serials: [],
     };
 
     setDataCreate(payload);

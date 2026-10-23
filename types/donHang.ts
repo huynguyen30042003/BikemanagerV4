@@ -116,6 +116,7 @@ export interface DonHangFilter {
 }
 
 export interface CreateChiTietDonHangPayload {
+  ID?: string;
   BienTheSanPhamID: string;
   MaSKU?: string;
   TenSanPham?: string;
@@ -141,7 +142,19 @@ export interface CreateChiTietDonHangPayload {
   }>;
 }
 
+export interface CreateSerialDonHangPayload {
+  ChiTietDonHangID: string;
+  BienTheSanPhamID: string;
+  SoSerialID: string;
+  MaSerial: string;
+  SoKhung?: string | null;
+  SoMay?: string | null;
+  SoPin?: string | null;
+  BienSoXe?: string | null;
+}
+
 export interface CreateDonHangPayload {
+  MaDonHang?: string | null;
   KhachHangID: string;
   DiaDiemID: string;
   KhoXuatID: string;
@@ -164,6 +177,7 @@ export interface CreateDonHangPayload {
   NgayBan?: string | null;
   GhiChu?: string | null;
   ChiTiets: CreateChiTietDonHangPayload[];
+  Serials?: CreateSerialDonHangPayload[];
 }
 
 export interface ChuyenTrangThaiDonHangPayload {

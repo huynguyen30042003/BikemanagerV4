@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   ArrowRightLeft,
   Camera,
+  Edit2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,8 +49,10 @@ interface ProductSerialsGridProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onOpenWarranty: (item: SP_SoSerial) => void;
   onOpenChangeStatus: (item: SP_SoSerial) => void;
+  setSelectSerial: (item: SP_SoSerial) => void;
   onOpenImages?: (item: SP_SoSerial) => void;
   onOpenAdd: () => void;
+  onOpenEdit: () => void;
   onResetFilters: () => void;
   hasActiveFilters: boolean;
   getSerialStatusBadge: (statusId?: number | null) => {
@@ -72,6 +75,8 @@ export const ProductSerialsGrid: React.FC<ProductSerialsGridProps> = ({
   onOpenChangeStatus,
   onOpenImages,
   onOpenAdd,
+  onOpenEdit,
+  setSelectSerial,
   onResetFilters,
   hasActiveFilters,
   getSerialStatusBadge,
@@ -279,7 +284,7 @@ export const ProductSerialsGrid: React.FC<ProductSerialsGridProps> = ({
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-1.5 pt-2 border-t border-border/50">
+              <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/50">
                 <Button
                   variant="outline"
                   size="sm"
@@ -309,6 +314,18 @@ export const ProductSerialsGrid: React.FC<ProductSerialsGridProps> = ({
                 >
                   <ArrowRightLeft className="w-3.5 h-3.5 text-blue-600" />
                   <span>Trạng thái</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onOpenEdit();
+                    setSelectSerial(serial);
+                  }}
+                  className="flex-1 h-8 text-xs flex items-center justify-center gap-1 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer shadow-2xs"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Cập nhật</span>
                 </Button>
               </div>
             </Card>

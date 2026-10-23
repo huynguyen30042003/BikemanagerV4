@@ -108,7 +108,7 @@ export function RepairTicketsTable({
       key: "khachHang",
       title: "Khách hàng & Xe vào xưởng",
       classNameHeader:
-        "min-w-[200px] text-left text-xs font-semibold text-muted-foreground",
+        "w-50 text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5 py-1">
@@ -131,7 +131,7 @@ export function RepairTicketsTable({
         "w-36 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
-        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20">
+        <span className="inline-flex text-xs font-medium px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20">
           {row.tenLoaiDichVu || "Sửa chữa"}
         </span>
       ),
@@ -264,7 +264,8 @@ export function RepairTicketsTable({
           Chưa có xe nào đang sửa chữa
         </h3>
         <p className="text-xs text-muted-foreground max-w-sm mb-4">
-          Hiện tại không tìm thấy phiếu sửa chữa nào theo bộ lọc tìm kiếm. Bạn có thể tiếp nhận xe mới hoặc làm mới bộ lọc.
+          Hiện tại không tìm thấy phiếu sửa chữa nào theo bộ lọc tìm kiếm. Bạn
+          có thể tiếp nhận xe mới hoặc làm mới bộ lọc.
         </p>
         <Button
           size="sm"

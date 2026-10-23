@@ -75,6 +75,8 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
   soLuongToiThieu,
   setSoLuongToiThieu,
 }) => {
+  console.log("khoOptions",khoOptions);
+  
   // Form state
   const [khoId, setKhoId] = useState<string>(selectedKhoId || "");
   const [bienTheId, setBienTheId] = useState<string>(presetVariantId || "");
@@ -306,25 +308,6 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
         );
         return;
       }
-
-      // const emptySerial = serials.some((s) => !s.MaSerial.trim());
-      // if (emptySerial) {
-      //   toast.error("Tất cả các dòng Serial bắt buộc phải có Mã Serial!");
-      //   return;
-      // }
-
-      // Check duplicate within the list
-      // const serialSet = new Set<string>();
-      // for (const s of serials) {
-      //   const trimmed = s.MaSerial.trim().toUpperCase();
-      //   if (serialSet.has(trimmed)) {
-      //     toast.error(
-      //       `Mã Serial [${trimmed}] bị trùng lặp trong danh sách nhập!`,
-      //     );
-      //     return;
-      //   }
-      //   serialSet.add(trimmed);
-      // }
     }
 
     setShowConfirmSubmit(true);
@@ -471,7 +454,10 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
                 placeholder="Chọn sản phẩm / biến thể xe..."
                 options={variantOptions}
                 value={bienTheId}
-                onChange={(val) => setBienTheId(String(val || ""))}
+                onChange={(val) => {
+                  setBienTheId(String(val || ""))
+                  // setSoLuongToiThieu()
+                }}
                 isLoading={isLoadingVariants}
                 className="text-xs"
               />

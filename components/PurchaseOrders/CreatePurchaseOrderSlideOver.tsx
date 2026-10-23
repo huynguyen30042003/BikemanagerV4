@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Barcode, ClipboardPaste } from "lucide-react";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +37,7 @@ const getInitialFormData = (): CreateDonNhapHangPayload => ({
   GhiChu: "",
   ChiTiets: [
     {
+      ChiTietID: crypto.randomUUID(),
       BienTheSanPhamID: "",
       SoLuong: 1,
       DonGiaNhap: 0,
@@ -85,6 +88,7 @@ export const CreatePurchaseOrderSlideOver: React.FC<
       ChiTiets: [
         ...prev.ChiTiets,
         {
+          ChiTietID: crypto.randomUUID(),
           BienTheSanPhamID: "",
           SoLuong: 1,
           DonGiaNhap: 0,
@@ -130,9 +134,96 @@ export const CreatePurchaseOrderSlideOver: React.FC<
     return detailsTotal + (Number(formData.ChiPhiVanChuyen) || 0);
   }, [formData.ChiTiets, formData.ChiPhiVanChuyen]);
 
+  useEffect(() => {
+    setFormData((prev) => {
+      const current = prev.Serials || [];
+      const next: NonNullable<CreateDonNhapHangPayload["Serials"]> = [];
+      let changed = false;
+
+      prev.ChiTiets.forEach((ct) => {
+        const group = current.filter(
+          (s) => s.ChiTietDonNhapHangID === ct.ChiTietID,
+        );
+        if (!ct.QuanLyTheoSerial || !ct.BienTheSanPhamID) {
+          if (group.length > 0) changed = true;
+          return;
+        }
+        const qty = Math.max(0, Math.min(500, Number(ct.SoLuong) || 0));
+        for (let i = 0; i < qty; i++) {
+          const existing = group[i];
+          if (existing && existing.BienTheSanPhamID === ct.BienTheSanPhamID) {
+            next.push(existing);
+          } else {
+            changed = true;
+            next.push({
+              ChiTietDonNhapHangID: ct.ChiTietID,
+              BienTheSanPhamID: ct.BienTheSanPhamID,
+              MaSerial: "",
+              SoKhung: "",
+              SoMay: "",
+              SoPin: "",
+              ViTriLuuTru: "",
+            });
+          }
+        }
+        if (group.length !== qty) changed = true;
+      });
+
+      if (!changed && next.length === current.length) return prev;
+      return { ...prev, Serials: next };
+    });
+  }, [formData.ChiTiets]);
+
+  const updateSerialField = (
+    chiTietId: string | undefined,
+    position: number,
+    field: "MaSerial" | "SoKhung" | "SoMay" | "SoPin" | "ViTriLuuTru",
+    value: string,
+  ) => {
+    setFormData((prev) => {
+      let seen = -1;
+      return {
+        ...prev,
+        Serials: (prev.Serials || []).map((s) => {
+          if (s.ChiTietDonNhapHangID !== chiTietId) return s;
+          seen++;
+          return seen === position ? { ...s, [field]: value } : s;
+        }),
+      };
+    });
+  };
+
+  const toggleSerialManaged = (idx: number, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      ChiTiets: prev.ChiTiets.map((ct, i) =>
+        i === idx ? { ...ct, QuanLyTheoSerial: checked } : ct,
+      ),
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    const serials = formData.Serials || [];
+    const codes = serials.map((s) => s.MaSerial.trim().toLowerCase());
+    // if (serials.some((s) => !s.MaSerial.trim())) {
+    //   toast.warning(
+    //     "Vui lòng nhập đầy đủ mã serial cho các mặt hàng quản lý theo serial!",
+    //   );
+    //   return;
+    // }
+    // if (new Set(codes).size !== codes.length) {
+    //   toast.warning("Mã serial bị trùng lặp trong đơn nhập!");
+    //   return;
+    // }
+    onSubmit({
+      ...formData,
+      Serials: serials.map((s) => ({
+        ...s,
+        MaSerial: s.MaSerial.trim(),
+      })),
+    });
   };
 
   return (
@@ -423,6 +514,109 @@ export const CreatePurchaseOrderSlideOver: React.FC<
                   <span className="font-semibold text-foreground">
                     Thành tiền: {formatCurrency(row.ThanhTien)}
                   </span>
+                </div>
+
+                {/* Quản lý serial / số khung / số máy / số pin */}
+                <div className="pt-2 border-t border-border/50 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="flex items-center gap-2 text-xs font-medium text-foreground">
+                      <Barcode className="w-3.5 h-3.5 text-blue-500" />
+                      Quản lý theo Serial / Số khung
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={Boolean(row.QuanLyTheoSerial)}
+                        onCheckedChange={(checked) =>
+                          toggleSerialManaged(idx, checked)
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {row.QuanLyTheoSerial && !row.BienTheSanPhamID && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Chọn sản phẩm để nhập serial cho từng đơn vị.
+                    </p>
+                  )}
+
+                  {row.QuanLyTheoSerial && row.BienTheSanPhamID && (
+                    <div className="">
+                      {(formData.Serials || [])
+                        .filter((s) => s.ChiTietDonNhapHangID === row.ChiTietID)
+                        .map((s, sIdx) => (
+                          <div
+                            key={`${row.ChiTietID}-${sIdx}`}
+                            className="grid grid-cols-2 md:grid-cols-5 gap-2 items-center"
+                          >
+                            <Input
+                              placeholder={`Mã serial #${sIdx + 1} *`}
+                              value={s.MaSerial}
+                              onChange={(e) =>
+                                updateSerialField(
+                                  row.ChiTietID,
+                                  sIdx,
+                                  "MaSerial",
+                                  e.target.value,
+                                )
+                              }
+                              className="text-[11px] font-mono h-8"
+                            />
+                            <Input
+                              placeholder="Số khung"
+                              value={s.SoKhung || ""}
+                              onChange={(e) =>
+                                updateSerialField(
+                                  row.ChiTietID,
+                                  sIdx,
+                                  "SoKhung",
+                                  e.target.value,
+                                )
+                              }
+                              className="text-[11px] font-mono h-8"
+                            />
+                            <Input
+                              placeholder="Số máy"
+                              value={s.SoMay || ""}
+                              onChange={(e) =>
+                                updateSerialField(
+                                  row.ChiTietID,
+                                  sIdx,
+                                  "SoMay",
+                                  e.target.value,
+                                )
+                              }
+                              className="text-[11px] font-mono h-8"
+                            />
+                            <Input
+                              placeholder="Số pin"
+                              value={s.SoPin || ""}
+                              onChange={(e) =>
+                                updateSerialField(
+                                  row.ChiTietID,
+                                  sIdx,
+                                  "SoPin",
+                                  e.target.value,
+                                )
+                              }
+                              className="text-[11px] font-mono h-8"
+                            />
+                            <Input
+                              placeholder="Vị trí lưu kho"
+                              value={s.ViTriLuuTru || ""}
+                              onChange={(e) =>
+                                updateSerialField(
+                                  row.ChiTietID,
+                                  sIdx,
+                                  "ViTriLuuTru",
+                                  e.target.value,
+                                )
+                              }
+                              className="text-[11px] h-8"
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SearchSelect } from "@/components/ui/selectSearch";
-import { SP_SoSerial } from "@/types/soSerial";
+import { SP_SoSerial, SP_SoSerial_HinhAnh } from "@/types/soSerial";
 import {
   useGetSoSerialHinhAnh,
   useUploadSoSerialHinhAnh,
@@ -29,6 +29,8 @@ import {
 } from "@/hooks/SoSerial/useSoSerialApi";
 import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
 import { getImageUrl } from "@/shared/constants/apiConstants";
+import { ConfirmModal } from "../ui/ConfirmModal";
+import { id } from "date-fns/locale";
 
 interface SerialImagesSlideOverProps {
   open: boolean;
@@ -43,8 +45,13 @@ export function SerialImagesSlideOver({
   onClose,
   serial,
 }: SerialImagesSlideOverProps) {
+  if (!open) return;
   const serialId = serial?.soSerialID || "";
-  const { data: images = [], isLoading, refetch } = useGetSoSerialHinhAnh(serialId);
+  const {
+    data: images = [],
+    isLoading,
+    refetch,
+  } = useGetSoSerialHinhAnh(serialId);
   const uploadMutation = useUploadSoSerialHinhAnh();
   const deleteMutation = useDeleteSoSerialHinhAnh(serialId);
 
@@ -62,12 +69,12 @@ export function SerialImagesSlideOver({
         label: o.label,
       }));
     }
-    return []
+    return [];
   }, [loaiAnhLookupOptions]);
 
   const defaultLoaiAnh = useMemo(() => {
     const banGiao = loaiAnhOptions.find((o) =>
-      o.label.toLowerCase().includes("bàn giao")
+      o.label.toLowerCase().includes("bàn giao"),
     );
     return banGiao
       ? String(banGiao.value)
@@ -90,6 +97,8 @@ export function SerialImagesSlideOver({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [previewModalImg, setPreviewModalImg] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
+  const [openDelete, setOpenDelete] = useState<boolean>(false);
+  const [selectDelete, setSelectDelete] = useState<SP_SoSerial_HinhAnh>();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -147,12 +156,17 @@ export function SerialImagesSlideOver({
     }
   };
 
-  const handleDeleteImage = async (id: string) => {
-    if (confirm("Bạn có chắc chắn muốn xóa hình ảnh này khỏi hồ sơ thiết bị?")) {
-      await deleteMutation.mutateAsync(id);
+  const handleDeleteImage = async (img: SP_SoSerial_HinhAnh) => {
+    setSelectDelete(img);
+    console.log("img", img);
+    setOpenDelete(true);
+  };
+  const handleSubmitDelete = async () => {
+    if (!!selectDelete?.id) {
+      await deleteMutation.mutateAsync(selectDelete?.id);
+      setSelectDelete(undefined);
     }
   };
-
   const handleCopyLink = (url: string, id: string) => {
     const fullUrl = url.startsWith("http")
       ? url
@@ -196,7 +210,9 @@ export function SerialImagesSlideOver({
         }
         description={
           <div>
-            <span>{serial?.tenSanPham || serial?.tenBienThe || "Sản phẩm"}</span>
+            <span>
+              {serial?.tenSanPham || serial?.tenBienThe || "Sản phẩm"}
+            </span>
             {serial?.soKhung && (
               <span className="ml-2 font-mono text-xs text-muted-foreground">
                 (Số khung: {serial.soKhung})
@@ -324,7 +340,9 @@ export function SerialImagesSlideOver({
                   ) : (
                     <>
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Lưu {selectedFiles.length} ảnh vào hồ sơ Serial</span>
+                      <span>
+                        Lưu {selectedFiles.length} ảnh vào hồ sơ Serial
+                      </span>
                     </>
                   )}
                 </Button>
@@ -348,7 +366,7 @@ export function SerialImagesSlideOver({
                   { value: "all", label: `Tất cả album (${images.length})` },
                   ...loaiAnhOptions.map((opt) => {
                     const count = images.filter(
-                      (img) => String(img.loaiAnhID) === opt.value
+                      (img) => String(img.loaiAnhID) === opt.value,
                     ).length;
                     return {
                       value: opt.value,
@@ -377,7 +395,8 @@ export function SerialImagesSlideOver({
                 Chưa có hình ảnh nào trong hồ sơ này
               </p>
               <p className="text-xs text-muted-foreground">
-                Tải lên ảnh số khung, ảnh hiện trạng trầy xước hoặc ảnh bàn giao xe ở trên để lưu trữ.
+                Tải lên ảnh số khung, ảnh hiện trạng trầy xước hoặc ảnh bàn giao
+                xe ở trên để lưu trữ.
               </p>
             </div>
           ) : (
@@ -406,7 +425,7 @@ export function SerialImagesSlideOver({
                       <div className="absolute top-2 left-2">
                         <Badge
                           variant="outline"
-                          className={`text-[10px] font-medium border shadow-xs backdrop-blur-xs ${badge?.color}`}
+                          className={`text-[10px] font-medium border shadow-xs backdrop-blur-xs ${badge?.color} bg-white `}
                         >
                           {badge?.label}
                         </Badge>
@@ -446,7 +465,9 @@ export function SerialImagesSlideOver({
                           {copiedId === img.id ? (
                             <>
                               <Check className="w-3 h-3 text-emerald-600" />
-                              <span className="text-emerald-600 font-medium">Đã chép link</span>
+                              <span className="text-emerald-600 font-medium">
+                                Đã chép link
+                              </span>
                             </>
                           ) : (
                             <>
@@ -460,7 +481,7 @@ export function SerialImagesSlideOver({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteImage(img.id)}
+                          onClick={() => handleDeleteImage(img)}
                           className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                           title="Xóa ảnh"
                         >
@@ -500,6 +521,31 @@ export function SerialImagesSlideOver({
             </div>
           </div>
         </div>
+      )}
+      {openDelete && (
+        <ConfirmModal
+          open={openDelete}
+          onClose={() => setOpenDelete(false)}
+          onConfirm={handleSubmitDelete}
+          title="Xác nhận xóa hình ảnh"
+          variant="danger"
+          isLoading={deleteMutation.isPending}
+          confirmText="Xác nhận xóa"
+          description={
+            <div>
+              <p>
+                Bạn có chắc chắn muốn xóa hình ảnh &quot;
+                <strong className="text-foreground">
+                  {selectDelete?.tieuDe}
+                </strong>
+                &quot; không?
+              </p>
+              <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
+                Hành động này không thể hoàn tác.
+              </span>
+            </div>
+          }
+        />
       )}
     </>
   );

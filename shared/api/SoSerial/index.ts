@@ -4,6 +4,7 @@ import { getAccessToken } from "@/lib/auth";
 import {
   ChuyenTrangThaiSerialPayload,
   CreateSoSerialPayload,
+  UpdateSoSerialPayload,
   KichHoatBaoHanhPayload,
   SoSerialFilter,
 } from "@/types/soSerial";
@@ -66,6 +67,23 @@ export const getSoSerialByIdApi = async (id: string) => {
 export const createSoSerialApi = async (payload: CreateSoSerialPayload) => {
   const response = await api.post(
     `${APP_URL}/SoSerialApi/Add`,
+    payload,
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Cập nhật thông tin số serial / số khung
+ * POST /api/SoSerialApi/Edit
+ */
+export const updateSoSerialApi = async (payload: UpdateSoSerialPayload) => {
+  const response = await api.post(
+    `${APP_URL}/SoSerialApi/Edit`,
     payload,
     {
       headers: getAuthHeaders(),

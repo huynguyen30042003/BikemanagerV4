@@ -91,7 +91,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
           "w-32 text-center text-xs font-semibold text-muted-foreground",
         classNameItem: "text-center",
         render: (_v, row) => (
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20">
+          <span className="inline-flex text-xs font-medium px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20">
             {row.tenLoaiDonHang || "Bán lẻ"}
           </span>
         ),
@@ -149,20 +149,26 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
           "w-40 text-right text-xs font-semibold text-muted-foreground",
         classNameItem: "text-right",
         render: (_v, row) => (
-          <div className="flex flex-col gap-0.5 text-xs font-mono">
-            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-              Đã trả: {formatCurrency(row.daThanhToan)}
-            </span>
-            <span
-              className={
-                (row.conNo || 0) > 0
-                  ? "text-rose-600 dark:text-rose-400 font-bold"
-                  : "text-muted-foreground"
-              }
-            >
-              Còn nợ: {formatCurrency(row.conNo)}
-            </span>
-          </div>
+          <>
+            {row?.trangThaiDonHangID !== 77 ? (
+              <div className="flex flex-col gap-0.5 text-xs font-mono">
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                  Đã trả: {formatCurrency(row.daThanhToan)}
+                </span>
+                <span
+                  className={
+                    (row.conNo || 0) > 0
+                      ? "text-rose-600 dark:text-rose-400 font-bold"
+                      : "text-muted-foreground"
+                  }
+                >
+                  Còn nợ: {formatCurrency(row.conNo)}
+                </span>
+              </div>
+            ) : (
+              ""
+            )}
+          </>
         ),
       },
       {
@@ -182,26 +188,28 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
             >
               <Eye className="w-3.5 h-3.5" />
             </Button>
-
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => onOpenStatusChange(row)}
-              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer active:scale-95"
-              title="Chuyển trạng thái đơn hàng"
-            >
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => onOpenPayment(row)}
-              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer active:scale-95"
-              title="Ghi nhận thanh toán"
-            >
-              <Receipt className="w-3.5 h-3.5" />
-            </Button>
+            {row.trangThaiDonHangID !== 76 && row.trangThaiDonHangID !== 77 && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => onOpenStatusChange(row)}
+                className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer active:scale-95"
+                title="Chuyển trạng thái đơn hàng"
+              >
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            )}
+            {row.conNo !== 0 && row.trangThaiDonHangID !== 77 && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => onOpenPayment(row)}
+                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer active:scale-95"
+                title="Ghi nhận thanh toán"
+              >
+                <Receipt className="w-3.5 h-3.5" />
+              </Button>
+            )}
 
             {row.trangThaiDonHangID !== 76 && row.trangThaiDonHangID !== 77 && (
               <Button
@@ -214,16 +222,19 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5" />
               </Button>
             )}
-
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => onDelete(row)}
-              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer active:scale-95"
-              title="Hủy đơn hàng"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+            {row.trangThaiDonHangID !== 76 &&
+              row.trangThaiDonHangID !== 77 &&
+              row.conNo == 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => onDelete(row)}
+                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer active:scale-95"
+                  title="Hủy đơn hàng"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              )}
           </div>
         ),
       },

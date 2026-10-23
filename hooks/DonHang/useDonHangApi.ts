@@ -51,19 +51,21 @@ export const useGetDonHangKPI = () => {
   });
 };
 
-export const useGetDonHangById = (id: string) => {
+export const useGetDonHangById = (id?: string | null, option?: boolean) => {
   return useQuery({
-    queryKey: DON_HANG_KEYS.detail(id),
-    queryFn: () => getDonHangByIdApi(id),
-    enabled: Boolean(id),
+    queryKey: DON_HANG_KEYS.detail(id || ""),
+    queryFn: () => getDonHangByIdApi(id || ""),
+    enabled: option,
+    // staleTime: 1000 * 30,
   });
 };
 
-export const useGetLichSuThanhToanDonHang = (donHangId: string) => {
+export const useGetLichSuThanhToanDonHang = (donHangId?: string | null) => {
   return useQuery({
-    queryKey: DON_HANG_KEYS.payments(donHangId),
-    queryFn: () => getLichSuThanhToanDonHangApi(donHangId),
+    queryKey: DON_HANG_KEYS.payments(donHangId || ""),
+    queryFn: () => getLichSuThanhToanDonHangApi(donHangId || ""),
     enabled: Boolean(donHangId),
+    staleTime: 1000 * 30,
   });
 };
 
@@ -80,8 +82,9 @@ export const useCreateDonHang = () => {
 export const useUpdateDonHang = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: Partial<CreateDonHangPayload> & { DonHangID: string }) =>
-      updateDonHangApi(payload),
+    mutationFn: (
+      payload: Partial<CreateDonHangPayload> & { DonHangID: string },
+    ) => updateDonHangApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DON_HANG_KEYS.all });
     },
@@ -91,7 +94,8 @@ export const useUpdateDonHang = () => {
 export const useChuyenTrangThaiDonHang = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: ChuyenTrangThaiDonHangPayload) => chuyenTrangThaiDonHangApi(payload),
+    mutationFn: (payload: ChuyenTrangThaiDonHangPayload) =>
+      chuyenTrangThaiDonHangApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DON_HANG_KEYS.all });
     },
@@ -111,7 +115,8 @@ export const useHoanThanhVaGiaoXeDonHang = () => {
 export const useAddLichSuThanhToanDonHang = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: AddLichSuThanhToanPayload) => addLichSuThanhToanDonHangApi(payload),
+    mutationFn: (payload: AddLichSuThanhToanPayload) =>
+      addLichSuThanhToanDonHangApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DON_HANG_KEYS.all });
     },
@@ -130,4 +135,3 @@ export const useDeleteDonHang = () => {
     },
   });
 };
-

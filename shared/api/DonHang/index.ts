@@ -52,8 +52,11 @@ export const getDonHangApi = async (
 export const getDonHangByIdApi = async (id: string): Promise<DH_DonHang> => {
   const response = await api.post(
     `${APP_URL}/DonHangApi/Get`,
-    { GuidId: id },
-    { headers: getAuthHeaders() }
+    { GuidId: id, DonHangID: id },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
   );
   return response.data?.data ?? response.data;
 };

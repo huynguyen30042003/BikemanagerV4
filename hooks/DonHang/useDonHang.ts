@@ -37,11 +37,13 @@ export interface UseDonHangOptions {
 
 export const useDonHang = (hookOptions?: UseDonHangOptions) => {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<number | null>(null);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<number | null>(
+    null,
+  );
   const [orderTypeFilter, setOrderTypeFilter] = useState<number | null>(null);
   const [customerFilter, setCustomerFilter] = useState<string>("");
   const [khoFilter, setKhoFilter] = useState<string>("");
@@ -73,7 +75,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
     getLabel: getPaymentMethodLabel,
     isLoading: isLoadingPaymentMethods,
   } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.PHUONG_THUC_THANH_TOAN);
-  
+
   const {
     options: categoryOptions,
     items: categoryItems,
@@ -81,17 +83,24 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
     getLabel: getCategoryLabel,
   } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.NGANH_HANG);
   // Khách hàng options
-  const { data: dataCustomers, isLoading: isLoadingCustomers } = useGetKhachHang({
-    PageIndex: 1,
-    PageSize: 100,
-  });
+  const { data: dataCustomers, isLoading: isLoadingCustomers } =
+    useGetKhachHang({
+      PageIndex: 1,
+      PageSize: 100,
+    });
 
   const customerOptions = useMemo(() => {
     const list = dataCustomers?.data ?? dataCustomers?.items ?? [];
-    return list.map((c: { khachHangID: string; tenKhachHang: string; dienThoai: string }) => ({
-      value: c.khachHangID,
-      label: `${c.tenKhachHang} - ${c.dienThoai}`,
-    }));
+    return list.map(
+      (c: {
+        khachHangID: string;
+        tenKhachHang: string;
+        dienThoai: string;
+      }) => ({
+        value: c.khachHangID,
+        label: `${c.tenKhachHang} - ${c.dienThoai}`,
+      }),
+    );
   }, [dataCustomers]);
 
   // Cơ sở / Showroom options
@@ -127,8 +136,8 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
     hookOptions?.KhoID !== undefined
       ? hookOptions.KhoID
       : khoOptions.length > 0
-      ? String(khoOptions[0].value)
-      : null;
+        ? String(khoOptions[0].value)
+        : null;
 
   const shouldEnableVariantsQuery = hookOptions?.waitForKho
     ? Boolean(effectiveKhoId) || (!isLoadingKhos && khoOptions.length === 0)
@@ -220,20 +229,27 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
 
   // Lịch sử thanh toán của đơn hàng
   const { data: dataPaymentHistory, isLoading: isLoadingPaymentHistory } =
-    useGetLichSuThanhToanDonHang(openDetail && selectedOrder?.donHangID ? selectedOrder.donHangID : "");
+    useGetLichSuThanhToanDonHang(
+      openDetail && selectedOrder?.donHangID ? selectedOrder.donHangID : "",
+    );
   const paymentHistoryItems: DH_LichSuThanhToan[] = useMemo(() => {
     if (!dataPaymentHistory) return [];
     if (Array.isArray(dataPaymentHistory)) return dataPaymentHistory;
-    return (dataPaymentHistory as any)?.data ?? (dataPaymentHistory as any)?.items ?? [];
+    return (
+      (dataPaymentHistory as any)?.data ??
+      (dataPaymentHistory as any)?.items ??
+      []
+    );
   }, [dataPaymentHistory]);
 
   // Modal Chuyển trạng thái
   const [openStatusModal, setOpenStatusModal] = useState(false);
-  const [dataStatusChange, setDataStatusChange] = useState<ChuyenTrangThaiDonHangPayload>({
-    DonHangID: "",
-    TrangThaiDonHangID: 73,
-    GhiChu: "",
-  });
+  const [dataStatusChange, setDataStatusChange] =
+    useState<ChuyenTrangThaiDonHangPayload>({
+      DonHangID: "",
+      TrangThaiDonHangID: 73,
+      GhiChu: "",
+    });
 
   // Modal Thanh toán
   const [openPaymentModal, setOpenPaymentModal] = useState(false);
@@ -366,14 +382,18 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
         ...prev,
         ChiTiets: updated,
         TamTinh: sub,
-        TongTien: sub + (prev.PhiVanChuyen || 0) + (prev.PhiDichVuBienSo || 0) - (prev.TienGiamGia || 0),
+        TongTien:
+          sub +
+          (prev.PhiVanChuyen || 0) +
+          (prev.PhiDichVuBienSo || 0) -
+          (prev.TienGiamGia || 0),
       };
     });
   };
 
   const handleSubmitCreate = async (
     e?: React.FormEvent,
-    customPayload?: CreateDonHangPayload
+    customPayload?: CreateDonHangPayload,
   ) => {
     if (e?.preventDefault) e.preventDefault();
     const targetData = customPayload || dataCreate;
@@ -386,7 +406,11 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
       toast.warning("Vui lòng chọn kho hàng xuất!");
       return;
     }
-    if (!targetData.ChiTiets || targetData.ChiTiets.length === 0 || !targetData.ChiTiets[0].BienTheSanPhamID) {
+    if (
+      !targetData.ChiTiets ||
+      targetData.ChiTiets.length === 0 ||
+      !targetData.ChiTiets[0].BienTheSanPhamID
+    ) {
       toast.warning("Vui lòng chọn ít nhất một sản phẩm bán!");
       return;
     }
@@ -394,16 +418,25 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
     try {
       const subTotal =
         targetData.TamTinh ??
-        targetData.ChiTiets.reduce((sum, item) => sum + (item.SoLuong || 0) * (item.DonGiaBan || 0), 0);
+        targetData.ChiTiets.reduce(
+          (sum, item) => sum + (item.SoLuong || 0) * (item.DonGiaBan || 0),
+          0,
+        );
       const vatTotal =
         targetData.TienThueVAT ??
-        targetData.ChiTiets.reduce((sum, item) => sum + (item.TienThueVAT || 0), 0);
+        targetData.ChiTiets.reduce(
+          (sum, item) => sum + (item.TienThueVAT || 0),
+          0,
+        );
       const total =
         targetData.TongTien ??
-        (targetData.ChiTiets.reduce((sum, item) => sum + (item.ThanhTien || 0), 0) +
+        targetData.ChiTiets.reduce(
+          (sum, item) => sum + (item.ThanhTien || 0),
+          0,
+        ) +
           (targetData.PhiVanChuyen || 0) +
           (targetData.PhiDichVuBienSo || 0) -
-          (targetData.TienGiamGia || 0));
+          (targetData.TienGiamGia || 0);
 
       const sanitizedPayload = {
         ...targetData,
@@ -420,7 +453,6 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
           ThanhTien: Number(ct.ThanhTien) || 0,
         })),
       };
-
       const result = await createMutation.mutateAsync(sanitizedPayload);
       toast.success("Tạo đơn hàng thành công!");
       setOpenCreate(false);
@@ -448,7 +480,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
   };
 
   const handleSubmitStatusChange = async (
-    payloadOrEvent?: React.FormEvent | ChuyenTrangThaiDonHangPayload
+    payloadOrEvent?: React.FormEvent | ChuyenTrangThaiDonHangPayload,
   ) => {
     let payload = dataStatusChange;
     if (payloadOrEvent && "TrangThaiDonHangID" in payloadOrEvent) {
@@ -479,7 +511,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
   };
 
   const handleSubmitPayment = async (
-    payloadOrEvent?: React.FormEvent | AddLichSuThanhToanPayload
+    payloadOrEvent?: React.FormEvent | AddLichSuThanhToanPayload,
   ) => {
     let payload = dataPayment;
     if (payloadOrEvent && "SoTien" in payloadOrEvent) {
@@ -505,7 +537,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
   const handleHoanThanhVaGiaoXe = async (order: DH_DonHang) => {
     if (
       !confirm(
-        `Xác nhận hoàn thành và bàn giao xe cho đơn hàng "${order.maDonHang}"?\nHệ thống sẽ trigger trừ tồn kho thực tế, tính giá vốn FIFO, kích hoạt bảo hành điện tử và tích điểm cho khách.`
+        `Xác nhận hoàn thành và bàn giao xe cho đơn hàng "${order.maDonHang}"?\nHệ thống sẽ trigger trừ tồn kho thực tế, tính giá vốn FIFO, kích hoạt bảo hành điện tử và tích điểm cho khách.`,
       )
     )
       return;
@@ -519,7 +551,8 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
   };
 
   const handleDelete = async (order: DH_DonHang) => {
-    if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng "${order.maDonHang}"?`)) return;
+    if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng "${order.maDonHang}"?`))
+      return;
     try {
       await deleteMutation.mutateAsync(order.donHangID);
       toast.success("Đã hủy đơn hàng thành công!");

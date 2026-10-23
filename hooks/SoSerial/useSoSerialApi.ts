@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   chuyenTrangThaiSerialApi,
   createSoSerialApi,
+  updateSoSerialApi,
   deleteSoSerialHinhAnhApi,
   getSoSerialApi,
   getSoSerialByIdApi,
@@ -17,6 +18,7 @@ import {
 import {
   ChuyenTrangThaiSerialPayload,
   CreateSoSerialPayload,
+  UpdateSoSerialPayload,
   KichHoatBaoHanhPayload,
   SP_SoSerial_HinhAnh,
   SoSerialFilter,
@@ -75,6 +77,22 @@ export const useCreateSoSerial = () => {
     },
     onError: (error: Error) => {
       toast.error(error?.message || "Không thể đăng ký số Serial!");
+    },
+  });
+};
+
+export const useUpdateSoSerial = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: UpdateSoSerialPayload) => updateSoSerialApi(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SO_SERIAL_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ["productNavTabs"] });
+      toast.success("Cập nhật số Serial / Số Khung thành công!");
+    },
+    onError: (error: Error) => {
+      toast.error(error?.message || "Không thể cập nhật số Serial!");
     },
   });
 };

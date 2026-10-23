@@ -73,6 +73,10 @@ export interface CreateSoSerialPayload {
   GhiChu?: string;
 }
 
+export interface UpdateSoSerialPayload extends CreateSoSerialPayload {
+  SoSerialID: string;
+}
+
 export interface KichHoatBaoHanhPayload {
   SoSerialID: string;
   KhachHangID: string;

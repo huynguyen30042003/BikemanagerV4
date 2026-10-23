@@ -114,7 +114,7 @@ export function RepairServicesTable({
         "w-44 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => (
-        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20">
+        <span className="inline-flex text-xs font-medium px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20">
           {getServiceTypeLabel(Number(v)) || "Dịch vụ chung"}
         </span>
       ),
@@ -208,7 +208,8 @@ export function RepairServicesTable({
           Chưa có dịch vụ nào trong bảng giá
         </h3>
         <p className="text-xs text-muted-foreground max-w-sm mb-4">
-          Không tìm thấy dịch vụ sửa chữa phù hợp với bộ lọc hiện tại. Bạn có thể thêm dịch vụ mới hoặc làm mới bộ lọc.
+          Không tìm thấy dịch vụ sửa chữa phù hợp với bộ lọc hiện tại. Bạn có
+          thể thêm dịch vụ mới hoặc làm mới bộ lọc.
         </p>
         <Button
           size="sm"
