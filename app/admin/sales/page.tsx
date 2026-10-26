@@ -14,6 +14,7 @@ import {
   SalesCart,
   SalesFloatingCheckoutBar,
 } from "@/components/Sales";
+import { format } from "date-fns";
 
 function SalesContent() {
   // Mobile tab state: "catalog" (chọn sản phẩm) hoặc "cart" (giỏ hàng & thanh toán)
@@ -42,7 +43,6 @@ function SalesContent() {
   const [saleDate, setSaleDate] = useState<string>(
     new Date().toISOString().split("T")[0],
   );
-
 
   // Hook quản lý đơn hàng & biến thể sản phẩm (BienTheSanPhamApi/Gets đã có đầy đủ tồn kho theo KhoID)
   const {
@@ -402,17 +402,7 @@ function SalesContent() {
         : grandTotal;
 
     // NgayBan: ngày chọn (cho phép nhập bù) + giờ hiện tại, gửi dạng ISO UTC (vd 2024-02-15T10:30:00Z)
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const saleDateTime = saleDate
-      ? new Date(
-          `${saleDate}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
-        )
-      : now;
-    const ngayBanIso = (
-      isNaN(saleDateTime.getTime()) ? now : saleDateTime
-    ).toISOString();
-
+    const ngayBanIso = saleDate;
     const chiTiets = cart.map((i) => ({
       ID: i.id || crypto.randomUUID(),
       BienTheSanPhamID: i.bienTheSanPhamID,
@@ -487,7 +477,6 @@ function SalesContent() {
     refetch();
     refetchVariants();
   };
-
 
   return (
     <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1700px] mx-auto min-w-0 pb-20 sm:pb-6">

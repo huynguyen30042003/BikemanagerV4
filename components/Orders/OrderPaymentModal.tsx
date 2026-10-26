@@ -44,7 +44,7 @@ export const OrderPaymentModal: React.FC<OrderPaymentModalProps> = ({
         SoTien: Math.max(
           0,
           selectedOrder.conNo ||
-            selectedOrder.tongTien - selectedOrder.daThanhToan
+            selectedOrder.tongTien - selectedOrder.daThanhToan,
         ),
         GhiChu: "",
       });
@@ -75,7 +75,7 @@ export const OrderPaymentModal: React.FC<OrderPaymentModalProps> = ({
           </label>
           <SearchSelect
             options={paymentMethodOptions}
-            value={String(dataPayment.PhuongTucThanhToanID)}
+            value={Number(dataPayment.PhuongTucThanhToanID)}
             onChange={(val) =>
               setDataPayment((prev) => ({
                 ...prev,
