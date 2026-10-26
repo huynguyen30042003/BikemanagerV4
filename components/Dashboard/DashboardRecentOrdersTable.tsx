@@ -8,14 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, ArrowRight } from "lucide-react";
 import { DashboardTongQuanDto } from "@/types/dashboard";
 import { formatCurrency, formatDate } from "./dashboardUtils";
+import { format, parseISO } from "date-fns";
+import { vi } from "date-fns/locale";
 
 interface DashboardRecentOrdersTableProps {
   dashboard?: DashboardTongQuanDto | null;
 }
 
-export const DashboardRecentOrdersTable: React.FC<DashboardRecentOrdersTableProps> = ({
-  dashboard,
-}) => {
+export const DashboardRecentOrdersTable: React.FC<
+  DashboardRecentOrdersTableProps
+> = ({ dashboard }) => {
   const hasOrders =
     dashboard?.donHangMoiNhat && dashboard.donHangMoiNhat.length > 0;
 
@@ -52,7 +54,7 @@ export const DashboardRecentOrdersTable: React.FC<DashboardRecentOrdersTableProp
                   <th className="pb-2 font-semibold">Khách hàng</th>
                   <th className="pb-2 font-semibold text-right">Tổng tiền</th>
                   <th className="pb-2 font-semibold text-center">Trạng thái</th>
-                  <th className="pb-2 font-semibold text-right">Ngày tạo</th>
+                  <th className="pb-2 font-semibold text-right">Ngày bán</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -96,7 +98,9 @@ export const DashboardRecentOrdersTable: React.FC<DashboardRecentOrdersTableProp
                       )}
                     </td>
                     <td className="py-2.5 text-right text-muted-foreground whitespace-nowrap">
-                      {formatDate(dh.ngayTaoLap)}
+                      {format(parseISO(dh.ngayBan), "dd/MM/yyyy", {
+                        locale: vi,
+                      })}
                     </td>
                   </tr>
                 ))}

@@ -269,7 +269,6 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
     );
   }, [isSalesMode, dataSanPhamBanHang, dataVariants]);
 
-
   // Form tạo đơn
   const [openCreate, setOpenCreate] = useState(false);
   const [dataCreate, setDataCreate] = useState<CreateDonHangPayload>({
@@ -409,7 +408,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
           SoLuong: 1,
           DonGiaBan: 0,
           TienGiamGia: 0,
-          ThueVAT: 10,
+          ThueVAT: 0,
           TienThueVAT: 0,
           ThanhTien: 0,
           QuanLyTheoSerial: false,
@@ -431,7 +430,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
           SoLuong: 1,
           DonGiaBan: 0,
           TienGiamGia: 0,
-          ThueVAT: 10,
+          ThueVAT: 0,
           TienThueVAT: 0,
           ThanhTien: 0,
           QuanLyTheoSerial: false,

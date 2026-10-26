@@ -70,6 +70,7 @@ export interface DonHangMoiNhatItem {
   tenKhachHang: string;
   dienThoaiKhachHang: string;
   ngayTaoLap: string;
+  ngayBan: string;
   tongTien: number;
   trangThaiDonHangID: number;
   tenTrangThaiDonHang: string;

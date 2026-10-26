@@ -53,7 +53,7 @@ const getInitialFormData = (): CreateDonHangPayload => ({
       SoLuong: 1,
       DonGiaBan: 0,
       TienGiamGia: 0,
-      ThueVAT: 10,
+      ThueVAT: 0,
       TienThueVAT: 0,
       ThanhTien: 0,
       QuanLyTheoSerial: false,
@@ -78,7 +78,8 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
   onSubmit,
   isCreating,
 }) => {
-  const [formData, setFormData] = useState<CreateDonHangPayload>(getInitialFormData);
+  const [formData, setFormData] =
+    useState<CreateDonHangPayload>(getInitialFormData);
 
   useEffect(() => {
     if (open) {
@@ -98,7 +99,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
           SoLuong: 1,
           DonGiaBan: 0,
           TienGiamGia: 0,
-          ThueVAT: 10,
+          ThueVAT: 0,
           TienThueVAT: 0,
           ThanhTien: 0,
           QuanLyTheoSerial: false,
@@ -306,7 +307,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                       onChange={(val) => {
                         const updated = [...formData.ChiTiets];
                         const selectedVar = variantOptions.find(
-                          (v) => v.value === val
+                          (v) => v.value === val,
                         );
                         updated[idx].BienTheSanPhamID = String(val);
                         updated[idx].MaSKU = selectedVar?.sku || "";
@@ -322,8 +323,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                         const vat = Number(updated[idx].ThueVAT) || 0;
                         const sub = qty * price;
                         updated[idx].TienThueVAT = (sub * vat) / 100;
-                        updated[idx].ThanhTien =
-                          sub + updated[idx].TienThueVAT;
+                        updated[idx].ThanhTien = sub + updated[idx].TienThueVAT;
                         setFormData((prev) => ({
                           ...prev,
                           ChiTiets: updated,
@@ -347,7 +347,7 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                           const updated = [...formData.ChiTiets];
                           const qty = Math.max(
                             1,
-                            parseInt(e.target.value) || 1
+                            parseInt(e.target.value) || 1,
                           );
                           updated[idx].SoLuong = qty;
                           const price = updated[idx].DonGiaBan || 0;
@@ -472,8 +472,8 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                   formData.ChiTiets.reduce(
                     (sum, item) =>
                       sum + (item.SoLuong || 0) * (item.DonGiaBan || 0),
-                    0
-                  )
+                    0,
+                  ),
                 )}
               </span>
             </div>
@@ -483,8 +483,8 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                 {formatCurrency(
                   formData.ChiTiets.reduce(
                     (sum, item) => sum + (item.TienThueVAT || 0),
-                    0
-                  )
+                    0,
+                  ),
                 )}
               </span>
             </div>
@@ -494,11 +494,11 @@ export const CreateOrderSlideOver: React.FC<CreateOrderSlideOverProps> = ({
                 {formatCurrency(
                   formData.ChiTiets.reduce(
                     (sum, item) => sum + (item.ThanhTien || 0),
-                    0
+                    0,
                   ) +
                     (formData.PhiVanChuyen || 0) +
                     (formData.PhiDichVuBienSo || 0) -
-                    (formData.TienGiamGia || 0)
+                    (formData.TienGiamGia || 0),
                 )}
               </span>
             </div>
