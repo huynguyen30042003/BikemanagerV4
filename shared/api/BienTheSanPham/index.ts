@@ -149,7 +149,11 @@ export const createBienTheApi = async (payload: CreateBienThePayload) => {
   formData.append("GiaNhap", String(payload.GiaNhap ?? 0));
   formData.append("GiaBan", String(payload.GiaBan ?? 0));
   formData.append("GiaBanSi", String(payload.GiaBanSi ?? 0));
-  if (payload.GiaSuaChua !== undefined && payload.GiaSuaChua !== null) {
+  if (
+    !payload.QuanLyTheoSerial &&
+    payload.GiaSuaChua !== undefined &&
+    payload.GiaSuaChua !== null
+  ) {
     formData.append("GiaSuaChua", String(payload.GiaSuaChua));
   }
   formData.append("SoThangBaoHanh", String(payload.SoThangBaoHanh ?? 12));
@@ -191,7 +195,11 @@ export const updateBienTheApi = async (payload: UpdateBienThePayload) => {
   formData.append("GiaNhap", String(payload.GiaNhap ?? 0));
   formData.append("GiaBan", String(payload.GiaBan ?? 0));
   formData.append("GiaBanSi", String(payload.GiaBanSi ?? 0));
-  if (payload.GiaSuaChua !== undefined && payload.GiaSuaChua !== null) {
+  if (
+    !payload.QuanLyTheoSerial &&
+    payload.GiaSuaChua !== undefined &&
+    payload.GiaSuaChua !== null
+  ) {
     formData.append("GiaSuaChua", String(payload.GiaSuaChua));
   }
   formData.append("SoThangBaoHanh", String(payload.SoThangBaoHanh ?? 12));

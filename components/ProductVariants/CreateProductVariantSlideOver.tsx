@@ -375,25 +375,31 @@ export const CreateProductVariantSlideOver: React.FC<
           />
         </div>
 
-        <div className="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center justify-between">
-            <span>Giá sửa chữa / thay thế (VNĐ)</span>
-            <span className="text-[10px] text-muted-foreground font-normal">(Tùy chọn)</span>
-          </label>
-          <Input
-            type="number"
-            min={0}
-            value={formData.GiaSuaChua ?? ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                GiaSuaChua: e.target.value ? parseFloat(e.target.value) : null,
-              }))
-            }
-            placeholder="Mặc định lấy giá bán nếu trống"
-            className="font-mono rounded-lg text-xs border-amber-500/30 focus-visible:border-amber-500"
-          />
-        </div>
+        {!formData.QuanLyTheoSerial && (
+          <div className="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center justify-between">
+              <span>Giá sửa chữa / thay thế (VNĐ)</span>
+              <span className="text-[10px] text-muted-foreground font-normal">
+                (Tùy chọn)
+              </span>
+            </label>
+            <Input
+              type="number"
+              min={0}
+              value={formData.GiaSuaChua ?? ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  GiaSuaChua: e.target.value
+                    ? parseFloat(e.target.value)
+                    : null,
+                }))
+              }
+              placeholder="Mặc định lấy giá bán nếu trống"
+              className="font-mono rounded-lg text-xs border-amber-500/30 focus-visible:border-amber-500"
+            />
+          </div>
+        )}
 
         {/* Image Upload */}
         <div className="col-span-2 flex flex-col gap-1.5">
