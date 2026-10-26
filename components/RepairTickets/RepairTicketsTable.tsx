@@ -13,6 +13,8 @@ import {
   Copy,
   Check,
   FolderOpen,
+  SquarePen,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
@@ -44,7 +46,9 @@ interface RepairTicketsTableProps {
     className: string;
   };
   onDetail: (item: SC_PhieuSuaChua) => void;
+  onEdit?: (item: SC_PhieuSuaChua) => void;
   onStatusChange: (item: SC_PhieuSuaChua) => void;
+  onDeliverVehicle?: (item: SC_PhieuSuaChua) => void;
   onPayment: (item: SC_PhieuSuaChua) => void;
   onDelete: (item: SC_PhieuSuaChua) => void;
   onOpenCreate: () => void;
@@ -61,7 +65,9 @@ export function RepairTicketsTable({
   getRepairStatusBadge,
   getPaymentStatusBadge,
   onDetail,
+  onEdit,
   onStatusChange,
+  onDeliverVehicle,
   onPayment,
   onDelete,
   onOpenCreate,
@@ -209,48 +215,148 @@ export function RepairTicketsTable({
       key: "actions",
       title: "Thao tác",
       classNameHeader:
-        "w-32 text-center text-xs font-semibold text-muted-foreground",
+        "w-36 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
-      render: (_v, row) => (
-        <div className="flex items-center justify-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => onDetail(row)}
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer"
-            title="Xem chi tiết phiếu & phụ tùng SC"
-          >
-            <Eye className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => onStatusChange(row)}
-            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer"
-            title="Đổi tiến độ sửa chữa"
-          >
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => onPayment(row)}
-            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer"
-            title="Thu tiền dịch vụ"
-          >
-            <Receipt className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => onDelete(row)}
-            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
-            title="Hủy phiếu"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-      ),
+      render: (_v, row) => {
+        const isCompleted = row.trangThaiID === 112;
+        const isCancelled = row.trangThaiID === 113;
+        const isLocked = isCompleted || isCancelled;
+        const isReadyToDeliver = row.trangThaiID === 111;
+        const isFullyPaid = (row.conNo || 0) <= 0;
+
+        return (
+          <div className="flex items-center justify-center gap-1">
+            {/* 1. Chi tiết */}
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => onDetail(row)}
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer"
+              title="Xem chi tiết phiếu & phụ tùng SC"
+            >
+              <Eye className="w-3.5 h-3.5" />
+            </Button>
+
+            {/* 2. Chỉnh sửa (Khóa khi 112 hoặc 113) */}
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => !isLocked && onEdit(row)}
+                disabled={isLocked}
+                className={`text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/50 ${
+                  isLocked
+                    ? "opacity-30 cursor-not-allowed pointer-events-none"
+                    : "cursor-pointer"
+                }`}
+                title={
+                  isCompleted
+                    ? "Phiếu đã bàn giao xe và trừ kho (Đã khóa)"
+                    : isCancelled
+                    ? "Phiếu đã hủy (Đã khóa)"
+                    : "Chỉnh sửa phiếu sửa chữa"
+                }
+              >
+                <SquarePen className="w-3.5 h-3.5" />
+              </Button>
+            )}
+
+            {/* 3. Tiến độ sửa chữa (107 -> 108 -> 109 -> 110 -> 111 -> 113) */}
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => !isLocked && onStatusChange(row)}
+              disabled={isLocked}
+              className={`text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 ${
+                isLocked
+                  ? "opacity-30 cursor-not-allowed pointer-events-none"
+                  : "cursor-pointer"
+              }`}
+              title={
+                isLocked
+                  ? "Phiếu đã kết thúc quy trình sửa chữa"
+                  : "Đổi tiến độ sửa chữa"
+              }
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+
+            {/* 4. Hoàn thành & Bàn giao xe (Trigger xuất kho trừ phụ tùng thực tế) */}
+            {onDeliverVehicle && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => !isLocked && onDeliverVehicle(row)}
+                disabled={isLocked}
+                className={`text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 ${
+                  isReadyToDeliver
+                    ? "ring-1 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 font-bold"
+                    : ""
+                } ${
+                  isLocked
+                    ? "opacity-30 cursor-not-allowed pointer-events-none"
+                    : "cursor-pointer"
+                }`}
+                title={
+                  isCompleted
+                    ? "Xe đã được bàn giao và trừ tồn kho phụ tùng"
+                    : isCancelled
+                    ? "Phiếu đã hủy"
+                    : isReadyToDeliver
+                    ? "Xe đã sẵn sàng! Bấm để bàn giao và trừ tồn kho"
+                    : "Bàn giao xe & Trừ tồn kho phụ tùng"
+                }
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
+
+            {/* 5. Thu tiền */}
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => !isCancelled && !isFullyPaid && onPayment(row)}
+              disabled={isCancelled || isFullyPaid}
+              className={`text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/50 ${
+                isCancelled || isFullyPaid
+                  ? "opacity-30 cursor-not-allowed pointer-events-none"
+                  : "cursor-pointer"
+              }`}
+              title={
+                isCancelled
+                  ? "Phiếu đã hủy"
+                  : isFullyPaid
+                  ? "Phiếu đã thanh toán đủ 100%"
+                  : "Thu tiền dịch vụ sửa chữa"
+              }
+            >
+              <Receipt className="w-3.5 h-3.5" />
+            </Button>
+
+            {/* 6. Hủy phiếu (Khóa khi 112 hoặc 113) */}
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => !isLocked && onDelete(row)}
+              disabled={isLocked}
+              className={`text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 ${
+                isLocked
+                  ? "opacity-30 cursor-not-allowed pointer-events-none"
+                  : "cursor-pointer"
+              }`}
+              title={
+                isCompleted
+                  ? "Không thể hủy phiếu đã hoàn thành"
+                  : isCancelled
+                  ? "Phiếu đã hủy"
+                  : "Hủy phiếu sửa chữa"
+              }
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

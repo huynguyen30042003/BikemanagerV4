@@ -2,12 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, ArrowRight, Warehouse, Truck, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  ArrowRight,
+  Warehouse,
+  Truck,
+  AlertCircle,
+} from "lucide-react";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchSelect } from "@/components/ui/selectSearch";
-import { CreatePhieuChuyenPayload, CreateChiTietChuyenItem } from "@/types/phieuChuyenKho";
+import {
+  CreatePhieuChuyenPayload,
+  CreateChiTietChuyenItem,
+} from "@/types/phieuChuyenKho";
 
 interface CreateStockTransferSlideOverProps {
   open: boolean;
@@ -36,7 +46,9 @@ const INITIAL_FORM: CreatePhieuChuyenPayload = {
   ChiTiets: [{ ...INITIAL_ITEM }],
 };
 
-export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOverProps> = ({
+export const CreateStockTransferSlideOver: React.FC<
+  CreateStockTransferSlideOverProps
+> = ({
   open,
   onClose,
   onSubmit,
@@ -46,7 +58,8 @@ export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOver
   variantOptions,
   isLoadingVariants,
 }) => {
-  const [formData, setFormData] = useState<CreatePhieuChuyenPayload>(INITIAL_FORM);
+  const [formData, setFormData] =
+    useState<CreatePhieuChuyenPayload>(INITIAL_FORM);
 
   // Reset form whenever drawer opens
   useEffect(() => {
@@ -72,7 +85,7 @@ export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOver
   const handleUpdateItem = (
     index: number,
     field: keyof CreateChiTietChuyenItem,
-    value: unknown
+    value: unknown,
   ) => {
     setFormData((prev) => {
       const updated = [...prev.ChiTiets];
@@ -86,7 +99,7 @@ export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOver
 
   const totalQuantity = formData.ChiTiets.reduce(
     (sum, item) => sum + (Number(item.SoLuongChuyen) || 0),
-    0
+    0,
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,11 +116,13 @@ export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOver
     }
 
     const validChiTiets = formData.ChiTiets.filter(
-      (c) => c.BienTheSanPhamID && c.SoLuongChuyen > 0
+      (c) => c.BienTheSanPhamID && c.SoLuongChuyen > 0,
     );
 
     if (validChiTiets.length === 0) {
-      toast.error("Vui lòng thêm ít nhất 1 sản phẩm với số lượng chuyển hợp lệ!");
+      toast.error(
+        "Vui lòng thêm ít nhất 1 sản phẩm với số lượng chuyển hợp lệ!",
+      );
       return;
     }
 
@@ -116,7 +131,7 @@ export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOver
     for (const c of validChiTiets) {
       if (seen.has(c.BienTheSanPhamID)) {
         toast.warning(
-          "Có sản phẩm được chọn trùng lặp ở nhiều dòng! Vui lòng gộp số lượng."
+          "Có sản phẩm được chọn trùng lặp ở nhiều dòng! Vui lòng gộp số lượng.",
         );
         return;
       }
@@ -259,7 +274,7 @@ export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOver
             </Button>
           </div>
 
-          <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[320px] pr-1">
             {formData.ChiTiets.map((ct, idx) => (
               <div
                 key={idx}
@@ -274,7 +289,11 @@ export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOver
                     options={variantOptions}
                     value={ct.BienTheSanPhamID}
                     onChange={(val) =>
-                      handleUpdateItem(idx, "BienTheSanPhamID", String(val || ""))
+                      handleUpdateItem(
+                        idx,
+                        "BienTheSanPhamID",
+                        String(val || ""),
+                      )
                     }
                     isLoading={isLoadingVariants}
                     className="text-xs"
@@ -294,7 +313,7 @@ export const CreateStockTransferSlideOver: React.FC<CreateStockTransferSlideOver
                       handleUpdateItem(
                         idx,
                         "SoLuongChuyen",
-                        Math.max(1, parseInt(e.target.value) || 1)
+                        Math.max(1, parseInt(e.target.value) || 1),
                       )
                     }
                     className="text-xs font-mono h-9 bg-background"

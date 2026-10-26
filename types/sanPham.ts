@@ -51,6 +51,7 @@ export interface CreateSanPhamPayload {
 export interface UpdateSanPhamPayload extends CreateSanPhamPayload {
   SanPhamID: string;
   XoaFile?: boolean;
+  AnhDaiDien?: string;
 }
 
 export interface SP_ProductNavTabs {

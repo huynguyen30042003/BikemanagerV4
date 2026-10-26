@@ -134,22 +134,20 @@ export const ProductVariantsTable: React.FC<ProductVariantsTableProps> = ({
       classNameHeader:
         "w-32 text-right text-xs font-semibold text-muted-foreground",
       classNameItem: "text-right",
-      render: (v) => (
-        <span className="font-mono text-xs font-bold text-foreground">
-          {formatCurrency(Number(v))}
-        </span>
-      ),
-    },
-    {
-      key: "giaBanSi",
-      title: "Giá sỉ / Thợ",
-      classNameHeader:
-        "w-32 text-right text-xs font-semibold text-muted-foreground",
-      classNameItem: "text-right",
-      render: (v) => (
-        <span className="font-mono text-xs text-muted-foreground">
-          {formatCurrency(Number(v))}
-        </span>
+      render: (v, row) => (
+        <div className="flex flex-col items-end">
+          <span className="font-mono text-xs font-bold text-foreground">
+            {formatCurrency(Number(v))}
+          </span>
+          {row.giaSuaChua != null && row.giaSuaChua > 0 && (
+            <span
+              className="text-[10px] font-mono font-medium text-amber-600 dark:text-amber-400"
+              title="Giá sửa chữa / thay thế phụ tùng"
+            >
+              SC: {formatCurrency(row.giaSuaChua)}
+            </span>
+          )}
+        </div>
       ),
     },
     {

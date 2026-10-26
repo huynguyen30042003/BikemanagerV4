@@ -25,6 +25,7 @@ import {
   UpdateDichVuPayload,
   PhieuSuaChuaFilter,
   CreatePhieuSuaChuaPayload,
+  UpdatePhieuSuaChuaPayload,
   AddLichSuThanhToanSuaChuaPayload,
   ThanhToanSuaChuaPayload,
 } from "@/types/suaChua";
@@ -160,9 +161,12 @@ export const useCreatePhieuSuaChua = () => {
 export const useUpdatePhieuSuaChua = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: Partial<CreatePhieuSuaChuaPayload> & { PhieuSuaChuaID: string }) =>
+    mutationFn: (payload: UpdatePhieuSuaChuaPayload) =>
       updatePhieuSuaChuaApi(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.phieuAll }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.phieuAll });
+      qc.invalidateQueries({ queryKey: SUA_CHUA_KEYS.navTabs() });
+    },
   });
 };
 

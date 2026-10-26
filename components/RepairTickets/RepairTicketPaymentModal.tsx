@@ -47,7 +47,7 @@ export function RepairTicketPaymentModal({
     if (open && ticket) {
       const remaining = Math.max(
         0,
-        ticket.conNo ?? ticket.tongTien - ticket.daThanhToan
+        ticket.conNo ?? ticket.tongTien - ticket.daThanhToan,
       );
       setFormData({
         PhieuSuaChuaID: ticket.phieuSuaChuaID,
@@ -84,7 +84,8 @@ export function RepairTicketPaymentModal({
           <div className="space-y-0.5">
             <span>
               Thu tiền cho phiếu{" "}
-              <strong className="font-mono">{ticket?.maPhieuSuaChua}</strong> ({ticket?.tenKhachHang || "Khách lẻ"}).
+              <strong className="font-mono">{ticket?.maPhieuSuaChua}</strong> (
+              {ticket?.tenKhachHang || "Khách lẻ"}).
             </span>
             <div className="text-[11px] font-mono text-foreground font-semibold">
               Tổng tiền: {formatCurrency(ticket?.tongTien)} | Còn nợ:{" "}
@@ -102,7 +103,7 @@ export function RepairTicketPaymentModal({
           </label>
           <SearchSelect
             options={paymentMethodOptions}
-            value={String(formData.PhuongTucThanhToanID)}
+            value={Number(formData.PhuongTucThanhToanID)}
             onChange={(val) =>
               setFormData((prev) => ({
                 ...prev,

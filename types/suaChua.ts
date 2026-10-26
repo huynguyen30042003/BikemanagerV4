@@ -128,34 +128,66 @@ export interface PhieuSuaChuaFilter {
   DiaDiemID?: string | null;
 }
 
+export interface CreateChiTietSuaChuaItem {
+  LoaiHangMuc: number; // 1: Tiền công dịch vụ, 2: Phụ tùng / Linh kiện thay thế
+  DichVuID?: string | null;
+  BienTheSanPhamID?: string | null;
+  MaHangMuc: string;
+  TenHangMuc: string;
+  DonViTinhID?: number | null;
+  SoLuong: number;
+  DonGia: number;
+  TienGiamGia?: number;
+  ThanhTien: number;
+  GhiChu?: string | null;
+}
+
 export interface CreatePhieuSuaChuaPayload {
+  MaPhieuSuaChua?: string | null;
   KhachHangID: string;
   PhuongTienKhachHangID: string;
   DiaDiemID: string;
   KhoID: string;
+  NhanVienTiepNhanID?: number | null;
+  KyThuatVienChinhID?: number | null;
   LoaiDichVuID: number;
   SoKmHienTai?: number | null;
   MoTaVanDe?: string | null;
   KetQuaChanDoan?: string | null;
   GiaiPhapXuLy?: string | null;
+  ThoiGianHenTra?: string | null;
+  TienGiamGia?: number;
+  TienThueVAT?: number;
+  SoThangBaoHanhSuaChua?: number | null;
+  GhiChu?: string | null;
   TrangThaiID?: number;
   TrangThaiThanhToanID?: number;
-  ThoiGianHenTra?: string | null;
-  GhiChu?: string | null;
-  ChiTiets: Array<{
-    LoaiHangMuc: number;
-    DichVuID?: string | null;
-    BienTheSanPhamID?: string | null;
-    MaHangMuc: string;
-    TenHangMuc: string;
-    DonViTinhID?: number | null;
-    SoLuong: number;
-    DonGia: number;
-    TienGiamGia?: number;
-    ThanhTien: number;
-    GhiChu?: string | null;
-  }>;
+  ChiTiets: CreateChiTietSuaChuaItem[];
 }
+
+export interface UpdatePhieuSuaChuaPayload {
+  PhieuSuaChuaID: string;
+  KhachHangID: string;
+  PhuongTienKhachHangID: string;
+  DiaDiemID: string;
+  KhoID: string;
+  NhanVienTiepNhanID?: number | null;
+  KyThuatVienChinhID?: number | null;
+  LoaiDichVuID: number;
+  SoKmHienTai?: number | null;
+  MoTaVanDe?: string | null;
+  KetQuaChanDoan?: string | null;
+  GiaiPhapXuLy?: string | null;
+  ThoiGianHenTra?: string | null;
+  TienGiamGia?: number;
+  TienThueVAT?: number;
+  SoThangBaoHanhSuaChua?: number | null;
+  GhiChu?: string | null;
+  TrangThaiID?: number;
+  TrangThaiThanhToanID?: number;
+  ChiTiets: CreateChiTietSuaChuaItem[];
+}
+
 
 export interface ThanhToanSuaChuaPayload {
   PhieuSuaChuaID: string;

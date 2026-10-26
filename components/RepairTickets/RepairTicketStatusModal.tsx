@@ -74,7 +74,8 @@ export function RepairTicketStatusModal({
           <ArrowRight className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <span>
             Cập nhật trạng thái tiến độ cho phiếu{" "}
-            <strong className="font-mono">{ticket?.maPhieuSuaChua}</strong> ({ticket?.tenKhachHang || "Khách lẻ"}).
+            <strong className="font-mono">{ticket?.maPhieuSuaChua}</strong> (
+            {ticket?.tenKhachHang || "Khách lẻ"}).
           </span>
         </div>
 
@@ -85,7 +86,7 @@ export function RepairTicketStatusModal({
           </label>
           <SearchSelect
             options={repairStatusOptions}
-            value={String(formData.TrangThaiID)}
+            value={Number(formData.TrangThaiID)}
             onChange={(val) =>
               setFormData((prev) => ({
                 ...prev,
@@ -97,6 +98,28 @@ export function RepairTicketStatusModal({
             placeholder="Chọn tiến độ mới..."
           />
         </div>
+
+        {formData.TrangThaiID === 112 && (
+          <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+            <span className="font-semibold flex items-center gap-1.5">
+              <span>🚀 Hoàn thành & Bàn giao xe</span>
+            </span>
+            <p className="text-[11px] leading-relaxed">
+              Trạng thái 112 sẽ kết thúc quy trình sửa chữa và khóa phiếu. Bạn cũng có thể sử dụng nút <strong>Bàn giao xe</strong> màu xanh trên danh sách để hệ thống kích hoạt tự động trừ tồn kho phụ tùng.
+            </p>
+          </div>
+        )}
+
+        {formData.TrangThaiID === 113 && (
+          <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-xs text-rose-800 dark:text-rose-300 space-y-1">
+            <span className="font-semibold flex items-center gap-1.5">
+              <span>⚠️ Cảnh báo hủy phiếu</span>
+            </span>
+            <p className="text-[11px] leading-relaxed">
+              Phiếu sau khi chuyển sang 113 (Đã hủy) sẽ bị khóa toàn bộ và không thể chỉnh sửa hoặc hoàn thành bàn giao xe.
+            </p>
+          </div>
+        )}
 
         {/* Ghi chú */}
         <div>

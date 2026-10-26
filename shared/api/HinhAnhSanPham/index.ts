@@ -3,6 +3,7 @@ import { APP_URL } from "../../constants/apiConstants";
 import { getAccessToken } from "@/lib/auth";
 import {
   CreateHinhAnhPayload,
+  DeleteHinhAnhPayload,
   HinhAnhFilter,
 } from "@/types/hinhAnhSanPham";
 
@@ -36,7 +37,7 @@ export const getHinhAnhsApi = async (filter: HinhAnhFilter) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -62,7 +63,7 @@ export const addHinhAnhApi = async (payload: CreateHinhAnhPayload) => {
     {
       headers: getAuthFormDataHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -72,14 +73,17 @@ export const addHinhAnhApi = async (payload: CreateHinhAnhPayload) => {
  * Xóa hình ảnh khỏi gallery
  * POST /api/BienTheSanPhamApi/DeleteHinhAnh
  */
-export const deleteHinhAnhApi = async (hinhAnhId: string) => {
+export const deleteHinhAnhApi = async (payload: DeleteHinhAnhPayload) => {
   const response = await api.post(
     `${APP_URL}/BienTheSanPhamApi/DeleteHinhAnh`,
-    { HinhAnhID: hinhAnhId },
+    {
+      HinhAnhID: payload.hinhAnhId,
+      DuongDanAnh: payload.duongDanAnh ?? "",
+    },
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -96,7 +100,7 @@ export const getHinhAnhSanPhamKPIApi = async () => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;

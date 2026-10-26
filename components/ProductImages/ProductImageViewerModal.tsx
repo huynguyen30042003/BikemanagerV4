@@ -20,7 +20,7 @@ export interface ProductImageViewerModalProps {
   images?: SP_HinhAnhSanPham[];
   onClose: () => void;
   onNavigate?: (img: SP_HinhAnhSanPham) => void;
-  onDelete?: (id: string) => void;
+  onDelete?: (img: SP_HinhAnhSanPham) => void;
 }
 
 export const ProductImageViewerModal: React.FC<
@@ -144,7 +144,7 @@ export const ProductImageViewerModal: React.FC<
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => onDelete(image.hinhAnhID)}
+                onClick={() => onDelete(image)}
                 className="w-8.5 h-8.5 text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 cursor-pointer"
                 title="Xóa hình ảnh này"
               >
@@ -233,7 +233,7 @@ export const ProductImageViewerModal: React.FC<
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onDelete(image.hinhAnhID)}
+              onClick={() => onDelete(image)}
               className="h-8 px-2.5 text-xs text-rose-600 border-rose-500/30 hover:bg-rose-500/10 sm:hidden cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5 mr-1" />

@@ -29,7 +29,12 @@ const getAuthFormDataHeaders = () => {
  * POST /api/SanPhamApi/Gets
  */
 export const getSanPhamApi = async (
-  filter: SanPhamFilter = { PageIndex: 1, PageSize: 20, TuKhoa: "", TrangThai: null }
+  filter: SanPhamFilter = {
+    PageIndex: 1,
+    PageSize: 20,
+    TuKhoa: "",
+    TrangThai: null,
+  },
 ) => {
   const response = await api.post(
     `${APP_URL}/SanPhamApi/Gets`,
@@ -44,7 +49,7 @@ export const getSanPhamApi = async (
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -61,7 +66,7 @@ export const getSanPhamByIdApi = async (id: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -78,11 +83,16 @@ export const createSanPhamApi = async (payload: CreateSanPhamPayload) => {
   formData.append("DanhMucChiTietID", String(payload.DanhMucChiTietID));
   formData.append("ThuongHieuID", payload.ThuongHieuID);
   formData.append("DuongDan", payload.DuongDan);
-  if (payload.DonViTinhID != null) formData.append("DonViTinhID", String(payload.DonViTinhID));
+  if (payload.DonViTinhID != null)
+    formData.append("DonViTinhID", String(payload.DonViTinhID));
   if (payload.MoTaNgan) formData.append("MoTaNgan", payload.MoTaNgan);
   if (payload.MoTa) formData.append("MoTa", payload.MoTa);
-  if (payload.ThongSoKyThuatJson) formData.append("ThongSoKyThuatJson", payload.ThongSoKyThuatJson);
-  formData.append("SoThangBaoHanhMacDinh", String(payload.SoThangBaoHanhMacDinh ?? 12));
+  if (payload.ThongSoKyThuatJson)
+    formData.append("ThongSoKyThuatJson", payload.ThongSoKyThuatJson);
+  formData.append(
+    "SoThangBaoHanhMacDinh",
+    String(payload.SoThangBaoHanhMacDinh ?? 12),
+  );
   formData.append("LaPhuongTien", String(payload.LaPhuongTien));
   formData.append("DaXuatBan", String(payload.DaXuatBan));
   formData.append("TrangThai", String(payload.TrangThai));
@@ -91,14 +101,10 @@ export const createSanPhamApi = async (payload: CreateSanPhamPayload) => {
     formData.append("file", payload.file);
   }
 
-  const response = await api.post(
-    `${APP_URL}/SanPhamApi/Add`,
-    formData,
-    {
-      headers: getAuthFormDataHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.post(`${APP_URL}/SanPhamApi/Add`, formData, {
+    headers: getAuthFormDataHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -115,28 +121,31 @@ export const updateSanPhamApi = async (payload: UpdateSanPhamPayload) => {
   formData.append("DanhMucChiTietID", String(payload.DanhMucChiTietID));
   formData.append("ThuongHieuID", payload.ThuongHieuID);
   formData.append("DuongDan", payload.DuongDan);
-  if (payload.DonViTinhID != null) formData.append("DonViTinhID", String(payload.DonViTinhID));
+  if (payload.DonViTinhID != null)
+    formData.append("DonViTinhID", String(payload.DonViTinhID));
   if (payload.MoTaNgan) formData.append("MoTaNgan", payload.MoTaNgan);
   if (payload.MoTa) formData.append("MoTa", payload.MoTa);
-  if (payload.ThongSoKyThuatJson) formData.append("ThongSoKyThuatJson", payload.ThongSoKyThuatJson);
-  formData.append("SoThangBaoHanhMacDinh", String(payload.SoThangBaoHanhMacDinh ?? 12));
+  if (payload.ThongSoKyThuatJson)
+    formData.append("ThongSoKyThuatJson", payload.ThongSoKyThuatJson);
+  formData.append(
+    "SoThangBaoHanhMacDinh",
+    String(payload.SoThangBaoHanhMacDinh ?? 12),
+  );
   formData.append("LaPhuongTien", String(payload.LaPhuongTien));
   formData.append("DaXuatBan", String(payload.DaXuatBan));
   formData.append("TrangThai", String(payload.TrangThai));
-  if (payload.XoaFile != null) formData.append("XoaFile", String(payload.XoaFile));
+  formData.append("AnhDaiDien", String(payload.AnhDaiDien));
+  if (payload.XoaFile != null)
+    formData.append("XoaFile", String(payload.XoaFile));
 
   if (payload.file) {
     formData.append("file", payload.file);
   }
 
-  const response = await api.post(
-    `${APP_URL}/SanPhamApi/Edit`,
-    formData,
-    {
-      headers: getAuthFormDataHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.post(`${APP_URL}/SanPhamApi/Edit`, formData, {
+    headers: getAuthFormDataHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -152,7 +161,7 @@ export const deleteSanPhamApi = async (id: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -182,7 +191,7 @@ export const getSanPhamKPIApi = async () => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;

@@ -35,6 +35,7 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [sanPhamFilter, setSanPhamFilter] = useState<string>(initialSanPhamId ?? "");
+  const [laPhuongTienFilter, setLaPhuongTienFilter] = useState<boolean | null>(null);
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -75,6 +76,7 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
     GiaNhap: 0,
     GiaBan: 0,
     GiaBanSi: 0,
+    GiaSuaChua: null,
     SoThangBaoHanh: 12,
     QuanLyTheoSerial: true,
     TrangThai: true,
@@ -93,6 +95,7 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
     GiaNhap: 0,
     GiaBan: 0,
     GiaBanSi: 0,
+    GiaSuaChua: null,
     SoThangBaoHanh: 12,
     QuanLyTheoSerial: true,
     TrangThai: true,
@@ -103,11 +106,12 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
   const queryParams = useMemo(() => {
     return {
       SanPhamID: sanPhamFilter || null,
+      LaPhuongTien: laPhuongTienFilter,
       TuKhoa: searchTerm,
       PageIndex: page,
       PageSize: pageSize,
     };
-  }, [sanPhamFilter, searchTerm, page, pageSize]);
+  }, [sanPhamFilter, laPhuongTienFilter, searchTerm, page, pageSize]);
 
   const { data, isLoading, isFetching, refetch } = useGetBienTheSanPham(queryParams);
 
@@ -146,6 +150,7 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
       GiaNhap: 0,
       GiaBan: 0,
       GiaBanSi: 0,
+      GiaSuaChua: null,
       SoThangBaoHanh: 12,
       QuanLyTheoSerial: true,
       TrangThai: true,
@@ -168,6 +173,7 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
       GiaNhap: item.giaNhap || 0,
       GiaBan: item.giaBan || 0,
       GiaBanSi: item.giaBanSi || 0,
+      GiaSuaChua: item.giaSuaChua ?? null,
       SoThangBaoHanh: item.soThangBaoHanh ?? 12,
       QuanLyTheoSerial: item.quanLyTheoSerial ?? false,
       TrangThai: item.trangThai,
@@ -257,6 +263,8 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
     setPageSize,
     sanPhamFilter,
     setSanPhamFilter,
+    laPhuongTienFilter,
+    setLaPhuongTienFilter,
     searchInput,
     handleSearch,
 

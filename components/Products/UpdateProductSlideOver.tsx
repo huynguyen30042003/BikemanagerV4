@@ -4,7 +4,13 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { z } from "zod";
 import { toast } from "sonner";
-import { SquarePen, Upload, AlertCircle, RefreshCw, Package } from "lucide-react";
+import {
+  SquarePen,
+  Upload,
+  AlertCircle,
+  RefreshCw,
+  Package,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -18,7 +24,9 @@ const sanPhamSchema = z.object({
   maSanPham: z.string().trim().min(1, "Vui lòng nhập mã sản phẩm"),
   tenSanPham: z.string().trim().min(1, "Vui lòng nhập tên sản phẩm"),
   thuongHieuID: z.string().min(1, "Vui lòng chọn thương hiệu / hãng sản xuất"),
-  danhMucChiTietID: z.number().min(1, "Vui lòng chọn ngành hàng / danh mục chi tiết"),
+  danhMucChiTietID: z
+    .number()
+    .min(1, "Vui lòng chọn ngành hàng / danh mục chi tiết"),
 });
 
 interface UpdateProductSlideOverProps {
@@ -82,6 +90,7 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
         LaPhuongTien: product.laPhuongTien ?? false,
         DaXuatBan: product.daXuatBan ?? true,
         TrangThai: product.trangThai,
+        AnhDaiDien: product.anhDaiDien || "",
         XoaFile: false,
         file: null,
       });
@@ -95,7 +104,7 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, file, XoaFile: false }));
+      setFormData((prev) => ({ ...prev, file, XoaFile: true }));
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
@@ -227,7 +236,9 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
             isLoading={isLoadingBrands}
             height={10}
             className={
-              errors.thuongHieuID ? "border-rose-500 ring-1 ring-rose-500/20" : ""
+              errors.thuongHieuID
+                ? "border-rose-500 ring-1 ring-rose-500/20"
+                : ""
             }
           />
           {errors.thuongHieuID && (
@@ -282,7 +293,8 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
             className="font-mono rounded-lg bg-background"
           />
           <p className="text-[11px] text-muted-foreground font-mono">
-            Đường dẫn thân thiện: /san-pham/{formData.DuongDan || "ten-san-pham"}
+            Đường dẫn thân thiện: /san-pham/
+            {formData.DuongDan || "ten-san-pham"}
           </p>
         </div>
 
@@ -392,7 +404,9 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
         {/* Switches */}
         <div className="col-span-2 flex items-center justify-between p-3.5 rounded-xl border border-border/70 bg-muted/20">
           <div>
-            <p className="text-sm font-semibold text-foreground">Xe nguyên chiếc</p>
+            <p className="text-sm font-semibold text-foreground">
+              Xe nguyên chiếc
+            </p>
             <p className="text-xs text-muted-foreground">
               Tự động sinh hồ sơ phương tiện khi bán
             </p>

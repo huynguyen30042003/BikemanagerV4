@@ -30,7 +30,6 @@ import {
 import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
 import { getImageUrl } from "@/shared/constants/apiConstants";
 import { ConfirmModal } from "../ui/ConfirmModal";
-import { id } from "date-fns/locale";
 
 interface SerialImagesSlideOverProps {
   open: boolean;
@@ -45,8 +44,7 @@ export function SerialImagesSlideOver({
   onClose,
   serial,
 }: SerialImagesSlideOverProps) {
-  if (!open) return;
-  const serialId = serial?.soSerialID || "";
+  const serialId = open ? serial?.soSerialID || "" : "";
   const {
     data: images = [],
     isLoading,
@@ -101,6 +99,23 @@ export function SerialImagesSlideOver({
   const [selectDelete, setSelectDelete] = useState<SP_SoSerial_HinhAnh>();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Tự động dọn dẹp file và URL tạm khi đóng modal
+  useEffect(() => {
+    if (!open) {
+      previews.forEach((p) => URL.revokeObjectURL(p));
+      setSelectedFiles([]);
+      setPreviews([]);
+      setGhiChu("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      previews.forEach((p) => URL.revokeObjectURL(p));
+    };
+  }, [previews]);
 
   // Reset when closing or opening
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

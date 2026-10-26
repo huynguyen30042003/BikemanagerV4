@@ -46,7 +46,7 @@ const getInitialFormData = (): CreateDonNhapHangPayload => ({
       ThueVAT: 10,
       TienThueVAT: 0,
       ThanhTien: 0,
-      QuanLyTheoSerial: true,
+      QuanLyTheoSerial: false,
       GhiChu: "",
     },
   ],
@@ -97,7 +97,7 @@ export const CreatePurchaseOrderSlideOver: React.FC<
           ThueVAT: 10,
           TienThueVAT: 0,
           ThanhTien: 0,
-          QuanLyTheoSerial: true,
+          QuanLyTheoSerial: false,
           GhiChu: "",
         },
       ],
@@ -383,12 +383,16 @@ export const CreatePurchaseOrderSlideOver: React.FC<
                             sku?: string;
                             name?: string;
                             defaultPrice?: number;
+                            quanLyTheoSerial?: boolean;
                           }>
                         ).find((v) => v.value === val);
 
                         updated[idx].BienTheSanPhamID = String(val);
                         updated[idx].MaSKU = selectedVar?.sku || "";
                         updated[idx].TenSanPham = selectedVar?.name || "";
+                        updated[idx].QuanLyTheoSerial = Boolean(
+                          selectedVar?.quanLyTheoSerial,
+                        );
                         if (
                           selectedVar?.defaultPrice &&
                           !updated[idx].DonGiaNhap
@@ -516,108 +520,122 @@ export const CreatePurchaseOrderSlideOver: React.FC<
                   </span>
                 </div>
 
-                {/* Quản lý serial / số khung / số máy / số pin */}
-                <div className="pt-2 border-t border-border/50 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <label className="flex items-center gap-2 text-xs font-medium text-foreground">
-                      <Barcode className="w-3.5 h-3.5 text-blue-500" />
-                      Quản lý theo Serial / Số khung
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={Boolean(row.QuanLyTheoSerial)}
-                        onCheckedChange={(checked) =>
-                          toggleSerialManaged(idx, checked)
-                        }
-                      />
-                    </div>
-                  </div>
+                {/* Quản lý serial / số khung / số máy / số pin: Ẩn nếu biến thể không quản lý theo serial */}
+                {(() => {
+                  const selectedVar = (
+                    variantOptions as Array<{
+                      value: string;
+                      sku?: string;
+                      name?: string;
+                      defaultPrice?: number;
+                      quanLyTheoSerial?: boolean;
+                    }>
+                  ).find((v) => v.value === row.BienTheSanPhamID);
 
-                  {row.QuanLyTheoSerial && !row.BienTheSanPhamID && (
-                    <p className="text-[11px] text-muted-foreground">
-                      Chọn sản phẩm để nhập serial cho từng đơn vị.
-                    </p>
-                  )}
+                  if (!selectedVar?.quanLyTheoSerial) {
+                    return null;
+                  }
 
-                  {row.QuanLyTheoSerial && row.BienTheSanPhamID && (
-                    <div className="">
-                      {(formData.Serials || [])
-                        .filter((s) => s.ChiTietDonNhapHangID === row.ChiTietID)
-                        .map((s, sIdx) => (
-                          <div
-                            key={`${row.ChiTietID}-${sIdx}`}
-                            className="grid grid-cols-2 md:grid-cols-5 gap-2 items-center"
-                          >
-                            <Input
-                              placeholder={`Mã serial #${sIdx + 1} *`}
-                              value={s.MaSerial}
-                              onChange={(e) =>
-                                updateSerialField(
-                                  row.ChiTietID,
-                                  sIdx,
-                                  "MaSerial",
-                                  e.target.value,
-                                )
-                              }
-                              className="text-[11px] font-mono h-8"
-                            />
-                            <Input
-                              placeholder="Số khung"
-                              value={s.SoKhung || ""}
-                              onChange={(e) =>
-                                updateSerialField(
-                                  row.ChiTietID,
-                                  sIdx,
-                                  "SoKhung",
-                                  e.target.value,
-                                )
-                              }
-                              className="text-[11px] font-mono h-8"
-                            />
-                            <Input
-                              placeholder="Số máy"
-                              value={s.SoMay || ""}
-                              onChange={(e) =>
-                                updateSerialField(
-                                  row.ChiTietID,
-                                  sIdx,
-                                  "SoMay",
-                                  e.target.value,
-                                )
-                              }
-                              className="text-[11px] font-mono h-8"
-                            />
-                            <Input
-                              placeholder="Số pin"
-                              value={s.SoPin || ""}
-                              onChange={(e) =>
-                                updateSerialField(
-                                  row.ChiTietID,
-                                  sIdx,
-                                  "SoPin",
-                                  e.target.value,
-                                )
-                              }
-                              className="text-[11px] font-mono h-8"
-                            />
-                            <Input
-                              placeholder="Vị trí lưu kho"
-                              value={s.ViTriLuuTru || ""}
-                              onChange={(e) =>
-                                updateSerialField(
-                                  row.ChiTietID,
-                                  sIdx,
-                                  "ViTriLuuTru",
-                                  e.target.value,
-                                )
-                              }
-                              className="text-[11px] h-8"
-                            />
-                          </div>
-                        ))}
+                  return (
+                    <div className="pt-2 border-t border-border/50 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="flex items-center gap-2 text-xs font-medium text-foreground">
+                          <Barcode className="w-3.5 h-3.5 text-blue-500" />
+                          Quản lý theo Serial / Số khung
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={Boolean(row.QuanLyTheoSerial)}
+                            onCheckedChange={(checked) =>
+                              toggleSerialManaged(idx, checked)
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      {row.QuanLyTheoSerial && (
+                        <div>
+                          {(formData.Serials || [])
+                            .filter(
+                              (s) => s.ChiTietDonNhapHangID === row.ChiTietID,
+                            )
+                            .map((s, sIdx) => (
+                              <div
+                                key={`${row.ChiTietID}-${sIdx}`}
+                                className="grid grid-cols-2 md:grid-cols-5 gap-2 items-center"
+                              >
+                                <Input
+                                  placeholder={`Mã serial #${sIdx + 1} *`}
+                                  value={s.MaSerial}
+                                  onChange={(e) =>
+                                    updateSerialField(
+                                      row.ChiTietID,
+                                      sIdx,
+                                      "MaSerial",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="text-[11px] font-mono h-8"
+                                />
+                                <Input
+                                  placeholder="Số khung"
+                                  value={s.SoKhung || ""}
+                                  onChange={(e) =>
+                                    updateSerialField(
+                                      row.ChiTietID,
+                                      sIdx,
+                                      "SoKhung",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="text-[11px] font-mono h-8"
+                                />
+                                <Input
+                                  placeholder="Số máy"
+                                  value={s.SoMay || ""}
+                                  onChange={(e) =>
+                                    updateSerialField(
+                                      row.ChiTietID,
+                                      sIdx,
+                                      "SoMay",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="text-[11px] font-mono h-8"
+                                />
+                                <Input
+                                  placeholder="Số pin"
+                                  value={s.SoPin || ""}
+                                  onChange={(e) =>
+                                    updateSerialField(
+                                      row.ChiTietID,
+                                      sIdx,
+                                      "SoPin",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="text-[11px] font-mono h-8"
+                                />
+                                <Input
+                                  placeholder="Vị trí lưu kho"
+                                  value={s.ViTriLuuTru || ""}
+                                  onChange={(e) =>
+                                    updateSerialField(
+                                      row.ChiTietID,
+                                      sIdx,
+                                      "ViTriLuuTru",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="text-[11px] h-8"
+                                />
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
             ))}
           </div>

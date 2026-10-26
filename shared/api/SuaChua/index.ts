@@ -9,6 +9,8 @@ import {
   SC_PhieuSuaChua,
   PhieuSuaChuaFilter,
   CreatePhieuSuaChuaPayload,
+  UpdatePhieuSuaChuaPayload,
+  CreateChiTietSuaChuaItem,
   AddLichSuThanhToanSuaChuaPayload,
   ThanhToanSuaChuaPayload,
   SC_LichSuThanhToan,
@@ -137,7 +139,46 @@ export const getPhieuSuaChuaByIdApi = async (id: string): Promise<SC_PhieuSuaChu
  * POST /api/PhieuSuaChuaApi/Add
  */
 export const createPhieuSuaChuaApi = async (payload: CreatePhieuSuaChuaPayload) => {
-  const response = await api.post(`${APP_URL}/PhieuSuaChuaApi/Add`, payload, {
+  const formattedBody = {
+    MaPhieuSuaChua: payload.MaPhieuSuaChua || null,
+    KhachHangID: payload.KhachHangID,
+    PhuongTienKhachHangID: payload.PhuongTienKhachHangID,
+    DiaDiemID: payload.DiaDiemID,
+    KhoID: payload.KhoID,
+    NhanVienTiepNhanID: payload.NhanVienTiepNhanID ?? 1,
+    KyThuatVienChinhID: payload.KyThuatVienChinhID ?? 2,
+    LoaiDichVuID: Number(payload.LoaiDichVuID) || 114,
+    SoKmHienTai: Number(payload.SoKmHienTai) || 0,
+    MoTaVanDe: payload.MoTaVanDe || "",
+    KetQuaChanDoan: payload.KetQuaChanDoan || "",
+    GiaiPhapXuLy: payload.GiaiPhapXuLy || "",
+    ThoiGianHenTra: payload.ThoiGianHenTra || null,
+    TienGiamGia: Number(payload.TienGiamGia) || 0,
+    TienThueVAT: Number(payload.TienThueVAT) || 0,
+    SoThangBaoHanhSuaChua: Number(payload.SoThangBaoHanhSuaChua) || 3,
+    GhiChu: payload.GhiChu || "",
+    ChiTiets: (payload.ChiTiets || []).map((ct) => ({
+      LoaiHangMuc: Number(ct.LoaiHangMuc) || 1,
+      DichVuID: ct.LoaiHangMuc === 1 ? (ct.DichVuID || null) : null,
+      BienTheSanPhamID: ct.LoaiHangMuc === 2 ? (ct.BienTheSanPhamID || null) : null,
+      MaHangMuc: ct.MaHangMuc || "",
+      TenHangMuc: ct.TenHangMuc || "",
+      DonViTinhID: ct.LoaiHangMuc === 2 ? (ct.DonViTinhID ?? 1) : null,
+      SoLuong: Number(ct.SoLuong) || 1,
+      DonGia: Number(ct.DonGia) || 0,
+      TienGiamGia: Number(ct.TienGiamGia) || 0,
+      ThanhTien:
+        Number(ct.ThanhTien) ||
+        Math.max(
+          0,
+          (Number(ct.SoLuong) || 1) * (Number(ct.DonGia) || 0) -
+            (Number(ct.TienGiamGia) || 0)
+        ),
+      GhiChu: ct.GhiChu || "",
+    })),
+  };
+
+  const response = await api.post(`${APP_URL}/PhieuSuaChuaApi/Add`, formattedBody, {
     headers: getAuthHeaders(),
   });
   return response.data;
@@ -147,8 +188,47 @@ export const createPhieuSuaChuaApi = async (payload: CreatePhieuSuaChuaPayload) 
  * Cập nhật / Chỉnh sửa phiếu sửa chữa
  * POST /api/PhieuSuaChuaApi/Edit
  */
-export const updatePhieuSuaChuaApi = async (payload: Partial<CreatePhieuSuaChuaPayload> & { PhieuSuaChuaID: string }) => {
-  const response = await api.post(`${APP_URL}/PhieuSuaChuaApi/Edit`, payload, {
+export const updatePhieuSuaChuaApi = async (payload: UpdatePhieuSuaChuaPayload) => {
+  const formattedBody = {
+    PhieuSuaChuaID: payload.PhieuSuaChuaID,
+    KhachHangID: payload.KhachHangID,
+    PhuongTienKhachHangID: payload.PhuongTienKhachHangID,
+    DiaDiemID: payload.DiaDiemID,
+    KhoID: payload.KhoID,
+    NhanVienTiepNhanID: payload.NhanVienTiepNhanID ?? 1,
+    KyThuatVienChinhID: payload.KyThuatVienChinhID ?? 2,
+    LoaiDichVuID: Number(payload.LoaiDichVuID) || 114,
+    SoKmHienTai: Number(payload.SoKmHienTai) || 0,
+    MoTaVanDe: payload.MoTaVanDe || "",
+    KetQuaChanDoan: payload.KetQuaChanDoan || "",
+    GiaiPhapXuLy: payload.GiaiPhapXuLy || "",
+    ThoiGianHenTra: payload.ThoiGianHenTra || null,
+    TienGiamGia: Number(payload.TienGiamGia) || 0,
+    TienThueVAT: Number(payload.TienThueVAT) || 0,
+    SoThangBaoHanhSuaChua: Number(payload.SoThangBaoHanhSuaChua) || 3,
+    GhiChu: payload.GhiChu || "",
+    ChiTiets: (payload.ChiTiets || []).map((ct) => ({
+      LoaiHangMuc: Number(ct.LoaiHangMuc) || 1,
+      DichVuID: ct.LoaiHangMuc === 1 ? (ct.DichVuID || null) : null,
+      BienTheSanPhamID: ct.LoaiHangMuc === 2 ? (ct.BienTheSanPhamID || null) : null,
+      MaHangMuc: ct.MaHangMuc || "",
+      TenHangMuc: ct.TenHangMuc || "",
+      DonViTinhID: ct.LoaiHangMuc === 2 ? (ct.DonViTinhID ?? 1) : null,
+      SoLuong: Number(ct.SoLuong) || 1,
+      DonGia: Number(ct.DonGia) || 0,
+      TienGiamGia: Number(ct.TienGiamGia) || 0,
+      ThanhTien:
+        Number(ct.ThanhTien) ||
+        Math.max(
+          0,
+          (Number(ct.SoLuong) || 1) * (Number(ct.DonGia) || 0) -
+            (Number(ct.TienGiamGia) || 0)
+        ),
+      GhiChu: ct.GhiChu || "",
+    })),
+  };
+
+  const response = await api.post(`${APP_URL}/PhieuSuaChuaApi/Edit`, formattedBody, {
     headers: getAuthHeaders(),
   });
   return response.data;

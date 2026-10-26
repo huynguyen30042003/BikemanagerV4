@@ -7,6 +7,7 @@ export interface KHO_TonKho {
   maVach?: string;
   tenSanPham?: string;
   TenBienThe?: string;
+  quanLyTheoSerial?: boolean;
   mauSac?: string;
   dungLuongPin?: string;
   soLuong: number;

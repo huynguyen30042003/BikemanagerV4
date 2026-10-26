@@ -6,7 +6,11 @@ import {
   CreateBienThePayload,
   UpdateBienThePayload,
 } from "@/types/bienTheSanPham";
-import { CreateHinhAnhPayload, HinhAnhFilter } from "@/types/hinhAnhSanPham";
+import {
+  CreateHinhAnhPayload,
+  DeleteHinhAnhPayload,
+  HinhAnhFilter,
+} from "@/types/hinhAnhSanPham";
 
 const getAuthHeaders = () => {
   const token = getAccessToken();
@@ -41,6 +45,39 @@ export const getBienTheSanPhamApi = async (
       DangHoatDong: filter.DangHoatDong ?? filter.TrangThai ?? null,
       TrangThai: filter.TrangThai ?? filter.DangHoatDong ?? null,
       DanhMucChiTietID: filter.DanhMucChiTietID ?? null,
+      LaPhuongTien: filter.LaPhuongTien ?? null,
+      TuKhoa: filter.TuKhoa ?? "",
+      PageIndex: filter.PageIndex ?? 1,
+      PageSize: filter.PageSize ?? 50,
+    },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data;
+};
+
+/**
+ * Lấy danh sách phụ tùng / linh kiện thay thế (chuyên dụng cho Sửa chữa / Dịch vụ)
+ * Backend tự gán LaPhuongTien = false
+ * POST /api/BienTheSanPhamApi/GetPhuTungs
+ */
+export const getPhuTungsApi = async (
+  filter: BienTheFilter = { PageIndex: 1, PageSize: 50, TuKhoa: "" },
+) => {
+  const response = await api.post(
+    `${APP_URL}/BienTheSanPhamApi/GetPhuTungs`,
+    {
+      QuanLyTheoSerial: filter.QuanLyTheoSerial ?? null,
+      SanPhamID: filter.SanPhamID ?? null,
+      KhoID: filter.KhoID ?? null,
+      CoTonKho: filter.CoTonKho ?? null,
+      DangHoatDong: filter.DangHoatDong ?? filter.TrangThai ?? null,
+      TrangThai: filter.TrangThai ?? filter.DangHoatDong ?? null,
+      DanhMucChiTietID: filter.DanhMucChiTietID ?? null,
+      LaPhuongTien: filter.LaPhuongTien ?? false,
       TuKhoa: filter.TuKhoa ?? "",
       PageIndex: filter.PageIndex ?? 1,
       PageSize: filter.PageSize ?? 50,
@@ -112,6 +149,9 @@ export const createBienTheApi = async (payload: CreateBienThePayload) => {
   formData.append("GiaNhap", String(payload.GiaNhap ?? 0));
   formData.append("GiaBan", String(payload.GiaBan ?? 0));
   formData.append("GiaBanSi", String(payload.GiaBanSi ?? 0));
+  if (payload.GiaSuaChua !== undefined && payload.GiaSuaChua !== null) {
+    formData.append("GiaSuaChua", String(payload.GiaSuaChua));
+  }
   formData.append("SoThangBaoHanh", String(payload.SoThangBaoHanh ?? 12));
   formData.append("QuanLyTheoSerial", String(payload.QuanLyTheoSerial));
   formData.append("TrangThai", String(payload.TrangThai));
@@ -151,6 +191,9 @@ export const updateBienTheApi = async (payload: UpdateBienThePayload) => {
   formData.append("GiaNhap", String(payload.GiaNhap ?? 0));
   formData.append("GiaBan", String(payload.GiaBan ?? 0));
   formData.append("GiaBanSi", String(payload.GiaBanSi ?? 0));
+  if (payload.GiaSuaChua !== undefined && payload.GiaSuaChua !== null) {
+    formData.append("GiaSuaChua", String(payload.GiaSuaChua));
+  }
   formData.append("SoThangBaoHanh", String(payload.SoThangBaoHanh ?? 12));
   formData.append("QuanLyTheoSerial", String(payload.QuanLyTheoSerial));
   formData.append("TrangThai", String(payload.TrangThai));
@@ -245,10 +288,13 @@ export const addHinhAnhApi = async (payload: CreateHinhAnhPayload) => {
  * Xóa hình ảnh khỏi gallery
  * POST /api/BienTheSanPhamApi/DeleteHinhAnh
  */
-export const deleteHinhAnhApi = async (hinhAnhId: string) => {
+export const deleteHinhAnhApi = async (payload: DeleteHinhAnhPayload) => {
   const response = await api.post(
     `${APP_URL}/BienTheSanPhamApi/DeleteHinhAnh`,
-    { HinhAnhID: hinhAnhId },
+    {
+      HinhAnhID: payload.hinhAnhId,
+      DuongDanAnh: payload.duongDanAnh ?? "",
+    },
     {
       headers: getAuthHeaders(),
       withCredentials: true,

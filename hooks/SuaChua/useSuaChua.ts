@@ -7,7 +7,9 @@ import {
   useDeleteDichVu,
   useGetPhieuSuaChua,
   useCreatePhieuSuaChua,
+  useUpdatePhieuSuaChua,
   useChuyenTrangThaiSuaChua,
+  useHoanThanhVaGiaoXeSuaChua,
   useThanhToanSuaChua,
   useDeletePhieuSuaChua,
 } from "./useSuaChuaApi";
@@ -17,6 +19,7 @@ import {
   UpdateDichVuPayload,
   SC_PhieuSuaChua,
   CreatePhieuSuaChuaPayload,
+  UpdatePhieuSuaChuaPayload,
   ThanhToanSuaChuaPayload,
 } from "@/types/suaChua";
 import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
@@ -25,6 +28,8 @@ import { useGetKhachHang } from "@/hooks/KhachHang/useKhachHangApi";
 import { useGetPhuongTienKhachHang } from "@/hooks/PhuongTienKhachHang/usePhuongTienKhachHangApi";
 import { useGetDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
 import { useGetKho } from "@/hooks/Kho/useKhoApi";
+import { useGetPhuTungs } from "@/hooks/BienTheSanPham/useBienTheSanPhamApi";
+
 
 export const useDichVuHook = () => {
   const [page, setPage] = useState(1);
@@ -275,7 +280,51 @@ export const usePhieuSuaChuaHook = () => {
     }));
   }, [dataKhos]);
 
+
+  // Lookup danh mục tiền công / dịch vụ sửa chữa có sẵn
+  const { data: dataServices } = useGetDichVu({ PageIndex: 1, PageSize: 100 });
+  const serviceOptions = useMemo(() => {
+    const list = dataServices?.data ?? dataServices?.items ?? [];
+    return list.map((d: SC_DichVu) => ({
+      value: d.dichVuID,
+      label: `${d.tenDichVu} [${d.maDichVu}]`,
+      maDichVu: d.maDichVu,
+      tenDichVu: d.tenDichVu,
+      donGia: d.giaKhuyenMai ?? d.giaCoBan,
+    }));
+  }, [dataServices]);
+
+  // Lookup danh mục phụ tùng thay thế có sẵn chuyên biệt (GetPhuTungs)
+  const { data: dataVariants } = useGetPhuTungs({ PageIndex: 1, PageSize: 200 });
+  const partOptions = useMemo(() => {
+    const list = dataVariants?.data ?? dataVariants?.items ?? [];
+    return list.map(
+      (v: {
+        bienTheSanPhamID: string;
+        tenBienThe: string;
+        maSKU: string;
+        giaBan?: number;
+        giaSuaChua?: number;
+        tonKhoTaiKho?: number;
+        donViTinhID?: number;
+      }) => {
+        const price = v.giaSuaChua ?? v.giaBan ?? 0;
+        const tonLabel = v.tonKhoTaiKho !== undefined ? ` [Tồn: ${v.tonKhoTaiKho}]` : "";
+        return {
+          value: v.bienTheSanPhamID,
+          label: `${v.tenBienThe} (${v.maSKU})${tonLabel} - ${price.toLocaleString("vi-VN")} đ`,
+          maSKU: v.maSKU,
+          tenBienThe: v.tenBienThe,
+          donGia: price,
+          donViTinhID: v.donViTinhID,
+          tonKhoTaiKho: v.tonKhoTaiKho,
+        };
+      }
+    );
+  }, [dataVariants]);
+
   const [openCreate, setOpenCreate] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const [dataCreate, setDataCreate] = useState<CreatePhieuSuaChuaPayload>({
     KhachHangID: "",
     PhuongTienKhachHangID: "",
@@ -346,14 +395,56 @@ export const usePhieuSuaChuaHook = () => {
   }, [totalCount, pageSize]);
 
   const createMutation = useCreatePhieuSuaChua();
+  const updateMutation = useUpdatePhieuSuaChua();
   const statusMutation = useChuyenTrangThaiSuaChua();
+  const hoanThanhVaGiaoXeMutation = useHoanThanhVaGiaoXeSuaChua();
   const paymentMutation = useThanhToanSuaChua();
   const deleteMutation = useDeletePhieuSuaChua();
+
+  const handleHoanThanhVaGiaoXe = async (ticket: SC_PhieuSuaChua) => {
+    if (ticket.trangThaiID === 112) {
+      toast.info("Phiếu đã hoàn thành và bàn giao xe trước đó!");
+      return;
+    }
+    if (ticket.trangThaiID === 113) {
+      toast.warning("Phiếu đã bị hủy, không thể bàn giao xe!");
+      return;
+    }
+    try {
+      await hoanThanhVaGiaoXeMutation.mutateAsync(ticket.phieuSuaChuaID);
+      toast.success("Bàn giao xe và trừ tồn kho phụ tùng thành công!");
+      refetch();
+    } catch {
+      toast.error("Không thể hoàn thành & bàn giao xe!");
+    }
+  };
+
+  const handleOpenEdit = (ticket: SC_PhieuSuaChua) => {
+    setSelectedTicket(ticket);
+    setOpenEdit(true);
+  };
+
+  const handleSubmitEdit = async (
+    e?: React.FormEvent,
+    customData?: UpdatePhieuSuaChuaPayload
+  ) => {
+    e?.preventDefault?.();
+    if (!customData) return;
+    try {
+      await updateMutation.mutateAsync(customData);
+      toast.success("Cập nhật phiếu sửa chữa thành công!");
+      setOpenEdit(false);
+      refetch();
+    } catch {
+      toast.error("Không thể cập nhật phiếu sửa chữa!");
+    }
+  };
 
   const handleOpenCreate = () => {
     setDataCreate({
       KhachHangID: customerOptions[0]?.value ?? "",
       PhuongTienKhachHangID: vehicleOptions[0]?.value ?? "",
+
       DiaDiemID: diaDiemOptions[0]?.value ?? "",
       KhoID: khoOptions[0]?.value ?? "",
       LoaiDichVuID: 114,
@@ -532,6 +623,8 @@ export const usePhieuSuaChuaHook = () => {
     vehicleOptions,
     diaDiemOptions,
     khoOptions,
+    serviceOptions,
+    partOptions,
     items,
     totalCount,
     totalPages,
@@ -546,6 +639,10 @@ export const usePhieuSuaChuaHook = () => {
     handleAddDetailRow,
     handleRemoveDetailRow,
     handleSubmitCreate,
+    openEdit,
+    setOpenEdit,
+    handleOpenEdit,
+    handleSubmitEdit,
     openStatusModal,
     setOpenStatusModal,
     dataStatusChange,
@@ -562,10 +659,13 @@ export const usePhieuSuaChuaHook = () => {
     setOpenDetail,
     handleOpenDetail,
     handleDelete,
+    handleHoanThanhVaGiaoXe,
     selectedTicket,
     isSubmitting:
       createMutation.isPending ||
+      updateMutation.isPending ||
       statusMutation.isPending ||
+      hoanThanhVaGiaoXeMutation.isPending ||
       paymentMutation.isPending ||
       deleteMutation.isPending,
   };

@@ -1330,9 +1330,23 @@ POST {{base_url}}/api/DonNhapHangApi/AddLichSuThanhToan
 
 # ==============================================================================
 
+# Lấy danh sách sản phẩm / biến thể sẵn sàng bán tại kho (kèm danh sách serial khả dụng)
+
+POST {{base_url}}/api/DonHangApi/GetSanPhamBanHang
+{
+  "KhoID": "90343865-b67b-400e-a4ab-23cecbc9953b",
+  "TuKhoa": "",
+  "DanhMucChiTietID": null,
+  "ChiLayConTon": true,
+  "QuanLyTheoSerial": null,
+  "PageIndex": 1,
+  "PageSize": 50
+}
+
 # Lấy danh sách đơn hàng phân trang & lọc đa tiêu chí
 
 POST {{base_url}}/api/DonHangApi/Gets
+
 {
 "TuKhoa": "",
 "KhachHangID": null,

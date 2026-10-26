@@ -10,27 +10,52 @@ import {
   Layers,
   type LucideIcon,
 } from "lucide-react";
+import { SerialKhaDungBanHang } from "@/types/donHang";
 
 export interface CartItem {
+  id: string; // ChiTietDonHangID
   bienTheSanPhamID: string;
   sku: string;
   tenBienThe: string;
+  tenSanPham?: string;
   donGia: number;
   soLuong: number;
+  tienGiamGia?: number;
+  thueVAT?: number;
+  tienThueVAT?: number;
   thanhTien: number;
+  quanLyTheoSerial: boolean;
+  laPhuongTien: boolean;
+  soThangBaoHanh: number;
+  ghiChu?: string;
+  danhSachSerialKhaDung?: SerialKhaDungBanHang[];
+  selectedSerials?: SerialKhaDungBanHang[];
 }
 
 export interface VariantItem {
   value: string;
   sku?: string;
   name?: string;
+  tenBienThe?: string;
+  tenSanPham?: string;
   defaultPrice?: number;
+  giaBan?: number;
+  giaBanKhuyenMai?: number | null;
+  thueVAT?: number;
+  soThangBaoHanh?: number;
   quanLySerial?: boolean;
+  quanLyTheoSerial?: boolean;
+  laPhuongTien?: boolean;
   soLuongTon?: number;
   soLuongKhaDung?: number;
   danhMucChiTietID?: number;
+  tenDanhMuc?: string;
+  tenThuongHieu?: string;
   tenKho?: string;
+  anhDaiDien?: string | null;
+  danhSachSerialKhaDung?: SerialKhaDungBanHang[];
 }
+
 
 export interface CategoryTabItem {
   key: string;

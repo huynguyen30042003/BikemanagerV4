@@ -23,7 +23,7 @@ export interface ProductImagesGalleryProps {
   isLoading: boolean;
   onOpenAdd: () => void;
   onZoom: (img: SP_HinhAnhSanPham) => void;
-  onDelete: (id: string) => void;
+  onDelete: (img: SP_HinhAnhSanPham) => void;
 }
 
 export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
@@ -123,7 +123,7 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete(img.hinhAnhID);
+                onDelete(img);
               }}
               title="Xóa ảnh này"
               aria-label="Xóa ảnh này"
@@ -148,7 +148,7 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
 
               <button
                 type="button"
-                onClick={() => onDelete(img.hinhAnhID)}
+                onClick={() => onDelete(img)}
                 title="Xóa hình ảnh này"
                 className="w-9 h-9 rounded-lg bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-xs cursor-pointer transition-transform active:scale-95"
               >

@@ -104,8 +104,12 @@ export function UpdateRepairServiceSlideOver({
         <div className="flex items-center gap-2.5 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300">
           <SquarePen className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
           <span>
-            Cập nhật đơn giá tiền công, nhóm phân loại hoặc điều chỉnh thời gian thi công cho mã{" "}
-            <strong className="font-mono">{formData.MaDichVu || item?.maDichVu}</strong>.
+            Cập nhật đơn giá tiền công, nhóm phân loại hoặc điều chỉnh thời gian
+            thi công cho mã{" "}
+            <strong className="font-mono">
+              {formData.MaDichVu || item?.maDichVu}
+            </strong>
+            .
           </span>
         </div>
 
@@ -181,7 +185,9 @@ export function UpdateRepairServiceSlideOver({
               className={`text-xs font-mono font-bold ${errors.GiaCoBan ? "border-rose-500" : ""}`}
             />
             {errors.GiaCoBan && (
-              <p className="text-[11px] text-rose-500 mt-1">{errors.GiaCoBan}</p>
+              <p className="text-[11px] text-rose-500 mt-1">
+                {errors.GiaCoBan}
+              </p>
             )}
           </div>
 
@@ -192,7 +198,6 @@ export function UpdateRepairServiceSlideOver({
             <Input
               type="number"
               min={1}
-              step={5}
               value={formData.ThoiGianDuKienPhut ?? 30}
               onChange={(e) =>
                 setFormData((prev) => ({

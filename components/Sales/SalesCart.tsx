@@ -12,13 +12,19 @@ import {
   RefreshCw,
   Receipt,
   Calendar,
+  Barcode,
+  Truck,
+  FileText,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { SearchSelect } from "@/components/ui/selectSearch";
-import { DatePicker } from "@/components/ui/datePicker";
 import { CartItem, formatCurrency } from "./types";
+import { SerialKhaDungBanHang } from "@/types/donHang";
 import DatePickerInput from "../ui/DatePickerInput";
 
 interface SelectOption {
@@ -38,6 +44,11 @@ interface SalesCartProps {
   onUpdateQuantity: (id: string, delta: number) => void;
   onRemoveFromCart: (id: string) => void;
   onClearCart: () => void;
+  onSelectSerial?: (
+    bienTheSanPhamID: string,
+    slotIdx: number,
+    serial: SerialKhaDungBanHang,
+  ) => void;
   subTotal: number;
   discountAmount: number;
   onDiscountChange: (val: number) => void;
@@ -55,6 +66,14 @@ interface SalesCartProps {
   paymentMethodOptions: SelectOption[];
   saleDate: string;
   onSaleDateChange: (val: string) => void;
+  orderNote?: string;
+  onOrderNoteChange?: (val: string) => void;
+  recipientName?: string;
+  onRecipientNameChange?: (val: string) => void;
+  recipientPhone?: string;
+  onRecipientPhoneChange?: (val: string) => void;
+  deliveryAddress?: string;
+  onDeliveryAddressChange?: (val: string) => void;
   isCreating: boolean;
   onCheckout: () => void;
 }
@@ -80,6 +99,7 @@ export const SalesCart: React.FC<SalesCartProps> = ({
   onUpdateQuantity,
   onRemoveFromCart,
   onClearCart,
+  onSelectSerial,
   subTotal,
   discountAmount,
   onDiscountChange,
@@ -97,12 +117,19 @@ export const SalesCart: React.FC<SalesCartProps> = ({
   paymentMethodOptions,
   saleDate,
   onSaleDateChange,
+  orderNote = "",
+  onOrderNoteChange,
+  recipientName = "",
+  onRecipientNameChange,
+  recipientPhone = "",
+  onRecipientPhoneChange,
+  deliveryAddress = "",
+  onDeliveryAddressChange,
   isCreating,
   onCheckout,
 }) => {
-  useEffect(() => {
-    console.log("saleDate", saleDate);
-  }, [saleDate]);
+  const [showDeliveryInfo, setShowDeliveryInfo] = React.useState(false);
+
   return (
     <div
       className={`${
@@ -152,7 +179,7 @@ export const SalesCart: React.FC<SalesCartProps> = ({
             )}
           </div>
 
-          <div className="space-y-2 max-h-[260px] overflow-y-auto scrollbar-thin pr-1">
+          <div className="space-y-2 max-h-[260px] scrollbar-thin pr-1">
             {cart.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground text-xs flex flex-col items-center justify-center">
                 <ShoppingCart className="w-10 h-10 text-muted-foreground/30 mb-2" />
@@ -167,55 +194,131 @@ export const SalesCart: React.FC<SalesCartProps> = ({
               cart.map((item) => (
                 <div
                   key={item.bienTheSanPhamID}
-                  className="p-2.5 rounded-xl border border-border/70 bg-background/90 flex items-center justify-between gap-2 text-xs"
+                  className="p-2.5 rounded-xl border border-border/70 bg-background/90 flex flex-col gap-2 text-xs"
                 >
-                  <div className="flex-1 min-w-0 pr-1">
-                    <p className="font-semibold text-foreground truncate">
-                      {item.tenBienThe}
-                    </p>
-                    <p className="text-[11px] font-mono text-muted-foreground">
-                      {formatCurrency(item.donGia)}
-                    </p>
-                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1 min-w-0 pr-1">
+                      <p className="font-semibold text-foreground truncate">
+                        {item.tenBienThe}
+                      </p>
+                      <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
+                        <span>{formatCurrency(item.donGia)}</span>
+                        {item.thueVAT ? (
+                          <span className="text-[10px] text-muted-foreground">
+                            (VAT {item.thueVAT}%)
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() =>
-                        onUpdateQuantity(item.bienTheSanPhamID, -1)
-                      }
-                      className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </Button>
-                    <span className="w-6 text-center font-mono font-bold text-xs">
-                      {item.soLuong}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          onUpdateQuantity(item.bienTheSanPhamID, -1)
+                        }
+                        className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="w-6 text-center font-mono font-bold text-xs">
+                        {item.soLuong}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          onUpdateQuantity(item.bienTheSanPhamID, 1)
+                        }
+                        className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onRemoveFromCart(item.bienTheSanPhamID)}
+                        className="text-rose-500 hover:text-rose-700 hover:bg-rose-500/10 h-7 w-7 rounded-lg cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+
+                    <span className="font-mono font-bold text-foreground text-right w-24 shrink-0 text-xs sm:text-sm">
+                      {formatCurrency(item.thanhTien)}
                     </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onUpdateQuantity(item.bienTheSanPhamID, 1)}
-                      className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onRemoveFromCart(item.bienTheSanPhamID)}
-                      className="text-rose-500 hover:text-rose-700 hover:bg-rose-500/10 h-7 w-7 rounded-lg cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
                   </div>
 
-                  <span className="font-mono font-bold text-foreground text-right w-24 shrink-0 text-xs sm:text-sm">
-                    {formatCurrency(item.thanhTien)}
-                  </span>
+                  {/* Chọn số khung / serial khả dụng */}
+                  {item.quanLyTheoSerial && (
+                    <div className="pt-2 border-t border-dashed border-border/80 space-y-1.5 w-full">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                          <Barcode className="w-3.5 h-3.5" />
+                          Số khung / Serial ({item.selectedSerials?.length || 0}
+                          /{item.soLuong}):
+                        </span>
+                        {(!item.selectedSerials ||
+                          item.selectedSerials.length < item.soLuong) && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                            Chưa chọn đủ serial
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        {Array.from({ length: item.soLuong }).map(
+                          (_, slotIdx) => {
+                            const curSerial = item.selectedSerials?.[slotIdx];
+                            const availableOptions = (
+                              item.danhSachSerialKhaDung || []
+                            ).map((s) => ({
+                              value: s.soSerialID,
+                              label: `Khung: ${s.soKhung || s.maSerial} ${
+                                s.soMay ? `- Máy: ${s.soMay}` : ""
+                              } ${s.viTriLuuTru ? `[${s.viTriLuuTru}]` : ""}`,
+                            }));
+
+                            return (
+                              <div
+                                key={slotIdx}
+                                className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-lg border border-border/60 text-[11px]"
+                              >
+                                <span className="text-[10px] font-mono text-muted-foreground w-12 shrink-0">
+                                  Xe #{slotIdx + 1}:
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <SearchSelect
+                                    placeholder="Chọn số khung / serial khả dụng..."
+                                    options={availableOptions}
+                                    value={curSerial?.soSerialID || ""}
+                                    onChange={(val) => {
+                                      const picked =
+                                        item.danhSachSerialKhaDung?.find(
+                                          (s) => s.soSerialID === val,
+                                        );
+                                      if (picked && onSelectSerial) {
+                                        onSelectSerial(
+                                          item.bienTheSanPhamID,
+                                          slotIdx,
+                                          picked,
+                                        );
+                                      }
+                                    }}
+                                    height={8}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          },
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -385,6 +488,79 @@ export const SalesCart: React.FC<SalesCartProps> = ({
               placeholder="dd/MM/yyyy"
             />
           </div>
+        </div>
+
+        {/* Thông tin nhận xe & Ghi chú đơn hàng (Collapsible) */}
+        <div className="border border-border/70 rounded-xl overflow-hidden bg-muted/20">
+          <button
+            type="button"
+            onClick={() => setShowDeliveryInfo(!showDeliveryInfo)}
+            className="w-full p-2.5 flex items-center justify-between text-xs font-semibold text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5">
+              <Truck className="w-3.5 h-3.5 text-blue-500" />
+              Thông tin nhận xe & Ghi chú đơn hàng
+            </span>
+            {showDeliveryInfo ? (
+              <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+          </button>
+
+          {showDeliveryInfo && (
+            <div className="p-3 pt-0 space-y-2 border-t border-border/60 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                <div>
+                  <label className="block text-[10px] uppercase font-semibold text-muted-foreground mb-1">
+                    Người nhận
+                  </label>
+                  <Input
+                    value={recipientName}
+                    onChange={(e) => onRecipientNameChange?.(e.target.value)}
+                    placeholder="Tên người nhận xe..."
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-semibold text-muted-foreground mb-1">
+                    Số điện thoại
+                  </label>
+                  <Input
+                    value={recipientPhone}
+                    onChange={(e) => onRecipientPhoneChange?.(e.target.value)}
+                    placeholder="SĐT người nhận..."
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-semibold text-muted-foreground mb-1">
+                  Địa chỉ giao hàng
+                </label>
+                <Input
+                  value={deliveryAddress}
+                  onChange={(e) => onDeliveryAddressChange?.(e.target.value)}
+                  placeholder="Địa chỉ nhận xe..."
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-semibold text-muted-foreground mb-1">
+                  Ghi chú đơn hàng
+                </label>
+                <Textarea
+                  value={orderNote}
+                  onChange={(e) => onOrderNoteChange?.(e.target.value)}
+                  placeholder="Ghi chú xuất xe, biển số, phụ kiện tặng kèm..."
+                  rows={2}
+                  className="text-xs resize-none"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Checkout Button */}

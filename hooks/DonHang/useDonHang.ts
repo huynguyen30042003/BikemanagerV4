@@ -10,6 +10,7 @@ import {
   useThanhToanDonHang,
   useDeleteDonHang,
   useGetLichSuThanhToanDonHang,
+  useGetSanPhamBanHang,
 } from "./useDonHangApi";
 import {
   DH_DonHang,
@@ -19,6 +20,7 @@ import {
   AddLichSuThanhToanPayload,
   ThanhToanDonHangPayload,
   DonHangKPI,
+  SP_SanPhamBanHang,
 } from "@/types/donHang";
 import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
 import { DANH_MUC_CHUNG } from "@/constants/danhMuc";
@@ -96,9 +98,13 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
         khachHangID: string;
         tenKhachHang: string;
         dienThoai: string;
+        diaChi?: string | null;
       }) => ({
         value: c.khachHangID,
         label: `${c.tenKhachHang} - ${c.dienThoai}`,
+        tenKhachHang: c.tenKhachHang,
+        dienThoai: c.dienThoai,
+        diaChi: c.diaChi || "",
       }),
     );
   }, [dataCustomers]);
@@ -139,16 +145,29 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
         ? String(khoOptions[0].value)
         : null;
 
-  const shouldEnableVariantsQuery = hookOptions?.waitForKho
-    ? Boolean(effectiveKhoId) || (!isLoadingKhos && khoOptions.length === 0)
-    : true;
+  const isSalesMode = Boolean(hookOptions?.waitForKho || hookOptions?.KhoID);
 
-  // Biến thể sản phẩm options (Lấy từ BienTheSanPhamApi/Gets có kèm số lượng tồn kho theo KhoID)
+  // 1. Dùng useGetSanPhamBanHang chuyên biệt cho POS/Bán hàng (kèm serials khả dụng)
+  const {
+    data: dataSanPhamBanHang,
+    isLoading: isLoadingSalesProducts,
+    refetch: refetchSalesProducts,
+    isFetching: isFetchingSalesProducts,
+  } = useGetSanPhamBanHang({
+    KhoID: effectiveKhoId || "",
+    DanhMucChiTietID: hookOptions?.DanhMucChiTietID ?? null,
+    TuKhoa: hookOptions?.TuKhoaVariants ?? "",
+    ChiLayConTon: true,
+    PageIndex: 1,
+    PageSize: hookOptions?.PageSizeVariants ?? 100,
+  });
+
+  // 2. Fallback dùng useGetBienTheSanPham nếu không ở chế độ bán hàng theo kho
   const {
     data: dataVariants,
-    isLoading: isLoadingVariants,
-    refetch: refetchVariants,
-    isFetching: isFetchingVariants,
+    isLoading: isLoadingCatalogVariants,
+    refetch: refetchCatalogVariants,
+    isFetching: isFetchingCatalogVariants,
   } = useGetBienTheSanPham(
     {
       KhoID: effectiveKhoId,
@@ -158,11 +177,51 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
       PageSize: hookOptions?.PageSizeVariants ?? 200,
     },
     {
-      enabled: shouldEnableVariantsQuery,
+      enabled: !isSalesMode,
     },
   );
 
+  const isLoadingVariants = isSalesMode
+    ? isLoadingSalesProducts
+    : isLoadingCatalogVariants;
+  const isFetchingVariants = isSalesMode
+    ? isFetchingSalesProducts
+    : isFetchingCatalogVariants;
+  const refetchVariants = isSalesMode
+    ? refetchSalesProducts
+    : refetchCatalogVariants;
+
   const variantOptions = useMemo(() => {
+    if (isSalesMode) {
+      const list: SP_SanPhamBanHang[] =
+        dataSanPhamBanHang?.data ?? dataSanPhamBanHang?.items ?? [];
+      return list.map((v) => ({
+        value: v.bienTheSanPhamID,
+        label: `${v.tenBienThe} [${v.maSKU}]`,
+        sku: v.maSKU,
+        name: v.tenSanPham
+          ? `${v.tenSanPham}${v.mauSac ? ` (${v.mauSac})` : ""}`
+          : v.tenBienThe,
+        tenBienThe: v.tenBienThe,
+        tenSanPham: v.tenSanPham,
+        defaultPrice: v.giaBanKhuyenMai ?? v.giaBan ?? 0,
+        giaBan: v.giaBan,
+        giaBanKhuyenMai: v.giaBanKhuyenMai,
+        thueVAT: v.thueVAT || 0,
+        soThangBaoHanh: v.soThangBaoHanh || 12,
+        quanLySerial: Boolean(v.quanLyTheoSerial),
+        quanLyTheoSerial: Boolean(v.quanLyTheoSerial),
+        laPhuongTien: Boolean(v.laPhuongTien),
+        danhMucChiTietID: v.danhMucChiTietID ?? undefined,
+        tenDanhMuc: v.tenDanhMuc ?? undefined,
+        tenThuongHieu: v.tenThuongHieu ?? undefined,
+        soLuongTon: v.soLuongTon ?? 0,
+        soLuongKhaDung: v.soLuongKhaDung ?? 0,
+        anhDaiDien: v.anhDaiDien,
+        danhSachSerialKhaDung: v.danhSachSerialKhaDung || [],
+      }));
+    }
+
     const list = dataVariants?.data ?? dataVariants?.items ?? [];
     return list.map(
       (v: {
@@ -187,8 +246,15 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
         name: v.tenSanPham
           ? `${v.tenSanPham}${v.mauSac ? ` (${v.mauSac})` : ""}`
           : v.tenBienThe,
+        tenBienThe: v.tenBienThe,
+        tenSanPham: v.tenSanPham,
         defaultPrice: v.giaBan || 0,
+        giaBan: v.giaBan || 0,
+        thueVAT: 0,
+        soThangBaoHanh: 12,
         quanLySerial: Boolean(v.quanLyTheoSerial),
+        quanLyTheoSerial: Boolean(v.quanLyTheoSerial),
+        laPhuongTien: false,
         danhMucChiTietID: v.danhMucChiTietID,
         soLuongTon: v.tonKhoTaiKho ?? v.tongTonKho ?? v.soLuongTon ?? 0,
         soLuongKhaDung:
@@ -198,9 +264,11 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
           v.soLuongTon ??
           0,
         tenKho: v.tenKho,
+        danhSachSerialKhaDung: [],
       }),
     );
-  }, [dataVariants]);
+  }, [isSalesMode, dataSanPhamBanHang, dataVariants]);
+
 
   // Form tạo đơn
   const [openCreate, setOpenCreate] = useState(false);

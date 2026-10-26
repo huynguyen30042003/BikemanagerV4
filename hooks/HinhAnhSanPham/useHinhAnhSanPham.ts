@@ -22,7 +22,10 @@ export function useHinhAnhSanPham(initialSanPhamId?: string) {
 
   const [openAdd, setOpenAdd] = useState<boolean>(false);
   const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const [selectHinhAnhId, setSelectHinhAnhId] = useState<string>("");
+  const [deletingImage, setDeletingImage] = useState<{
+    hinhAnhId: string;
+    duongDanAnh?: string | null;
+  } | null>(null);
 
   // Query sản phẩm cho dropdown
   const { data: dataProducts, isLoading: isLoadingProducts } = useGetSanPham({
@@ -139,16 +142,30 @@ export function useHinhAnhSanPham(initialSanPhamId?: string) {
     }
   };
 
-  const handleOpenDelete = (hinhAnhId: string) => {
-    setSelectHinhAnhId(hinhAnhId);
+  const handleOpenDelete = (
+    hinhAnhIdOrImg: string | SP_HinhAnhSanPham,
+    duongDanAnh?: string | null
+  ) => {
+    if (typeof hinhAnhIdOrImg === "string") {
+      setDeletingImage({ hinhAnhId: hinhAnhIdOrImg, duongDanAnh });
+    } else {
+      setDeletingImage({
+        hinhAnhId: hinhAnhIdOrImg.hinhAnhID,
+        duongDanAnh: hinhAnhIdOrImg.duongDanAnh,
+      });
+    }
     setOpenDelete(true);
   };
 
   const handleSubmitDelete = async () => {
-    if (!selectHinhAnhId) return;
+    if (!deletingImage) return;
     try {
-      await deleteMutation.mutateAsync(selectHinhAnhId);
+      await deleteMutation.mutateAsync({
+        hinhAnhId: deletingImage.hinhAnhId,
+        duongDanAnh: deletingImage.duongDanAnh,
+      });
       setOpenDelete(false);
+      setDeletingImage(null);
     } catch {
       // Toast handled
     }
@@ -184,6 +201,9 @@ export function useHinhAnhSanPham(initialSanPhamId?: string) {
 
     openDelete,
     setOpenDelete,
+    selectHinhAnhId: deletingImage?.hinhAnhId ?? "",
+    deletingImage,
+    setDeletingImage,
     handleOpenDelete,
     handleSubmitDelete,
     isDeleting: deleteMutation.isPending,

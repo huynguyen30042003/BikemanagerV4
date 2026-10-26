@@ -9,6 +9,8 @@ import {
   AddLichSuThanhToanPayload,
   ThanhToanDonHangPayload,
   DH_LichSuThanhToan,
+  SanPhamBanHangFilter,
+  SP_SanPhamBanHang,
 } from "@/types/donHang";
 
 const getAuthHeaders = () => {
@@ -184,3 +186,28 @@ export const getDonHangKPIApi = async () => {
   );
   return response.data;
 };
+
+/**
+ * Lấy danh sách sản phẩm / biến thể sẵn sàng bán tại kho (kèm danh sách serial khả dụng)
+ * POST /api/DonHangApi/GetSanPhamBanHang
+ */
+export const getSanPhamBanHangApi = async (filter: SanPhamBanHangFilter) => {
+  const response = await api.post(
+    `${APP_URL}/DonHangApi/GetSanPhamBanHang`,
+    {
+      KhoID: filter.KhoID,
+      TuKhoa: filter.TuKhoa ?? "",
+      DanhMucChiTietID: filter.DanhMucChiTietID ?? null,
+      ChiLayConTon: filter.ChiLayConTon ?? true,
+      QuanLyTheoSerial: filter.QuanLyTheoSerial ?? null,
+      PageIndex: filter.PageIndex ?? 1,
+      PageSize: filter.PageSize ?? 50,
+    },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
+  );
+  return response.data;
+};
+

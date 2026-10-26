@@ -220,16 +220,6 @@ export const ProductVariantsGrid: React.FC<ProductVariantsGridProps> = ({
                         {formatCurrency(variant.giaBan)}
                       </span>
                     </div>
-                    {variant.giaBanSi != null && variant.giaBanSi > 0 && (
-                      <div className="text-right">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">
-                          Giá sỉ
-                        </span>
-                        <span className="font-mono text-xs text-muted-foreground">
-                          {formatCurrency(variant.giaBanSi)}
-                        </span>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex items-center gap-1.5 pt-1">

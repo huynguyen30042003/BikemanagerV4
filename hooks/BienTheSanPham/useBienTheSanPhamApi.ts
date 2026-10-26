@@ -8,6 +8,7 @@ import {
   getBienTheByIdApi,
   getBienTheSanPhamApi,
   getBienTheSanPhamKPIApi,
+  getPhuTungsApi,
   updateBienTheApi,
 } from "@/shared/api/BienTheSanPham";
 import {
@@ -21,6 +22,8 @@ export const BIEN_THE_QUERY_KEYS = {
   all: ["bienTheSanPham"] as const,
   lists: () => [...BIEN_THE_QUERY_KEYS.all, "list"] as const,
   list: (params: BienTheFilter) => [...BIEN_THE_QUERY_KEYS.lists(), params] as const,
+  phuTungs: () => [...BIEN_THE_QUERY_KEYS.all, "phuTungs"] as const,
+  phuTungList: (params: BienTheFilter) => [...BIEN_THE_QUERY_KEYS.phuTungs(), params] as const,
   details: () => [...BIEN_THE_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...BIEN_THE_QUERY_KEYS.details(), id] as const,
   kpi: () => [...BIEN_THE_QUERY_KEYS.all, "kpi"] as const,
@@ -33,6 +36,19 @@ export const useGetBienTheSanPham = (
   return useQuery({
     queryKey: BIEN_THE_QUERY_KEYS.list(params),
     queryFn: () => getBienTheSanPhamApi(params),
+    placeholderData: (prev) => prev,
+    staleTime: 5000,
+    enabled: options?.enabled,
+  });
+};
+
+export const useGetPhuTungs = (
+  params: BienTheFilter = {},
+  options?: { enabled?: boolean },
+) => {
+  return useQuery({
+    queryKey: BIEN_THE_QUERY_KEYS.phuTungList(params),
+    queryFn: () => getPhuTungsApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
     enabled: options?.enabled,

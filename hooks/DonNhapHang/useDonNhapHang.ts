@@ -223,12 +223,13 @@ export function useDonNhapHang() {
 
   const variantOptions = useMemo(() => {
     const list = dataVariants?.data ?? dataVariants?.items ?? [];
-    return list.map((v: { bienTheSanPhamID: string; tenBienThe: string; maSKU: string; giaNhap?: number }) => ({
+    return list.map((v: { bienTheSanPhamID: string; tenBienThe: string; maSKU: string; giaNhap?: number; quanLyTheoSerial?: boolean }) => ({
       value: v.bienTheSanPhamID,
       label: `${v.tenBienThe} [${v.maSKU}]`,
       sku: v.maSKU,
       name: v.tenBienThe,
       defaultPrice: v.giaNhap || 0,
+      quanLyTheoSerial: Boolean(v.quanLyTheoSerial),
     }));
   }, [dataVariants]);
 

@@ -10,6 +10,7 @@ import {
 } from "@/shared/api/HinhAnhSanPham";
 import {
   CreateHinhAnhPayload,
+  DeleteHinhAnhPayload,
   HinhAnhFilter,
   HinhAnhSanPhamKPI,
 } from "@/types/hinhAnhSanPham";
@@ -64,7 +65,7 @@ export const useDeleteHinhAnh = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteHinhAnhApi(id),
+    mutationFn: (payload: DeleteHinhAnhPayload) => deleteHinhAnhApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HINH_ANH_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["productNavTabs"] });

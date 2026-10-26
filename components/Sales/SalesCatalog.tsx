@@ -229,8 +229,8 @@ export const SalesCatalog: React.FC<SalesCatalogProps> = ({
                       {v.name}
                     </h4>
 
-                    {/* Hiển thị tồn kho khả dụng từ biến thể */}
-                    <div className="flex items-center gap-1 pt-0.5">
+                    {/* Hiển thị tồn kho khả dụng từ biến thể & badge serial */}
+                    <div className="flex items-center justify-between gap-1 pt-0.5 flex-wrap">
                       {isOutOfStock ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-500">
                           <AlertCircle className="w-3 h-3" />
@@ -239,6 +239,11 @@ export const SalesCatalog: React.FC<SalesCatalogProps> = ({
                       ) : (
                         <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                           Khả dụng: <strong>{availableStock}</strong>
+                        </span>
+                      )}
+                      {v.quanLyTheoSerial && (
+                        <span className="text-[9px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                          Theo số khung
                         </span>
                       )}
                     </div>

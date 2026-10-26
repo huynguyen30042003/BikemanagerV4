@@ -32,3 +32,7 @@ export interface HinhAnhSanPhamKPI {
   total_AnhChung: number;
 }
 
+export interface DeleteHinhAnhPayload {
+  hinhAnhId: string;
+  duongDanAnh?: string | null;
+}

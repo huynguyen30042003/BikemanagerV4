@@ -55,6 +55,7 @@ export const UpdateProductVariantSlideOver: React.FC<
     GiaNhap: 0,
     GiaBan: 0,
     GiaBanSi: 0,
+    GiaSuaChua: null,
     SoThangBaoHanh: 12,
     QuanLyTheoSerial: true,
     TrangThai: true,
@@ -80,6 +81,7 @@ export const UpdateProductVariantSlideOver: React.FC<
         GiaNhap: variant.giaNhap || 0,
         GiaBan: variant.giaBan || 0,
         GiaBanSi: variant.giaBanSi || 0,
+        GiaSuaChua: variant.giaSuaChua ?? null,
         SoThangBaoHanh: variant.soThangBaoHanh ?? 12,
         QuanLyTheoSerial: variant.quanLyTheoSerial ?? false,
         TrangThai: variant.trangThai,
@@ -363,7 +365,7 @@ export const UpdateProductVariantSlideOver: React.FC<
           )}
         </div>
 
-        <div className="col-span-2 flex flex-col gap-1.5">
+        <div className="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
           <label className="text-xs font-medium text-muted-foreground">
             Giá sỉ / thợ (VNĐ)
           </label>
@@ -378,6 +380,26 @@ export const UpdateProductVariantSlideOver: React.FC<
               }))
             }
             className="font-mono rounded-lg text-xs"
+          />
+        </div>
+
+        <div className="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center justify-between">
+            <span>Giá sửa chữa / thay thế (VNĐ)</span>
+            <span className="text-[10px] text-muted-foreground font-normal">(Tùy chọn)</span>
+          </label>
+          <Input
+            type="number"
+            min={0}
+            value={formData.GiaSuaChua ?? ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                GiaSuaChua: e.target.value ? parseFloat(e.target.value) : null,
+              }))
+            }
+            placeholder="Mặc định lấy giá bán nếu trống"
+            className="font-mono rounded-lg text-xs border-amber-500/30 focus-visible:border-amber-500"
           />
         </div>
 

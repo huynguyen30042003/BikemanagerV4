@@ -2,16 +2,42 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { Wrench, Plus, Trash2 } from "lucide-react";
+import {
+  Wrench,
+  Plus,
+  Trash2,
+  Calendar,
+  ShieldCheck,
+  Tag,
+  Sparkles,
+  Package,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
-import { CreatePhieuSuaChuaPayload } from "@/types/suaChua";
+import {
+  CreatePhieuSuaChuaPayload,
+  CreateChiTietSuaChuaItem,
+} from "@/types/suaChua";
+import DatePickerInput from "@/components/ui/DatePickerInput";
 
 interface VehicleOption extends SelectOption {
   khachHangID?: string;
+}
+
+interface ServiceLookupOption extends SelectOption {
+  maDichVu?: string;
+  tenDichVu?: string;
+  donGia?: number;
+}
+
+interface PartLookupOption extends SelectOption {
+  maSKU?: string;
+  tenBienThe?: string;
+  donGia?: number;
+  donViTinhID?: number;
 }
 
 interface CreateRepairTicketSlideOverProps {
@@ -22,9 +48,33 @@ interface CreateRepairTicketSlideOverProps {
   serviceTypeOptions: SelectOption[];
   diaDiemOptions: SelectOption[];
   khoOptions: SelectOption[];
+  serviceOptions?: ServiceLookupOption[];
+  partOptions?: PartLookupOption[];
   onSubmit: (formData: CreatePhieuSuaChuaPayload) => Promise<void>;
   isSubmitting?: boolean;
 }
+
+function formatCurrency(val: number | null | undefined): string {
+  if (val == null) return "0 đ";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(val);
+}
+
+const getInitialChiTiet = (): CreateChiTietSuaChuaItem => ({
+  LoaiHangMuc: 2,
+  DichVuID: null,
+  BienTheSanPhamID: null,
+  MaHangMuc: "",
+  TenHangMuc: "",
+  DonViTinhID: null,
+  SoLuong: 1,
+  DonGia: 0,
+  TienGiamGia: 0,
+  ThanhTien: 0,
+  GhiChu: "",
+});
 
 export function CreateRepairTicketSlideOver({
   open,
@@ -34,24 +84,32 @@ export function CreateRepairTicketSlideOver({
   serviceTypeOptions,
   diaDiemOptions,
   khoOptions,
+  serviceOptions = [],
+  partOptions = [],
   onSubmit,
   isSubmitting = false,
 }: CreateRepairTicketSlideOverProps) {
   const [formData, setFormData] = useState<CreatePhieuSuaChuaPayload>({
+    MaPhieuSuaChua: "",
     KhachHangID: "",
     PhuongTienKhachHangID: "",
     DiaDiemID: "",
     KhoID: "",
+    NhanVienTiepNhanID: null,
+    KyThuatVienChinhID: null,
     LoaiDichVuID: 114,
     SoKmHienTai: 0,
     MoTaVanDe: "",
     KetQuaChanDoan: "",
     GiaiPhapXuLy: "",
-    TrangThaiID: 107,
-    TrangThaiThanhToanID: 83,
     ThoiGianHenTra: null,
+    TienGiamGia: 0,
+    TienThueVAT: 0,
+    SoThangBaoHanhSuaChua: 3,
     GhiChu: "",
-    ChiTiets: [],
+    TrangThaiID: 107, // Tiếp nhận
+    TrangThaiThanhToanID: 83, // Chưa thanh toán
+    ChiTiets: [getInitialChiTiet()],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -59,57 +117,72 @@ export function CreateRepairTicketSlideOver({
   useEffect(() => {
     if (open) {
       setFormData({
-        KhachHangID: customerOptions[0]?.value ? String(customerOptions[0].value) : "",
-        PhuongTienKhachHangID: vehicleOptions[0]?.value ? String(vehicleOptions[0].value) : "",
-        DiaDiemID: diaDiemOptions[0]?.value ? String(diaDiemOptions[0].value) : "",
+        MaPhieuSuaChua: null,
+        KhachHangID: customerOptions[0]?.value
+          ? String(customerOptions[0].value)
+          : "",
+        PhuongTienKhachHangID: vehicleOptions[0]?.value
+          ? String(vehicleOptions[0].value)
+          : "",
+        DiaDiemID: diaDiemOptions[0]?.value
+          ? String(diaDiemOptions[0].value)
+          : "",
         KhoID: khoOptions[0]?.value ? String(khoOptions[0].value) : "",
-        LoaiDichVuID: serviceTypeOptions[0]?.value ? Number(serviceTypeOptions[0].value) : 114,
+        NhanVienTiepNhanID: 1,
+        KyThuatVienChinhID: 2,
+        LoaiDichVuID: serviceTypeOptions[0]?.value
+          ? Number(serviceTypeOptions[0].value)
+          : 114,
         SoKmHienTai: 0,
         MoTaVanDe: "",
         KetQuaChanDoan: "",
         GiaiPhapXuLy: "",
+        ThoiGianHenTra: null,
+        TienGiamGia: 0,
+        TienThueVAT: 0,
+        SoThangBaoHanhSuaChua: 3,
+        GhiChu: "",
         TrangThaiID: 107,
         TrangThaiThanhToanID: 83,
-        ThoiGianHenTra: null,
-        GhiChu: "",
-        ChiTiets: [
-          {
-            LoaiHangMuc: 1,
-            MaHangMuc: "DV-KT",
-            TenHangMuc: "Kiểm tra tổng quát xe điện",
-            SoLuong: 1,
-            DonGia: 100000,
-            TienGiamGia: 0,
-            ThanhTien: 100000,
-          },
-        ],
+        ChiTiets: [getInitialChiTiet()],
       });
       setErrors({});
     }
-  }, [open, customerOptions, vehicleOptions, diaDiemOptions, khoOptions, serviceTypeOptions]);
+  }, [
+    open,
+    customerOptions,
+    vehicleOptions,
+    diaDiemOptions,
+    khoOptions,
+    serviceTypeOptions,
+  ]);
 
   // Lọc danh sách xe theo khách hàng đã chọn (nếu có)
   const filteredVehicles = useMemo(() => {
     if (!formData.KhachHangID) return vehicleOptions;
     const matched = vehicleOptions.filter(
-      (v) => String(v.khachHangID) === String(formData.KhachHangID)
+      (v) => String(v.khachHangID) === String(formData.KhachHangID),
     );
     return matched.length > 0 ? matched : vehicleOptions;
   }, [vehicleOptions, formData.KhachHangID]);
 
-  const handleAddDetailRow = () => {
+  const handleAddDetailRow = (type: 1 | 2 = 1) => {
     setFormData((prev) => ({
       ...prev,
       ChiTiets: [
         ...prev.ChiTiets,
         {
-          LoaiHangMuc: 1,
-          MaHangMuc: "DV-SC",
+          LoaiHangMuc: type,
+          DichVuID: null,
+          BienTheSanPhamID: null,
+          MaHangMuc: "",
           TenHangMuc: "",
+          DonViTinhID: null,
           SoLuong: 1,
-          DonGia: 50000,
+          DonGia: 0,
           TienGiamGia: 0,
-          ThanhTien: 50000,
+          ThanhTien: 0,
+          GhiChu: "",
         },
       ],
     }));
@@ -121,6 +194,116 @@ export function CreateRepairTicketSlideOver({
       ChiTiets: prev.ChiTiets.filter((_, i) => i !== idx),
     }));
   };
+
+  const handleUpdateDetailRow = (
+    idx: number,
+    field: keyof CreateChiTietSuaChuaItem,
+    val: unknown,
+  ) => {
+    setFormData((prev) => {
+      const updated = [...prev.ChiTiets];
+      const item = { ...updated[idx], [field]: val };
+
+      // Tự động tính Thành tiền
+      if (
+        field === "SoLuong" ||
+        field === "DonGia" ||
+        field === "TienGiamGia"
+      ) {
+        const qty = Number(item.SoLuong) || 0;
+        const price = Number(item.DonGia) || 0;
+        const discount = Number(item.TienGiamGia) || 0;
+        item.ThanhTien = Math.max(0, qty * price - discount);
+      }
+
+      updated[idx] = item;
+      return { ...prev, ChiTiets: updated };
+    });
+  };
+
+  const handleSelectServicePreset = (idx: number, dichVuId: string) => {
+    const selected = serviceOptions.find(
+      (s) => String(s.value) === String(dichVuId),
+    );
+    if (!selected) return;
+
+    setFormData((prev) => {
+      const updated = [...prev.ChiTiets];
+      const qty = updated[idx].SoLuong || 1;
+      const price = selected.donGia || 0;
+      const discount = updated[idx].TienGiamGia || 0;
+
+      updated[idx] = {
+        ...updated[idx],
+        LoaiHangMuc: 1,
+        DichVuID: String(selected.value),
+        BienTheSanPhamID: null,
+        MaHangMuc: selected.maDichVu || "DV-SC",
+        TenHangMuc: selected.tenDichVu || selected.label,
+        DonGia: price,
+        ThanhTien: Math.max(0, qty * price - discount),
+      };
+      return { ...prev, ChiTiets: updated };
+    });
+  };
+
+  const handleSelectPartPreset = (idx: number, partId: string) => {
+    const selected = partOptions.find(
+      (p) => String(p.value) === String(partId),
+    );
+    if (!selected) return;
+
+    setFormData((prev) => {
+      const updated = [...prev.ChiTiets];
+      const qty = updated[idx].SoLuong || 1;
+      const price = selected.donGia || 0;
+      const discount = updated[idx].TienGiamGia || 0;
+
+      updated[idx] = {
+        ...updated[idx],
+        LoaiHangMuc: 2,
+        BienTheSanPhamID: String(selected.value),
+        DichVuID: null,
+        MaHangMuc: selected.maSKU || "",
+        TenHangMuc: selected.tenBienThe || selected.label,
+        DonViTinhID: selected.donViTinhID || null,
+        DonGia: price,
+        ThanhTien: Math.max(0, qty * price - discount),
+      };
+      return { ...prev, ChiTiets: updated };
+    });
+  };
+
+  // Tính tổng tiền các hạng mục
+  const subTotalLabor = useMemo(
+    () =>
+      formData.ChiTiets.filter((c) => c.LoaiHangMuc === 1).reduce(
+        (acc, cur) => acc + (cur.ThanhTien || 0),
+        0,
+      ),
+    [formData.ChiTiets],
+  );
+
+  const subTotalParts = useMemo(
+    () =>
+      formData.ChiTiets.filter((c) => c.LoaiHangMuc === 2).reduce(
+        (acc, cur) => acc + (cur.ThanhTien || 0),
+        0,
+      ),
+    [formData.ChiTiets],
+  );
+
+  const grandTotal = useMemo(
+    () =>
+      Math.max(
+        0,
+        subTotalLabor +
+          subTotalParts -
+          (formData.TienGiamGia || 0) +
+          (formData.TienThueVAT || 0),
+      ),
+    [subTotalLabor, subTotalParts, formData.TienGiamGia, formData.TienThueVAT],
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,12 +318,37 @@ export function CreateRepairTicketSlideOver({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      toast.warning("Vui lòng kiểm tra lại thông tin tiếp nhận!");
+      toast.warning("Vui lòng kiểm tra lại thông tin tiếp nhận bắt buộc!");
       return;
     }
 
-    setErrors({});
-    await onSubmit(formData);
+    // Đảm bảo các dòng chi tiết hợp lệ
+    const validChiTiets = formData.ChiTiets.filter(
+      (c) => c.TenHangMuc?.trim() && c.SoLuong > 0,
+    );
+
+    if (validChiTiets.length === 0) {
+      toast.warning(
+        "Vui lòng nhập ít nhất 1 hạng mục dịch vụ hoặc linh kiện thay thế!",
+      );
+      return;
+    }
+
+    // Kiểm tra dòng phụ tùng (LoaiHangMuc = 2) bắt buộc phải có BienTheSanPhamID
+    const missingPart = validChiTiets.find(
+      (c) => c.LoaiHangMuc === 2 && !c.BienTheSanPhamID,
+    );
+    if (missingPart) {
+      toast.warning(
+        `Hạng mục phụ tùng "${missingPart.TenHangMuc || "chưa chọn"}" bắt buộc phải chọn linh kiện/biến thể sản phẩm từ kho để có thể tự động trừ tồn kho khi bàn giao xe!`,
+      );
+      return;
+    }
+
+    await onSubmit({
+      ...formData,
+      ChiTiets: validChiTiets,
+    });
   };
 
   return (
@@ -148,46 +356,52 @@ export function CreateRepairTicketSlideOver({
       open={open}
       onClose={onClose}
       title="Tiếp Nhận Sửa Chữa & Bảo Dưỡng Xe"
+      description="Lập phiếu tiếp nhận xe vào xưởng, chẩn đoán triệu chứng và báo giá công sửa / phụ tùng"
       maxWidth="2xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4 py-2">
-        {/* Banner */}
+        {/* Banner hướng dẫn */}
         <div className="flex items-center gap-2.5 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300">
           <Wrench className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
           <span>
-            Tiếp nhận xe vào xưởng, ghi nhận triệu chứng phản ánh, cấu hình các hạng mục dịch vụ dự kiến và phụ tùng thay thế.
+            Tiếp nhận xe vào xưởng, ghi nhận triệu chứng phản ánh, cấu hình các
+            hạng mục dịch vụ dự kiến và phụ tùng thay thế.
           </span>
         </div>
 
-        {/* Khách hàng & Phương tiện */}
+        {/* Khách hàng & Phương tiện xe */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1">
-              Chủ xe / Khách hàng <span className="text-rose-500">*</span>
+              Khách hàng <span className="text-destructive">*</span>
             </label>
             <SearchSelect
-              placeholder="Chọn khách hàng..."
               options={customerOptions}
               value={formData.KhachHangID}
-              onChange={(val) =>
+              onChange={(val) => {
                 setFormData((prev) => ({
                   ...prev,
                   KhachHangID: String(val),
-                }))
-              }
-              height={10}
+                  PhuongTienKhachHangID: "",
+                }));
+                if (errors.KhachHangID) {
+                  setErrors((prev) => ({ ...prev, KhachHangID: "" }));
+                }
+              }}
+              placeholder="Chọn khách hàng..."
             />
             {errors.KhachHangID && (
-              <p className="text-[11px] text-rose-500 mt-1">{errors.KhachHangID}</p>
+              <span className="text-[11px] text-destructive mt-1 block">
+                {errors.KhachHangID}
+              </span>
             )}
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1">
-              Phương tiện xe của khách
+              Phương tiện / Xe vào xưởng
             </label>
             <SearchSelect
-              placeholder="Chọn xe..."
               options={filteredVehicles}
               value={formData.PhuongTienKhachHangID}
               onChange={(val) =>
@@ -196,51 +410,30 @@ export function CreateRepairTicketSlideOver({
                   PhuongTienKhachHangID: String(val),
                 }))
               }
-              height={10}
+              placeholder="Chọn biển số / số khung..."
             />
           </div>
         </div>
 
-        {/* Gói dịch vụ, ODO, Kho */}
+        {/* Địa điểm, Kho xuất & Gói dịch vụ */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1">
-              Gói dịch vụ (Từ DM chi tiết)
+              Chi nhánh / Điểm tiếp nhận
             </label>
             <SearchSelect
-              options={serviceTypeOptions}
-              value={String(formData.LoaiDichVuID)}
+              options={diaDiemOptions}
+              value={formData.DiaDiemID}
               onChange={(val) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  LoaiDichVuID: Number(val),
-                }))
+                setFormData((prev) => ({ ...prev, DiaDiemID: String(val) }))
               }
-              height={10}
+              placeholder="Chọn chi nhánh..."
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1">
-              Số Km (ODO) hiện tại
-            </label>
-            <Input
-              type="number"
-              min={0}
-              value={formData.SoKmHienTai || 0}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  SoKmHienTai: parseInt(e.target.value, 10) || 0,
-                }))
-              }
-              className="text-xs font-mono h-10"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              Kho phụ tùng xuất linh kiện
+              Kho xuất phụ tùng
             </label>
             <SearchSelect
               options={khoOptions}
@@ -248,155 +441,347 @@ export function CreateRepairTicketSlideOver({
               onChange={(val) =>
                 setFormData((prev) => ({ ...prev, KhoID: String(val) }))
               }
-              height={10}
+              placeholder="Chọn kho xuất..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1">
+              Loại gói dịch vụ
+            </label>
+            <SearchSelect
+              options={serviceTypeOptions}
+              value={formData.LoaiDichVuID}
+              onChange={(val) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  LoaiDichVuID: Number(val) || 114,
+                }))
+              }
+              placeholder="Loại dịch vụ..."
             />
           </div>
         </div>
 
-        {/* Khách phản ánh */}
-        <div>
-          <label className="block text-xs font-semibold text-foreground mb-1">
-            Khách phản ánh / Triệu chứng xe <span className="text-rose-500">*</span>
-          </label>
-          <Textarea
-            placeholder="VD: Xe đi bị kêu ở bánh sau, ga không bốc, pin sụt nhanh..."
-            rows={2}
-            value={formData.MoTaVanDe || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, MoTaVanDe: e.target.value }))
-            }
-            className={`text-xs ${errors.MoTaVanDe ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
-          />
-          {errors.MoTaVanDe && (
-            <p className="text-[11px] text-rose-500 mt-1">{errors.MoTaVanDe}</p>
-          )}
+        {/* Triệu chứng, Chẩn đoán, Giải pháp */}
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1">
+              Mô tả vấn đề / Triệu chứng phản ánh{" "}
+              <span className="text-destructive">*</span>
+            </label>
+            <Textarea
+              rows={2}
+              placeholder="VD: Xe đi qua gờ giảm tốc bị kêu ở cổ phốt, tay ga phản hồi chậm..."
+              value={formData.MoTaVanDe || ""}
+              onChange={(e) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  MoTaVanDe: e.target.value,
+                }));
+                if (errors.MoTaVanDe) {
+                  setErrors((prev) => ({ ...prev, MoTaVanDe: "" }));
+                }
+              }}
+              className="text-xs"
+            />
+            {errors.MoTaVanDe && (
+              <span className="text-[11px] text-destructive mt-1 block">
+                {errors.MoTaVanDe}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Chẩn đoán */}
-        <div>
-          <label className="block text-xs font-semibold text-foreground mb-1">
-            Thợ máy chẩn đoán & Phương án xử lý
-          </label>
-          <Textarea
-            placeholder="VD: Thay vòng bi moay-ơ bánh sau, cân chỉnh phanh đĩa..."
-            rows={2}
-            value={formData.KetQuaChanDoan || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                KetQuaChanDoan: e.target.value,
-              }))
-            }
-            className="text-xs"
-          />
-        </div>
-
-        {/* Chi tiết hạng mục tiền công / phụ tùng */}
-        <div className="space-y-2 pt-2">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-semibold text-foreground">
-              Hạng mục tiền công & Phụ tùng thay thế ({formData.ChiTiets.length})
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="xs"
-              onClick={handleAddDetailRow}
-              className="text-blue-600 text-xs cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" /> Thêm hạng mục
-            </Button>
+        {/* BẢNG HẠNG MỤC DỊCH VỤ & PHỤ TÙNG */}
+        <div className="pt-2 border-t border-border/80">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <div>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                Danh mục Tiền công & Phụ tùng ({formData.ChiTiets.length})
+              </span>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Loại 1: Tiền công dịch vụ | Loại 2: Phụ tùng / Linh kiện thay
+                thế
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={() => handleAddDetailRow(1)}
+                className="text-xs gap-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+              >
+                <Plus className="w-3 h-3" /> Tiền công DV
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={() => handleAddDetailRow(2)}
+                className="text-xs gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+              >
+                <Package className="w-3 h-3" /> Phụ tùng xe
+              </Button>
+            </div>
           </div>
 
-          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {formData.ChiTiets.map((row, idx) => (
+          <div className="space-y-2.5">
+            {formData.ChiTiets.map((ct, idx) => (
               <div
                 key={idx}
-                className="p-3 rounded-lg border border-border bg-muted/30 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
+                className={`p-3 rounded-lg border text-xs space-y-2 transition-all ${
+                  ct.LoaiHangMuc === 1
+                    ? "border-blue-200/80 bg-blue-50/20 dark:border-blue-900/40 dark:bg-blue-950/10"
+                    : "border-emerald-200/80 bg-emerald-50/20 dark:border-emerald-900/40 dark:bg-emerald-950/10"
+                }`}
               >
-                <div className="sm:col-span-6">
-                  <Input
-                    type="text"
-                    placeholder="Tên công việc / Tên phụ tùng"
-                    value={row.TenHangMuc}
-                    onChange={(e) => {
-                      const updated = [...formData.ChiTiets];
-                      updated[idx].TenHangMuc = e.target.value;
-                      setFormData((prev) => ({ ...prev, ChiTiets: updated }));
-                    }}
-                    className="text-xs"
-                  />
-                </div>
+                {/* Header dòng: Loại hạng mục + Preset selector */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        ct.LoaiHangMuc === 1
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300"
+                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300"
+                      }`}
+                    >
+                      {ct.LoaiHangMuc === 1 ? "Tiền công DV" : "Phụ tùng / LK"}
+                    </span>
+                    <span className="text-[11px] font-mono text-muted-foreground">
+                      #{idx + 1}
+                    </span>
+                  </div>
 
-                <div className="sm:col-span-2">
-                  <Input
-                    type="number"
-                    min={1}
-                    placeholder="SL"
-                    value={row.SoLuong}
-                    onChange={(e) => {
-                      const updated = [...formData.ChiTiets];
-                      const qty = Math.max(1, parseInt(e.target.value, 10) || 1);
-                      updated[idx].SoLuong = qty;
-                      updated[idx].ThanhTien = qty * updated[idx].DonGia;
-                      setFormData((prev) => ({ ...prev, ChiTiets: updated }));
-                    }}
-                    className="text-xs font-mono"
-                  />
-                </div>
+                  {/* Preset Quick Select */}
+                  <div className="flex-1 max-w-xs">
+                    {ct.LoaiHangMuc === 1 && serviceOptions.length > 0 ? (
+                      <SearchSelect
+                        options={serviceOptions}
+                        value={ct.DichVuID || ""}
+                        onChange={(val) =>
+                          handleSelectServicePreset(idx, String(val))
+                        }
+                        placeholder="-- Chọn bảng giá DV mẫu --"
+                      />
+                    ) : ct.LoaiHangMuc === 2 && partOptions.length > 0 ? (
+                      <SearchSelect
+                        options={partOptions}
+                        value={ct.BienTheSanPhamID || ""}
+                        onChange={(val) =>
+                          handleSelectPartPreset(idx, String(val))
+                        }
+                        placeholder="-- Chọn linh kiện kho mẫu --"
+                      />
+                    ) : null}
+                  </div>
 
-                <div className="sm:col-span-3">
-                  <Input
-                    type="number"
-                    min={0}
-                    step={1000}
-                    placeholder="Đơn giá"
-                    value={row.DonGia}
-                    onChange={(e) => {
-                      const updated = [...formData.ChiTiets];
-                      const price = parseInt(e.target.value, 10) || 0;
-                      updated[idx].DonGia = price;
-                      updated[idx].ThanhTien = updated[idx].SoLuong * price;
-                      setFormData((prev) => ({ ...prev, ChiTiets: updated }));
-                    }}
-                    className="text-xs font-mono font-bold"
-                  />
-                </div>
-
-                <div className="sm:col-span-1 flex justify-center">
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon-xs"
                     onClick={() => handleRemoveDetailRow(idx)}
-                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                    disabled={formData.ChiTiets.length <= 1}
+                    className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
+                </div>
+
+                {/* Hàng nhập chi tiết */}
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-12 sm:col-span-4">
+                    <label className="block text-[10px] text-muted-foreground mb-0.5">
+                      Tên hạng mục / Phụ tùng
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="Tên công việc hoặc phụ tùng thay..."
+                      value={ct.TenHangMuc}
+                      onChange={(e) =>
+                        handleUpdateDetailRow(idx, "TenHangMuc", e.target.value)
+                      }
+                      className="text-xs h-8"
+                    />
+                  </div>
+
+                  <div className="col-span-3 sm:col-span-1">
+                    <label className="block text-[10px] text-muted-foreground mb-0.5">
+                      SL
+                    </label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={ct.SoLuong}
+                      onChange={(e) =>
+                        handleUpdateDetailRow(
+                          idx,
+                          "SoLuong",
+                          Number(e.target.value) || 1,
+                        )
+                      }
+                      className="text-xs h-8 px-1 text-center font-bold"
+                    />
+                  </div>
+
+                  <div className="col-span-4 sm:col-span-2">
+                    <label className="block text-[10px] text-muted-foreground mb-0.5">
+                      Đơn giá
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="5000"
+                      value={ct.DonGia}
+                      onChange={(e) =>
+                        handleUpdateDetailRow(
+                          idx,
+                          "DonGia",
+                          Number(e.target.value) || 0,
+                        )
+                      }
+                      className="text-xs h-8 px-1 text-right font-mono"
+                    />
+                  </div>
+
+                  <div className="col-span-5 sm:col-span-1">
+                    <label className="block text-[10px] text-muted-foreground mb-0.5">
+                      Giảm giá
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="5000"
+                      value={ct.TienGiamGia || 0}
+                      onChange={(e) =>
+                        handleUpdateDetailRow(
+                          idx,
+                          "TienGiamGia",
+                          Number(e.target.value) || 0,
+                        )
+                      }
+                      className="text-xs h-8 px-1 text-right font-mono"
+                    />
+                  </div>
+
+                  <div className="col-span-12 sm:col-span-2">
+                    <label className="block text-[10px] text-muted-foreground mb-0.5 text-right">
+                      Thành tiền
+                    </label>
+                    <div className="text-xs h-8 flex items-center justify-end font-bold font-mono text-foreground px-2 bg-muted/40 rounded border border-border/50">
+                      {formatCurrency(ct.ThanhTien)}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-2.5 pt-4 border-t border-border">
+        {/* Tổng kết tài chính phiếu sửa chữa */}
+        <div className="p-3.5 rounded-xl border border-border/80 bg-muted/20 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Tiền công dịch vụ:</span>
+            <span className="font-mono font-medium text-foreground">
+              {formatCurrency(subTotalLabor)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Tiền phụ tùng & linh kiện:</span>
+            <span className="font-mono font-medium text-foreground">
+              {formatCurrency(subTotalParts)}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/60">
+            <div>
+              <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                Giảm giá phiếu (VNĐ)
+              </label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  min="0"
+                  step="10000"
+                  placeholder="0"
+                  value={formData.TienGiamGia || 0}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      TienGiamGia: Number(e.target.value) || 0,
+                    }))
+                  }
+                  className="text-xs h-8 pl-7 font-mono"
+                />
+                <Tag className="w-3 h-3 absolute left-2.5 top-2.5 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                Tiền thuế VAT (VNĐ)
+              </label>
+              <Input
+                type="number"
+                min="0"
+                step="10000"
+                placeholder="0"
+                value={formData.TienThueVAT || 0}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    TienThueVAT: Number(e.target.value) || 0,
+                  }))
+                }
+                className="text-xs h-8 font-mono text-right"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-sm font-bold text-foreground pt-2 border-t border-border/80">
+            <span>Tổng thanh toán dự kiến:</span>
+            <span className="font-mono text-base text-blue-600 dark:text-blue-400">
+              {formatCurrency(grandTotal)}
+            </span>
+          </div>
+        </div>
+
+        {/* Ghi chú */}
+        <div>
+          <label className="block text-xs font-semibold text-foreground mb-1">
+            Ghi chú tiếp nhận / Yêu cầu riêng của khách
+          </label>
+          <Textarea
+            rows={2}
+            placeholder="VD: Khách yêu cầu giữ lại phụ tùng cũ đã thay..."
+            value={formData.GhiChu || ""}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, GhiChu: e.target.value }))
+            }
+            className="text-xs"
+          />
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border/80">
           <Button
             type="button"
             variant="outline"
-            size="sm"
             onClick={onClose}
-            className="text-xs"
+            disabled={isSubmitting}
+            className="text-xs h-9 px-4"
           >
-            Hủy
+            Hủy bỏ
           </Button>
           <Button
             type="submit"
-            size="sm"
             disabled={isSubmitting}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs cursor-pointer font-medium"
+            className="text-xs h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-xs"
           >
-            {isSubmitting ? "Đang lưu..." : "Lập phiếu sửa chữa"}
+            {isSubmitting ? "Đang lưu..." : "Lập Phiếu Tiếp Nhận"}
           </Button>
         </div>
       </form>

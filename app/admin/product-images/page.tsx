@@ -46,7 +46,9 @@ function ImagesContent() {
   } = useHinhAnhSanPham(initialSanPhamId);
 
   const [zoomImage, setZoomImage] = useState<SP_HinhAnhSanPham | null>(null);
-  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [deletingImage, setDeletingImage] = useState<SP_HinhAnhSanPham | null>(
+    null,
+  );
 
   const deleteMutation = useDeleteHinhAnh();
 
@@ -84,10 +86,13 @@ function ImagesContent() {
   }, [kpiData?.total_AnhChung, items]);
 
   const handleDeleteConfirm = async () => {
-    if (!deletingImageId) return;
+    if (!deletingImage) return;
     try {
-      await deleteMutation.mutateAsync(deletingImageId);
-      setDeletingImageId(null);
+      await deleteMutation.mutateAsync({
+        hinhAnhId: deletingImage.hinhAnhID,
+        duongDanAnh: deletingImage.duongDanAnh,
+      });
+      setDeletingImage(null);
       refetchKPI();
     } catch {
       // Toast notification is handled in mutation
@@ -135,7 +140,7 @@ function ImagesContent() {
         isLoading={isLoading}
         onOpenAdd={() => setOpenAdd(true)}
         onZoom={(img) => setZoomImage(img)}
-        onDelete={(id) => setDeletingImageId(id)}
+        onDelete={(img) => setDeletingImage(img)}
       />
 
       {/* 4. SlideOver: Tải lên hình ảnh mới (State Form cô lập hoàn toàn) */}
@@ -158,19 +163,23 @@ function ImagesContent() {
         images={items}
         onClose={() => setZoomImage(null)}
         onNavigate={(nextImg) => setZoomImage(nextImg)}
-        onDelete={(id) => {
+        onDelete={(img) => {
           setZoomImage(null);
-          setDeletingImageId(id);
+          setDeletingImage(img);
         }}
       />
 
       {/* 6. Modal xác nhận xóa ảnh an toàn */}
       <ConfirmModal
-        open={Boolean(deletingImageId)}
-        onClose={() => setDeletingImageId(null)}
+        open={Boolean(deletingImage)}
+        onClose={() => setDeletingImage(null)}
         onConfirm={handleDeleteConfirm}
         title="Xác nhận xóa hình ảnh"
-        description="Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập gallery không? Thao tác này không thể hoàn tác."
+        description={
+          deletingImage?.tieuDe
+            ? `Bạn có chắc chắn muốn xóa hình ảnh "${deletingImage.tieuDe}" khỏi bộ sưu tập gallery không? Thao tác này không thể hoàn tác.`
+            : "Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập gallery không? Thao tác này không thể hoàn tác."
+        }
         confirmText="Xác nhận xóa"
         variant="danger"
         isLoading={deleteMutation.isPending}

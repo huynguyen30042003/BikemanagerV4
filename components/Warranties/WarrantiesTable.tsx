@@ -8,14 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RoleGuard } from "@/components/Common/RoleGuard";
 import { Pagination } from "@/components/Common/Pagination";
 import { BH_BaoHanh } from "@/types/baoHanh";
-import {
-  Barcode,
-  User,
-  Trash2,
-  FolderOpen,
-  Plus,
-  Camera,
-} from "lucide-react";
+import { Barcode, User, Trash2, FolderOpen, Plus, Camera } from "lucide-react";
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -38,7 +31,10 @@ interface WarrantiesTableProps {
   onDelete: (item: BH_BaoHanh) => void;
   onAddNew: () => void;
   onOpenImages?: (item: BH_BaoHanh) => void;
-  getWarrantyStatusBadge: (statusId: number) => { label: string; className: string };
+  getWarrantyStatusBadge: (statusId: number) => {
+    label: string;
+    className: string;
+  };
 }
 
 export function WarrantiesTable({
@@ -59,7 +55,8 @@ export function WarrantiesTable({
     {
       key: "maBaoHanh",
       title: "Mã Sổ Bảo Hành",
-      classNameHeader: "w-36 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-36 inline-block text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => (
         <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
@@ -70,7 +67,8 @@ export function WarrantiesTable({
     {
       key: "xePin",
       title: "Phương Tiện / Serial / Khung VIN",
-      classNameHeader: "min-w-[200px] text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "min-w-[200px] text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5 py-1">
@@ -94,7 +92,8 @@ export function WarrantiesTable({
     {
       key: "khachHang",
       title: "Chủ xe",
-      classNameHeader: "min-w-[160px] text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "min-w-[160px] text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5 py-1">
@@ -111,12 +110,17 @@ export function WarrantiesTable({
     {
       key: "ngayKetThuc",
       title: "Thời hạn bảo hành",
-      classNameHeader: "w-44 text-left text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-44 text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => (
         <div className="flex flex-col gap-0.5 text-xs">
-          <span className="text-muted-foreground">Từ: {formatDate(row.ngayBatDau)}</span>
-          <span className="font-semibold text-foreground">Đến: {formatDate(row.ngayKetThuc)}</span>
+          <span className="text-muted-foreground">
+            Từ: {formatDate(row.ngayBatDau)}
+          </span>
+          <span className="font-semibold text-foreground">
+            Đến: {formatDate(row.ngayKetThuc)}
+          </span>
           {row.gioiHanKm ? (
             <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">
               Hạn ODO: {row.gioiHanKm.toLocaleString("vi-VN")} km
@@ -128,7 +132,8 @@ export function WarrantiesTable({
     {
       key: "trangThaiID",
       title: "Trạng thái",
-      classNameHeader: "w-32 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-32 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => {
         const badge = getWarrantyStatusBadge(Number(v));
@@ -144,7 +149,8 @@ export function WarrantiesTable({
     {
       key: "actions",
       title: "Thao tác",
-      classNameHeader: "w-24 text-center text-xs font-semibold text-muted-foreground",
+      classNameHeader:
+        "w-24 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex items-center justify-center gap-1">
@@ -192,7 +198,9 @@ export function WarrantiesTable({
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
             <FolderOpen className="w-10 h-10 mb-2 stroke-[1.5]" />
-            <p className="font-semibold text-foreground">Chưa có sổ bảo hành nào</p>
+            <p className="font-semibold text-foreground">
+              Chưa có sổ bảo hành nào
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
               Không tìm thấy sổ bảo hành phù hợp với bộ lọc hiện tại.
             </p>

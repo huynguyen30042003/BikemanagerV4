@@ -11,6 +11,7 @@ import {
   deleteDonHangApi,
   getLichSuThanhToanDonHangApi,
   getDonHangKPIApi,
+  getSanPhamBanHangApi,
 } from "@/shared/api/DonHang";
 import {
   DonHangFilter,
@@ -19,16 +20,28 @@ import {
   AddLichSuThanhToanPayload,
   ThanhToanDonHangPayload,
   DonHangKPI,
+  SanPhamBanHangFilter,
 } from "@/types/donHang";
 
 export const DON_HANG_KEYS = {
   all: ["don-hang"] as const,
   lists: () => [...DON_HANG_KEYS.all, "list"] as const,
   list: (filter: DonHangFilter) => [...DON_HANG_KEYS.lists(), filter] as const,
+  sanPhamBanHang: (filter: SanPhamBanHangFilter) =>
+    [...DON_HANG_KEYS.all, "san-pham-ban-hang", filter] as const,
   details: () => [...DON_HANG_KEYS.all, "detail"] as const,
   detail: (id: string) => [...DON_HANG_KEYS.details(), id] as const,
   payments: (id: string) => [...DON_HANG_KEYS.all, "payments", id] as const,
   kpi: () => [...DON_HANG_KEYS.all, "kpi"] as const,
+};
+
+export const useGetSanPhamBanHang = (filter: SanPhamBanHangFilter) => {
+  return useQuery({
+    queryKey: DON_HANG_KEYS.sanPhamBanHang(filter),
+    queryFn: () => getSanPhamBanHangApi(filter),
+    enabled: Boolean(filter.KhoID),
+    staleTime: 1000 * 30,
+  });
 };
 
 export const useGetDonHang = (filter: DonHangFilter = {}) => {

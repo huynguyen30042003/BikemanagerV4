@@ -98,7 +98,8 @@ export function CreateRepairServiceSlideOver({
         <div className="flex items-center gap-2.5 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300">
           <Sparkles className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
           <span>
-            Khai báo tên gói tiền công, phân loại và thời gian thi công chuẩn để áp dụng vào phiếu tiếp nhận sửa chữa.
+            Khai báo tên gói tiền công, phân loại và thời gian thi công chuẩn để
+            áp dụng vào phiếu tiếp nhận sửa chữa.
           </span>
         </div>
 
@@ -161,7 +162,9 @@ export function CreateRepairServiceSlideOver({
               className={`text-xs font-mono font-bold ${errors.GiaCoBan ? "border-rose-500" : ""}`}
             />
             {errors.GiaCoBan && (
-              <p className="text-[11px] text-rose-500 mt-1">{errors.GiaCoBan}</p>
+              <p className="text-[11px] text-rose-500 mt-1">
+                {errors.GiaCoBan}
+              </p>
             )}
           </div>
 
@@ -172,7 +175,6 @@ export function CreateRepairServiceSlideOver({
             <Input
               type="number"
               min={1}
-              step={5}
               value={formData.ThoiGianDuKienPhut ?? 30}
               onChange={(e) =>
                 setFormData((prev) => ({

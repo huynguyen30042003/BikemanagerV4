@@ -13,10 +13,12 @@ export interface SP_BienTheSanPham {
   giaNhap: number;
   giaBan: number;
   giaBanSi: number;
+  giaSuaChua?: number | null;
   soThangBaoHanh: number;
   quanLyTheoSerial: boolean;
   trangThai: boolean;
   soLuongTon?: number;
+  laPhuongTien?: boolean;
   ngayTao?: string;
 }
 
@@ -28,6 +30,7 @@ export interface BienTheFilter {
   DangHoatDong?: boolean | null;
   TrangThai?: boolean | null;
   DanhMucChiTietID?: number | null;
+  LaPhuongTien?: boolean | null;
   TuKhoa?: string;
   PageIndex?: number;
   PageSize?: number;
@@ -44,6 +47,7 @@ export interface CreateBienThePayload {
   GiaNhap: number;
   GiaBan: number;
   GiaBanSi: number;
+  GiaSuaChua?: number | null;
   SoThangBaoHanh: number;
   QuanLyTheoSerial: boolean;
   TrangThai: boolean;

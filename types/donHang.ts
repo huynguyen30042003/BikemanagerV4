@@ -205,3 +205,49 @@ export interface DonHangKPI {
   total_HoanThanh: number;
   total_DoanhThu: number;
 }
+
+export interface SanPhamBanHangFilter {
+  KhoID: string;
+  TuKhoa?: string;
+  DanhMucChiTietID?: number | null;
+  ChiLayConTon?: boolean | null;
+  QuanLyTheoSerial?: boolean | null;
+  PageIndex?: number;
+  PageSize?: number;
+}
+
+export interface SerialKhaDungBanHang {
+  bienTheSanPhamID: string;
+  soSerialID: string;
+  maSerial: string;
+  soKhung?: string | null;
+  soMay?: string | null;
+  soPin?: string | null;
+  viTriLuuTru?: string | null;
+}
+
+export interface SP_SanPhamBanHang {
+  bienTheSanPhamID: string;
+  sanPhamID: string;
+  tenSanPham: string;
+  tenBienThe: string;
+  maSKU: string;
+  maVach?: string | null;
+  anhDaiDien?: string | null;
+  danhMucChiTietID?: number | null;
+  tenDanhMuc?: string | null;
+  tenThuongHieu?: string | null;
+  donViTinh?: string | null;
+  mauSac?: string | null;
+  giaBan: number;
+  giaBanKhuyenMai?: number | null;
+  thueVAT: number;
+  soThangBaoHanh: number;
+  soLuongTon: number;
+  soLuongKhaDung: number;
+  quanLyTheoSerial: boolean;
+  laPhuongTien: boolean;
+  totalItems?: number;
+  danhSachSerialKhaDung: SerialKhaDungBanHang[];
+}
+

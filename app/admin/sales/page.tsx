@@ -3,7 +3,7 @@
 import React, { Suspense, useState, useMemo, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDonHang } from "@/hooks/DonHang/useDonHang";
-import { CreateDonHangPayload } from "@/types/donHang";
+import { CreateDonHangPayload, SerialKhaDungBanHang } from "@/types/donHang";
 import { toast } from "sonner";
 import {
   CartItem,
@@ -26,6 +26,12 @@ function SalesContent() {
   const [selectedKhoId, setSelectedKhoId] = useState("");
   const [selectedDiaDiemId, setSelectedDiaDiemId] = useState("");
 
+  // State giao nhận & ghi chú
+  const [orderNote, setOrderNote] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+
   // State giỏ hàng & thanh toán
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -36,6 +42,7 @@ function SalesContent() {
   const [saleDate, setSaleDate] = useState<string>(
     new Date().toISOString().split("T")[0],
   );
+
 
   // Hook quản lý đơn hàng & biến thể sản phẩm (BienTheSanPhamApi/Gets đã có đầy đủ tồn kho theo KhoID)
   const {
@@ -126,27 +133,77 @@ function SalesContent() {
         }
 
         toast.info(`Tăng số lượng: ${v.name}`);
+        const nextQty = existing.soLuong + 1;
+        let nextSelectedSerials = existing.selectedSerials || [];
+        if (existing.quanLyTheoSerial) {
+          const availableList = existing.danhSachSerialKhaDung || [];
+          const unselected = availableList.filter(
+            (s) =>
+              !nextSelectedSerials.some(
+                (cur) => cur.soSerialID === s.soSerialID,
+              ),
+          );
+          if (unselected.length > 0) {
+            nextSelectedSerials = [...nextSelectedSerials, unselected[0]];
+          }
+        }
+
+        const donGia = existing.donGia;
+        const tienGiamGia = existing.tienGiamGia || 0;
+        const thueVAT = existing.thueVAT || 0;
+        const tienThueVAT = Math.round(
+          ((donGia * nextQty - tienGiamGia) * thueVAT) / 100,
+        );
+        const thanhTien = donGia * nextQty - tienGiamGia + tienThueVAT;
+
         return prev.map((i) =>
           i.bienTheSanPhamID === v.value
             ? {
                 ...i,
-                soLuong: i.soLuong + 1,
-                thanhTien: (i.soLuong + 1) * i.donGia,
+                soLuong: nextQty,
+                tienThueVAT,
+                thanhTien,
+                selectedSerials: nextSelectedSerials,
               }
             : i,
         );
       }
 
       toast.success(`Đã thêm vào giỏ: ${v.name}`);
+      const donGia = v.defaultPrice || 0;
+      const thueVAT = v.thueVAT || 0;
+      const tienGiamGia = 0;
+      const tienThueVAT = Math.round(
+        ((donGia * 1 - tienGiamGia) * thueVAT) / 100,
+      );
+      const thanhTien = donGia * 1 - tienGiamGia + tienThueVAT;
+
+      const initialSerials =
+        v.quanLyTheoSerial &&
+        v.danhSachSerialKhaDung &&
+        v.danhSachSerialKhaDung.length > 0
+          ? [v.danhSachSerialKhaDung[0]]
+          : [];
+
       return [
         ...prev,
         {
+          id: crypto.randomUUID(),
           bienTheSanPhamID: v.value,
           sku: v.sku || "",
-          tenBienThe: v.name || "",
-          donGia: v.defaultPrice || 0,
+          tenBienThe: v.tenBienThe || v.name || "",
+          tenSanPham: v.tenSanPham || v.name || "",
+          donGia,
           soLuong: 1,
-          thanhTien: v.defaultPrice || 0,
+          tienGiamGia,
+          thueVAT,
+          tienThueVAT,
+          thanhTien,
+          quanLyTheoSerial: Boolean(v.quanLyTheoSerial),
+          laPhuongTien: Boolean(v.laPhuongTien),
+          soThangBaoHanh: v.soThangBaoHanh || 12,
+          danhSachSerialKhaDung: v.danhSachSerialKhaDung || [],
+          selectedSerials: initialSerials,
         },
       ];
     });
@@ -173,15 +230,61 @@ function SalesContent() {
             }
 
             const nextQty = Math.max(0, i.soLuong + delta);
+            let nextSelectedSerials = i.selectedSerials || [];
+            if (i.quanLyTheoSerial) {
+              if (delta > 0) {
+                const availableList = i.danhSachSerialKhaDung || [];
+                const unselected = availableList.filter(
+                  (s) =>
+                    !nextSelectedSerials.some(
+                      (cur) => cur.soSerialID === s.soSerialID,
+                    ),
+                );
+                if (unselected.length > 0) {
+                  nextSelectedSerials = [...nextSelectedSerials, unselected[0]];
+                }
+              } else if (delta < 0 && nextSelectedSerials.length > nextQty) {
+                nextSelectedSerials = nextSelectedSerials.slice(0, nextQty);
+              }
+            }
+
+            const donGia = i.donGia;
+            const tienGiamGia = i.tienGiamGia || 0;
+            const thueVAT = i.thueVAT || 0;
+            const tienThueVAT = Math.round(
+              ((donGia * nextQty - tienGiamGia) * thueVAT) / 100,
+            );
+            const thanhTien = donGia * nextQty - tienGiamGia + tienThueVAT;
+
             return {
               ...i,
               soLuong: nextQty,
-              thanhTien: nextQty * i.donGia,
+              tienThueVAT,
+              thanhTien,
+              selectedSerials: nextSelectedSerials,
             };
           }
           return i;
         })
         .filter((i) => i.soLuong > 0),
+    );
+  };
+
+  const handleSelectSerial = (
+    bienTheSanPhamID: string,
+    slotIdx: number,
+    serial: SerialKhaDungBanHang,
+  ) => {
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item.bienTheSanPhamID !== bienTheSanPhamID) return item;
+        const updated = [...(item.selectedSerials || [])];
+        updated[slotIdx] = serial;
+        return {
+          ...item,
+          selectedSerials: updated,
+        };
+      }),
     );
   };
 
@@ -218,12 +321,31 @@ function SalesContent() {
     return receivedCash - grandTotal;
   }, [receivedCash, grandTotal]);
 
+  // Chọn khách hàng và điền thông tin người nhận
+  const handleCustomerChange = (id: string) => {
+    setSelectedCustomerId(id);
+    setDataCreate((prev) => ({ ...prev, KhachHangID: id }));
+    const customer = (
+      customerOptions as Array<{
+        value: string;
+        label: string;
+        tenKhachHang?: string;
+        dienThoai?: string;
+        diaChi?: string;
+      }>
+    ).find((c) => c.value === id);
+    if (customer) {
+      if (!recipientName) setRecipientName(customer.tenKhachHang || "");
+      if (!recipientPhone) setRecipientPhone(customer.dienThoai || "");
+      if (!deliveryAddress) setDeliveryAddress(customer.diaChi || "");
+    }
+  };
+
   // Chọn khách hàng vãng lai tại quầy
   const handleSelectWalkInCustomer = () => {
     if (customerOptions.length > 0) {
       const firstId = String(customerOptions[0].value);
-      setSelectedCustomerId(firstId);
-      setDataCreate((prev) => ({ ...prev, KhachHangID: firstId }));
+      handleCustomerChange(firstId);
       toast.info("Đã chọn khách hàng vãng lai tại quầy");
     }
   };
@@ -250,6 +372,30 @@ function SalesContent() {
     const diaDiemId =
       selectedDiaDiemId || (diaDiemOptions[0]?.value as string) || "";
 
+    // Kiểm tra số lượng serial đã chọn cho mặt hàng quản lý theo serial
+    for (const item of cart) {
+      if (item.quanLyTheoSerial) {
+        const chosen = item.selectedSerials?.length || 0;
+        if (chosen < item.soLuong) {
+          toast.warning(
+            `Sản phẩm "${item.tenBienThe}" yêu cầu chọn đủ ${item.soLuong} số khung/serial (hiện mới có ${chosen})!`,
+          );
+          if (window.innerWidth < 1024) setMobileTab("cart");
+          return;
+        }
+      }
+    }
+
+    const selectedCustomer = (
+      customerOptions as Array<{
+        value: string;
+        label: string;
+        tenKhachHang?: string;
+        dienThoai?: string;
+        diaChi?: string;
+      }>
+    ).find((c) => c.value === selectedCustomerId);
+
     const actualPaid =
       typeof receivedCash === "number" && receivedCash > 0
         ? Math.min(receivedCash, grandTotal)
@@ -268,19 +414,35 @@ function SalesContent() {
     ).toISOString();
 
     const chiTiets = cart.map((i) => ({
-      ID: crypto.randomUUID(),
+      ID: i.id || crypto.randomUUID(),
       BienTheSanPhamID: i.bienTheSanPhamID,
       MaSKU: i.sku,
-      TenSanPham: i.tenBienThe,
+      TenSanPham: i.tenBienThe || i.tenSanPham || "",
       SoLuong: i.soLuong,
       DonGiaBan: i.donGia,
-      TienGiamGia: 0,
-      ThueVAT: 0,
-      TienThueVAT: 0,
+      TienGiamGia: i.tienGiamGia || 0,
+      ThueVAT: i.thueVAT || 0,
+      TienThueVAT: i.tienThueVAT || 0,
       ThanhTien: i.thanhTien,
-      QuanLyTheoSerial: false,
-      LaPhuongTien: false,
+      QuanLyTheoSerial: i.quanLyTheoSerial,
+      LaPhuongTien: i.laPhuongTien,
+      SoThangBaoHanh: i.soThangBaoHanh || 12,
+      GhiChu: i.ghiChu || "",
     }));
+
+    const serials = cart.flatMap((i) => {
+      if (!i.quanLyTheoSerial || !i.selectedSerials) return [];
+      return i.selectedSerials.map((s) => ({
+        ChiTietDonHangID: i.id,
+        BienTheSanPhamID: i.bienTheSanPhamID,
+        SoSerialID: s.soSerialID,
+        MaSerial: s.maSerial,
+        SoKhung: s.soKhung ?? null,
+        SoMay: s.soMay ?? null,
+        SoPin: s.soPin ?? null,
+        BienSoXe: null,
+      }));
+    });
 
     const payload: CreateDonHangPayload = {
       MaDonHang: null, // Backend tự sinh mã
@@ -288,8 +450,8 @@ function SalesContent() {
       DiaDiemID: diaDiemId,
       KhoXuatID: khoId,
       LoaiDonHangID: 87, // Bán lẻ tại quầy
-      TrangThaiDonHangID: 72,
-      TrangThaiThanhToanID: 83,
+      TrangThaiDonHangID: 72, // Lưu tạm / Chờ xử lý
+      TrangThaiThanhToanID: 83, // Chờ thanh toán
       NgayBan: ngayBanIso,
       TamTinh: subTotal,
       TienGiamGia: discountAmount,
@@ -297,8 +459,12 @@ function SalesContent() {
       PhiDichVuBienSo: registrationFee,
       TongTien: grandTotal,
       DaThanhToan: actualPaid,
+      TenNguoiNhan: recipientName || selectedCustomer?.tenKhachHang || "",
+      DienThoaiNguoiNhan: recipientPhone || selectedCustomer?.dienThoai || "",
+      DiaChiGiaoHang: deliveryAddress || selectedCustomer?.diaChi || "",
+      GhiChu: orderNote || "",
       ChiTiets: chiTiets,
-      Serials: [],
+      Serials: serials,
     };
 
     setDataCreate(payload);
@@ -309,6 +475,7 @@ function SalesContent() {
       setDeliveryFee(0);
       setRegistrationFee(0);
       setReceivedCash("");
+      setOrderNote("");
       refetchVariants(); // Tự động làm mới số lượng biến thể sau khi xuất bán
       toast.success("Xuất hóa đơn bán lẻ POS thành công!");
     } catch {
@@ -320,6 +487,7 @@ function SalesContent() {
     refetch();
     refetchVariants();
   };
+
 
   return (
     <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-4 sm:space-y-6 max-w-[1700px] mx-auto min-w-0 pb-20 sm:pb-6">
@@ -369,10 +537,7 @@ function SalesContent() {
         <SalesCart
           mobileTab={mobileTab}
           selectedCustomerId={selectedCustomerId}
-          onCustomerChange={(id) => {
-            setSelectedCustomerId(id);
-            setDataCreate((prev) => ({ ...prev, KhachHangID: id }));
-          }}
+          onCustomerChange={handleCustomerChange}
           customerOptions={customerOptions}
           isLoadingCustomers={isLoadingCustomers}
           onSelectWalkInCustomer={handleSelectWalkInCustomer}
@@ -381,6 +546,7 @@ function SalesContent() {
           onUpdateQuantity={updateQuantity}
           onRemoveFromCart={removeFromCart}
           onClearCart={() => setCart([])}
+          onSelectSerial={handleSelectSerial}
           subTotal={subTotal}
           discountAmount={discountAmount}
           onDiscountChange={setDiscountAmount}
@@ -398,6 +564,14 @@ function SalesContent() {
           paymentMethodOptions={paymentMethodOptions}
           saleDate={saleDate}
           onSaleDateChange={setSaleDate}
+          orderNote={orderNote}
+          onOrderNoteChange={setOrderNote}
+          recipientName={recipientName}
+          onRecipientNameChange={setRecipientName}
+          recipientPhone={recipientPhone}
+          onRecipientPhoneChange={setRecipientPhone}
+          deliveryAddress={deliveryAddress}
+          onDeliveryAddressChange={setDeliveryAddress}
           isCreating={isCreating}
           onCheckout={handleCheckout}
         />
