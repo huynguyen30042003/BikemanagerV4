@@ -222,7 +222,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
             )}
             {row.trangThaiDonHangID !== 76 &&
               row.trangThaiDonHangID !== 77 &&
-              row.conNo == 0 && (
+              row.daThanhToan != 0 && (
                 <Button
                   variant="ghost"
                   size="icon-xs"
