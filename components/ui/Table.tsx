@@ -40,14 +40,14 @@ export const Table = <T,>({
         <thead className="bg-thead h-10 text-muted-foreground">
           <tr>
             {showIndex && (
-              <th className="px-4 py-2 text-center text-muted-foreground border-b font-semibold w-12">
+              <th className="px-2 py-1 text-center text-muted-foreground border-b font-semibold w-12">
                 Stt
               </th>
             )}
             {columns.map((column) => (
               <th
                 key={String(column.key)}
-                className={`px-4 py-2 border-b font-semibold text-center ${column.classNameHeader || ""}`}
+                className={`px-2 py-1 border-b font-semibold text-center ${column.classNameHeader || ""}`}
               >
                 {column.title}
               </th>
@@ -59,7 +59,7 @@ export const Table = <T,>({
           {data?.map((row, rowIndex) => (
             <tr key={rowIndex} className="hover:bg-muted/50 transition-colors">
               {showIndex && (
-                <td className="px-4 py-2 border-b text-center">
+                <td className="px-2 py-1 border-b text-center">
                   {startIndex + rowIndex + 1}
                 </td>
               )}
@@ -71,7 +71,7 @@ export const Table = <T,>({
                 return (
                   <td
                     key={String(column.key)}
-                    className={`px-4 py-2 border-b ${
+                    className={`px-2 py-1 border-b ${
                       column.classNameItem || ""
                     }`}
                   >
