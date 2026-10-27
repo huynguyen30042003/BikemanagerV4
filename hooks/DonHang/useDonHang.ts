@@ -39,7 +39,7 @@ export interface UseDonHangOptions {
 
 export const useDonHang = (hookOptions?: UseDonHangOptions) => {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
