@@ -343,9 +343,10 @@ function SalesContent() {
 
   // Chọn khách hàng vãng lai tại quầy
   const handleSelectWalkInCustomer = () => {
+    console.log(customerOptions);
+
     if (customerOptions.length > 0) {
-      const firstId = String(customerOptions[0].value);
-      handleCustomerChange(firstId);
+      handleCustomerChange("a200fd5a-c5cd-4576-bfc6-61aeabca9d52");
       toast.info("Đã chọn khách hàng vãng lai tại quầy");
     }
   };
