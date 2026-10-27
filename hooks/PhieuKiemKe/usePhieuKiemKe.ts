@@ -26,7 +26,10 @@ export const DEFAULT_PAGE_SIZE = 50;
 /**
  * Fallback map cho trạng thái kiểm kê khi chưa load xong dữ liệu API
  */
-export const STATUS_AUDIT_MAP: Record<number, { label: string; color: string }> = {
+export const STATUS_AUDIT_MAP: Record<
+  number,
+  { label: string; color: string }
+> = {
   26: { label: "Đang kiểm kê", color: "amber" },
   27: { label: "Đã cân bằng kho", color: "emerald" },
   28: { label: "Đã hủy", color: "rose" },
@@ -81,16 +84,16 @@ export function usePhieuKiemKe() {
 
   const hasActiveFilters = useMemo(
     () =>
-      Boolean(
-        searchTerm.trim() || khoFilter !== "" || statusFilter !== null
-      ),
-    [searchTerm, khoFilter, statusFilter]
+      Boolean(searchTerm.trim() || khoFilter !== "" || statusFilter !== null),
+    [searchTerm, khoFilter, statusFilter],
   );
 
   const [openCreate, setOpenCreate] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
   const [openCapNhat, setOpenCapNhat] = useState<boolean>(false);
-  const [selectedPhieu, setSelectedPhieu] = useState<KHO_PhieuKiemKe | null>(null);
+  const [selectedPhieu, setSelectedPhieu] = useState<KHO_PhieuKiemKe | null>(
+    null,
+  );
 
   // Dropdown kho
   const { data: dataKhos, isLoading: isLoadingKhos } = useGetKho({
@@ -130,19 +133,16 @@ export function usePhieuKiemKe() {
     };
   }, [khoFilter, statusFilter, searchTerm, page, pageSize]);
 
-  const { data, isLoading, isFetching, refetch } = useGetPhieuKiemKe(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetPhieuKiemKe(queryParams);
 
   const items: KHO_PhieuKiemKe[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreatePhieuKiemKe();
   const capNhatMutation = useCapNhatSoDemKiemKe();
@@ -178,7 +178,9 @@ export function usePhieuKiemKe() {
     setOpenCapNhat(true);
   };
 
-  const handleSubmitCreate = async (customPayload?: CreatePhieuKiemKePayload) => {
+  const handleSubmitCreate = async (
+    customPayload?: CreatePhieuKiemKePayload,
+  ) => {
     const payload = customPayload || dataCreate;
     if (!payload.KhoID) {
       toast.error("Vui lòng chọn kho cần tiến hành kiểm kê!");

@@ -55,7 +55,8 @@ export function useDonNhapHang() {
   const [openPaymentModal, setOpenPaymentModal] = useState<boolean>(false);
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [selectedOrderFallback, setSelectedOrderFallback] = useState<NH_DonNhapHang | null>(null);
+  const [selectedOrderFallback, setSelectedOrderFallback] =
+    useState<NH_DonNhapHang | null>(null);
 
   // Dynamic Lookup từ DM_DanhMucChiTiet
   const {
@@ -88,23 +89,35 @@ export function useDonNhapHang() {
     data: dataDetail,
     isLoading: isLoadingDetail,
     refetch: refetchDetail,
-  } = useGetDonNhapHangById(openDetail && selectedOrderId ? selectedOrderId : undefined);
+  } = useGetDonNhapHangById(
+    openDetail && selectedOrderId ? selectedOrderId : undefined,
+  );
 
   // Lịch sử thanh toán của đơn nhập
   const { data: dataPaymentHistory, isLoading: isLoadingPaymentHistory } =
     useGetLichSuThanhToanDonNhap(
-      (openDetail || openPaymentModal) && selectedOrderId ? selectedOrderId : undefined
+      (openDetail || openPaymentModal) && selectedOrderId
+        ? selectedOrderId
+        : undefined,
     );
 
   const selectedOrder: NH_DonNhapHang | null = useMemo(() => {
     if (!selectedOrderId && !selectedOrderFallback) return null;
-    const detail = (dataDetail as any)?.data ?? (dataDetail as any)?.Data ?? dataDetail;
+    const detail =
+      (dataDetail as any)?.data ?? (dataDetail as any)?.Data ?? dataDetail;
     if (
       detail &&
       typeof detail === "object" &&
-      (detail.donNhapHangID || detail.DonNhapHangID || detail.chiTiets || detail.ChiTiets)
+      (detail.donNhapHangID ||
+        detail.DonNhapHangID ||
+        detail.chiTiets ||
+        detail.ChiTiets)
     ) {
-      const rawChiTiets = detail.chiTiets ?? detail.ChiTiets ?? selectedOrderFallback?.chiTiets ?? [];
+      const rawChiTiets =
+        detail.chiTiets ??
+        detail.ChiTiets ??
+        selectedOrderFallback?.chiTiets ??
+        [];
       const normalizedChiTiets = Array.isArray(rawChiTiets)
         ? rawChiTiets.map((ct: any) => ({
             id: ct.id ?? ct.ID,
@@ -125,11 +138,16 @@ export function useDonNhapHang() {
           }))
         : [];
 
-      const rawSerials = detail.serials ?? detail.Serials ?? selectedOrderFallback?.serials ?? [];
+      const rawSerials =
+        detail.serials ??
+        detail.Serials ??
+        selectedOrderFallback?.serials ??
+        [];
       const normalizedSerials = Array.isArray(rawSerials)
         ? rawSerials.map((s: any) => ({
             id: s.id ?? s.ID,
-            chiTietDonNhapHangID: s.chiTietDonNhapHangID ?? s.ChiTietDonNhapHangID,
+            chiTietDonNhapHangID:
+              s.chiTietDonNhapHangID ?? s.ChiTietDonNhapHangID,
             bienTheSanPhamID: s.bienTheSanPhamID ?? s.BienTheSanPhamID,
             maSerial: s.maSerial ?? s.MaSerial,
             soKhung: s.soKhung ?? s.SoKhung,
@@ -140,14 +158,19 @@ export function useDonNhapHang() {
           }))
         : [];
 
-      const rawLichSu = detail.lichSuThanhToans ?? detail.LichSuThanhToans ?? selectedOrderFallback?.lichSuThanhToans ?? [];
+      const rawLichSu =
+        detail.lichSuThanhToans ??
+        detail.LichSuThanhToans ??
+        selectedOrderFallback?.lichSuThanhToans ??
+        [];
       const normalizedLichSu = Array.isArray(rawLichSu)
         ? rawLichSu.map((ls: any) => ({
             id: ls.id ?? ls.ID,
             donNhapHangID: ls.donNhapHangID ?? ls.DonNhapHangID,
             nhaCungCapID: ls.nhaCungCapID ?? ls.NhaCungCapID,
             maGiaoDich: ls.maGiaoDich ?? ls.MaGiaoDich,
-            phuongTucThanhToanID: ls.phuongTucThanhToanID ?? ls.PhuongTucThanhToanID,
+            phuongTucThanhToanID:
+              ls.phuongTucThanhToanID ?? ls.PhuongTucThanhToanID,
             tenPhuongThuc: ls.tenPhuongThuc ?? ls.TenPhuongThuc,
             soTien: ls.soTien ?? ls.SoTien ?? 0,
             ngayThanhToan: ls.ngayThanhToan ?? ls.NgayThanhToan,
@@ -158,19 +181,47 @@ export function useDonNhapHang() {
       return {
         ...(selectedOrderFallback ?? {}),
         ...detail,
-        donNhapHangID: detail.donNhapHangID ?? detail.DonNhapHangID ?? selectedOrderFallback?.donNhapHangID,
-        maDonNhap: detail.maDonNhap ?? detail.MaDonNhap ?? selectedOrderFallback?.maDonNhap,
-        nhaCungCapID: detail.nhaCungCapID ?? detail.NhaCungCapID ?? selectedOrderFallback?.nhaCungCapID,
-        tenNhaCungCap: detail.tenNhaCungCap ?? detail.TenNhaCungCap ?? selectedOrderFallback?.tenNhaCungCap,
+        donNhapHangID:
+          detail.donNhapHangID ??
+          detail.DonNhapHangID ??
+          selectedOrderFallback?.donNhapHangID,
+        maDonNhap:
+          detail.maDonNhap ??
+          detail.MaDonNhap ??
+          selectedOrderFallback?.maDonNhap,
+        nhaCungCapID:
+          detail.nhaCungCapID ??
+          detail.NhaCungCapID ??
+          selectedOrderFallback?.nhaCungCapID,
+        tenNhaCungCap:
+          detail.tenNhaCungCap ??
+          detail.TenNhaCungCap ??
+          selectedOrderFallback?.tenNhaCungCap,
         khoID: detail.khoID ?? detail.KhoID ?? selectedOrderFallback?.khoID,
         tenKho: detail.tenKho ?? detail.TenKho ?? selectedOrderFallback?.tenKho,
-        soHoaDonChungTu: detail.soHoaDonChungTu ?? detail.SoHoaDonChungTu ?? selectedOrderFallback?.soHoaDonChungTu,
-        ngayHoaDon: detail.ngayHoaDon ?? detail.NgayHoaDon ?? selectedOrderFallback?.ngayHoaDon,
-        hanThanhToan: detail.hanThanhToan ?? detail.HanThanhToan ?? selectedOrderFallback?.hanThanhToan,
-        tongTien: detail.tongTien ?? detail.TongTien ?? selectedOrderFallback?.tongTien,
-        daThanhToan: detail.daThanhToan ?? detail.DaThanhToan ?? selectedOrderFallback?.daThanhToan,
+        soHoaDonChungTu:
+          detail.soHoaDonChungTu ??
+          detail.SoHoaDonChungTu ??
+          selectedOrderFallback?.soHoaDonChungTu,
+        ngayHoaDon:
+          detail.ngayHoaDon ??
+          detail.NgayHoaDon ??
+          selectedOrderFallback?.ngayHoaDon,
+        hanThanhToan:
+          detail.hanThanhToan ??
+          detail.HanThanhToan ??
+          selectedOrderFallback?.hanThanhToan,
+        tongTien:
+          detail.tongTien ?? detail.TongTien ?? selectedOrderFallback?.tongTien,
+        daThanhToan:
+          detail.daThanhToan ??
+          detail.DaThanhToan ??
+          selectedOrderFallback?.daThanhToan,
         conNo: detail.conNo ?? detail.ConNo ?? selectedOrderFallback?.conNo,
-        trangThaiID: detail.trangThaiID ?? detail.TrangThaiID ?? selectedOrderFallback?.trangThaiID,
+        trangThaiID:
+          detail.trangThaiID ??
+          detail.TrangThaiID ??
+          selectedOrderFallback?.trangThaiID,
         chiTiets: normalizedChiTiets,
         serials: normalizedSerials,
         lichSuThanhToans: normalizedLichSu,
@@ -180,24 +231,34 @@ export function useDonNhapHang() {
   }, [selectedOrderId, selectedOrderFallback, dataDetail]);
 
   const paymentHistoryItems: NH_LichSuThanhToan[] = useMemo(() => {
-    const fromApi = dataPaymentHistory?.data ?? dataPaymentHistory?.items ?? dataPaymentHistory;
+    const fromApi =
+      dataPaymentHistory?.data ??
+      dataPaymentHistory?.items ??
+      dataPaymentHistory;
     if (Array.isArray(fromApi) && fromApi.length > 0) return fromApi;
     return (selectedOrder as any)?.lichSuThanhToans ?? [];
   }, [dataPaymentHistory, selectedOrder]);
 
   // Dropdown Nhà cung cấp
-  const { data: dataSuppliers, isLoading: isLoadingSuppliers } = useGetNhaCungCap({
-    PageIndex: 1,
-    PageSize: 100,
-    TrangThai: true,
-  });
+  const { data: dataSuppliers, isLoading: isLoadingSuppliers } =
+    useGetNhaCungCap({
+      PageIndex: 1,
+      PageSize: 100,
+      TrangThai: true,
+    });
 
   const supplierOptions = useMemo(() => {
     const list = dataSuppliers?.data ?? dataSuppliers?.items ?? [];
-    return list.map((s: { nhaCungCapID: string; tenNhaCungCap: string; maNhaCungCap: string }) => ({
-      value: s.nhaCungCapID,
-      label: `${s.tenNhaCungCap} [${s.maNhaCungCap}]`,
-    }));
+    return list.map(
+      (s: {
+        nhaCungCapID: string;
+        tenNhaCungCap: string;
+        maNhaCungCap: string;
+      }) => ({
+        value: s.nhaCungCapID,
+        label: `${s.tenNhaCungCap} [${s.maNhaCungCap}]`,
+      }),
+    );
   }, [dataSuppliers]);
 
   // Dropdown Kho hàng
@@ -216,21 +277,30 @@ export function useDonNhapHang() {
   }, [dataKhos]);
 
   // Dropdown Biến thể sản phẩm
-  const { data: dataVariants, isLoading: isLoadingVariants } = useGetBienTheSanPham({
-    PageIndex: 1,
-    PageSize: 100,
-  });
+  const { data: dataVariants, isLoading: isLoadingVariants } =
+    useGetBienTheSanPham({
+      PageIndex: 1,
+      PageSize: 100,
+    });
 
   const variantOptions = useMemo(() => {
     const list = dataVariants?.data ?? dataVariants?.items ?? [];
-    return list.map((v: { bienTheSanPhamID: string; tenBienThe: string; maSKU: string; giaNhap?: number; quanLyTheoSerial?: boolean }) => ({
-      value: v.bienTheSanPhamID,
-      label: `${v.tenBienThe} [${v.maSKU}]`,
-      sku: v.maSKU,
-      name: v.tenBienThe,
-      defaultPrice: v.giaNhap || 0,
-      quanLyTheoSerial: Boolean(v.quanLyTheoSerial),
-    }));
+    return list.map(
+      (v: {
+        bienTheSanPhamID: string;
+        tenBienThe: string;
+        maSKU: string;
+        giaNhap?: number;
+        quanLyTheoSerial?: boolean;
+      }) => ({
+        value: v.bienTheSanPhamID,
+        label: `${v.tenBienThe} [${v.maSKU}]`,
+        sku: v.maSKU,
+        name: v.tenBienThe,
+        defaultPrice: v.giaNhap || 0,
+        quanLyTheoSerial: Boolean(v.quanLyTheoSerial),
+      }),
+    );
   }, [dataVariants]);
 
   // Form tạo đơn mới
@@ -270,11 +340,12 @@ export function useDonNhapHang() {
   });
 
   // Form chuyển trạng thái
-  const [dataStatusChange, setDataStatusChange] = useState<ChuyenTrangThaiDonNhapPayload>({
-    DonNhapHangID: "",
-    TrangThaiID: 67,
-    GhiChu: "",
-  });
+  const [dataStatusChange, setDataStatusChange] =
+    useState<ChuyenTrangThaiDonNhapPayload>({
+      DonNhapHangID: "",
+      TrangThaiID: 67,
+      GhiChu: "",
+    });
 
   const queryParams = useMemo(() => {
     return {
@@ -287,7 +358,8 @@ export function useDonNhapHang() {
     };
   }, [searchTerm, supplierFilter, khoFilter, statusFilter, page, pageSize]);
 
-  const { data, isLoading, isFetching, refetch } = useGetDonNhapHang(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetDonNhapHang(queryParams);
 
   const {
     data: kpiData,
@@ -299,13 +371,9 @@ export function useDonNhapHang() {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateDonNhapHang();
   const updateMutation = useUpdateDonNhapHang();
@@ -396,7 +464,9 @@ export function useDonNhapHang() {
 
   const handleOpenStatusChange = (order: NH_DonNhapHang) => {
     if (isCompletedStatus(order.trangThaiID)) {
-      toast.warning("Đơn hàng đã ở trạng thái hoàn thành (nhập kho thành công), không thể thay đổi trạng thái!");
+      toast.warning(
+        "Đơn hàng đã ở trạng thái hoàn thành (nhập kho thành công), không thể thay đổi trạng thái!",
+      );
       return;
     }
     setSelectedOrderId(order.donNhapHangID);
@@ -411,7 +481,7 @@ export function useDonNhapHang() {
 
   const handleSubmitCreate = async (
     e?: React.FormEvent,
-    customPayload?: CreateDonNhapHangPayload
+    customPayload?: CreateDonNhapHangPayload,
   ) => {
     if (e) e.preventDefault();
     const payload = customPayload || dataCreate;
@@ -451,7 +521,7 @@ export function useDonNhapHang() {
   };
 
   const handleSubmitStatusChange = async (
-    payloadOrEvent?: React.FormEvent | ChuyenTrangThaiDonNhapPayload
+    payloadOrEvent?: React.FormEvent | ChuyenTrangThaiDonNhapPayload,
   ) => {
     let payload = dataStatusChange;
     if (payloadOrEvent && "DonNhapHangID" in payloadOrEvent) {
@@ -462,7 +532,7 @@ export function useDonNhapHang() {
 
     if (isCompletedStatus(selectedOrder?.trangThaiID)) {
       toast.warning(
-        "Đơn hàng đã ở trạng thái hoàn thành (nhập kho thành công), không thể thay đổi trạng thái!"
+        "Đơn hàng đã ở trạng thái hoàn thành (nhập kho thành công), không thể thay đổi trạng thái!",
       );
       setOpenStatusModal(false);
       return;
@@ -487,7 +557,7 @@ export function useDonNhapHang() {
   };
 
   const handleSubmitPayment = async (
-    payloadOrEvent?: React.FormEvent | ThanhToanDonNhapPayload
+    payloadOrEvent?: React.FormEvent | ThanhToanDonNhapPayload,
   ) => {
     let payload = dataPayment;
     if (payloadOrEvent && "DonNhapHangID" in payloadOrEvent) {

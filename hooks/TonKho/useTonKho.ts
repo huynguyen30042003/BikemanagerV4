@@ -22,7 +22,9 @@ export function useTonKho(initialKhoId?: string) {
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [khoFilter, setKhoFilter] = useState<string>(initialKhoId || "");
-  const [warningFilter, setWarningFilter] = useState<"all" | "low" | "out">("all");
+  const [warningFilter, setWarningFilter] = useState<"all" | "low" | "out">(
+    "all",
+  );
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -78,7 +80,7 @@ export function useTonKho(initialKhoId?: string) {
         (i) =>
           i.soLuongToiThieu != null &&
           i.soLuongKhaDung <= i.soLuongToiThieu &&
-          i.soLuongKhaDung > 0
+          i.soLuongKhaDung > 0,
       );
     }
     if (warningFilter === "out") {
@@ -87,21 +89,17 @@ export function useTonKho(initialKhoId?: string) {
     return rawItems;
   }, [rawItems, warningFilter]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
-
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
   // Query thẻ kho nếu mở modal
-  const { data: dataGiaoDichs, isLoading: isLoadingTheKho } = useGetGiaoDichTonKho({
-    KhoID: selectedItem?.khoID || null,
-    BienTheSanPhamID: selectedItem?.bienTheSanPhamID || null,
-    PageIndex: 1,
-    PageSize: 100,
-  });
+  const { data: dataGiaoDichs, isLoading: isLoadingTheKho } =
+    useGetGiaoDichTonKho({
+      KhoID: selectedItem?.khoID || null,
+      BienTheSanPhamID: selectedItem?.bienTheSanPhamID || null,
+      PageIndex: 1,
+      PageSize: 100,
+    });
 
   const theKhoItems = useMemo(() => {
     return dataGiaoDichs?.data ?? dataGiaoDichs?.items ?? [];
@@ -139,39 +137,55 @@ export function useTonKho(initialKhoId?: string) {
     setPage(1);
   };
 
-  const [activeTab, setActiveTab] = useState<"stock" | "costs" | "transactions">("stock");
+  const [activeTab, setActiveTab] = useState<
+    "stock" | "costs" | "transactions"
+  >("stock");
 
   // Query Lô chi phí tồn kho (KHO_LoChiPhiTonKho)
-  const { data: dataLoChiPhis, isLoading: isLoadingLoChiPhis, refetch: refetchLoChiPhis } =
-    useGetLoChiPhiTonKho({
-      KhoID: khoFilter || null,
-      TuKhoa: searchTerm,
-      PageIndex: page,
-      PageSize: pageSize,
-    });
+  const {
+    data: dataLoChiPhis,
+    isLoading: isLoadingLoChiPhis,
+    refetch: refetchLoChiPhis,
+  } = useGetLoChiPhiTonKho({
+    KhoID: khoFilter || null,
+    TuKhoa: searchTerm,
+    PageIndex: page,
+    PageSize: pageSize,
+  });
 
   const loChiPhiItems = useMemo(() => {
     return dataLoChiPhis?.data ?? dataLoChiPhis?.items ?? [];
   }, [dataLoChiPhis]);
 
   const totalLoChiPhis = useMemo(() => {
-    return dataLoChiPhis?.totalItems ?? dataLoChiPhis?.totalCount ?? loChiPhiItems.length;
+    return (
+      dataLoChiPhis?.totalItems ??
+      dataLoChiPhis?.totalCount ??
+      loChiPhiItems.length
+    );
   }, [dataLoChiPhis, loChiPhiItems.length]);
 
   // Query Toàn bộ giao dịch thẻ kho (KHO_GiaoDichTonKho)
-  const { data: dataAllGiaoDichs, isLoading: isLoadingAllGiaoDichs, refetch: refetchAllGiaoDichs } =
-    useGetGiaoDichTonKho({
-      KhoID: khoFilter || null,
-      PageIndex: page,
-      PageSize: pageSize,
-    });
+  const {
+    data: dataAllGiaoDichs,
+    isLoading: isLoadingAllGiaoDichs,
+    refetch: refetchAllGiaoDichs,
+  } = useGetGiaoDichTonKho({
+    KhoID: khoFilter || null,
+    PageIndex: page,
+    PageSize: pageSize,
+  });
 
   const allGiaoDichItems = useMemo(() => {
     return dataAllGiaoDichs?.data ?? dataAllGiaoDichs?.items ?? [];
   }, [dataAllGiaoDichs]);
 
   const totalAllGiaoDichs = useMemo(() => {
-    return dataAllGiaoDichs?.totalItems ?? dataAllGiaoDichs?.totalCount ?? allGiaoDichItems.length;
+    return (
+      dataAllGiaoDichs?.totalItems ??
+      dataAllGiaoDichs?.totalCount ??
+      allGiaoDichItems.length
+    );
   }, [dataAllGiaoDichs, allGiaoDichItems.length]);
 
   return {

@@ -371,13 +371,9 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateDonHang();
   const statusMutation = useChuyenTrangThaiDonHang();

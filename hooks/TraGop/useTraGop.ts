@@ -39,7 +39,10 @@ export const TRANG_THAI_GIAI_NGAN = {
   DA_GIAI_NGAN: 121,
 } as const;
 
-export const getTrangThaiHopDongBadge = (statusId?: number | null, fallback?: string | null) => {
+export const getTrangThaiHopDongBadge = (
+  statusId?: number | null,
+  fallback?: string | null,
+) => {
   switch (statusId) {
     case 110:
       return { label: "Chờ thẩm định", color: "amber" };
@@ -56,8 +59,10 @@ export const getTrangThaiHopDongBadge = (statusId?: number | null, fallback?: st
     case 116:
       return { label: "Đã hủy", color: "slate" };
     default:
-      if (fallback?.toLowerCase().includes("daduyet")) return { label: "Đã duyệt", color: "emerald" };
-      if (fallback?.toLowerCase().includes("tuchoi")) return { label: "Từ chối", color: "rose" };
+      if (fallback?.toLowerCase().includes("daduyet"))
+        return { label: "Đã duyệt", color: "emerald" };
+      if (fallback?.toLowerCase().includes("tuchoi"))
+        return { label: "Từ chối", color: "rose" };
       return { label: fallback || "Chờ duyệt", color: "amber" };
   }
 };
@@ -110,19 +115,16 @@ export const useDonViTraGopHook = () => {
     };
   }, [searchInput, statusFilter, page, pageSize]);
 
-  const { data, isLoading, isFetching, refetch } = useGetDonViTraGop(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetDonViTraGop(queryParams);
 
   const items: DonViTraGop[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateDonViTraGop();
   const updateMutation = useUpdateDonViTraGop();
@@ -168,7 +170,7 @@ export const useDonViTraGopHook = () => {
   };
 
   const handleSubmitAdd = async (
-    payloadOrEvent?: React.FormEvent | CreateDonViTraGopPayload
+    payloadOrEvent?: React.FormEvent | CreateDonViTraGopPayload,
   ) => {
     let payload = formData;
     if (payloadOrEvent && "MaDonVi" in payloadOrEvent) {
@@ -190,12 +192,14 @@ export const useDonViTraGopHook = () => {
       setOpenAdd(false);
       refetch();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Không thể thêm đối tác trả góp!");
+      toast.error(
+        err?.response?.data?.message || "Không thể thêm đối tác trả góp!",
+      );
     }
   };
 
   const handleSubmitEdit = async (
-    payloadOrEvent?: React.FormEvent | UpdateDonViTraGopPayload
+    payloadOrEvent?: React.FormEvent | UpdateDonViTraGopPayload,
   ) => {
     let payload: UpdateDonViTraGopPayload;
     if (payloadOrEvent && "DonViTraGopID" in payloadOrEvent) {
@@ -221,7 +225,9 @@ export const useDonViTraGopHook = () => {
       setOpenEdit(false);
       refetch();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Không thể cập nhật đối tác trả góp!");
+      toast.error(
+        err?.response?.data?.message || "Không thể cập nhật đối tác trả góp!",
+      );
     }
   };
 
@@ -235,7 +241,10 @@ export const useDonViTraGopHook = () => {
       toast.success("Đã xóa đơn vị trả góp!");
       refetch();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Không thể xóa đối tác trả góp này (có thể đã phát sinh hợp đồng)!");
+      toast.error(
+        err?.response?.data?.message ||
+          "Không thể xóa đối tác trả góp này (có thể đã phát sinh hợp đồng)!",
+      );
     }
   };
 
@@ -285,7 +294,8 @@ export const useHopDongTraGopHook = () => {
   const [openAdd, setOpenAdd] = useState(false);
   const [openStatusModal, setOpenStatusModal] = useState(false);
   const [openDisburseModal, setOpenDisburseModal] = useState(false);
-  const [selectedContract, setSelectedContract] = useState<HopDongTraGop | null>(null);
+  const [selectedContract, setSelectedContract] =
+    useState<HopDongTraGop | null>(null);
 
   const [formData, setFormData] = useState<CreateHopDongTraGopPayload>({
     DonHangID: "",
@@ -309,7 +319,10 @@ export const useHopDongTraGopHook = () => {
     GhiChu: "",
   });
 
-  const { data: dataProviders } = useGetDonViTraGop({ PageIndex: 1, PageSize: 100 });
+  const { data: dataProviders } = useGetDonViTraGop({
+    PageIndex: 1,
+    PageSize: 100,
+  });
   const providerOptions = useMemo(() => {
     const list = dataProviders?.data ?? dataProviders?.items ?? [];
     return list.map((p: DonViTraGop) => ({
@@ -323,25 +336,30 @@ export const useHopDongTraGopHook = () => {
       TuKhoa: searchInput,
       DonViTraGopID: providerFilter || null,
       TrangThaiHopDongID: statusFilter === "all" ? null : Number(statusFilter),
-      TrangThaiGiaiNganID: disbursementFilter === "all" ? null : Number(disbursementFilter),
+      TrangThaiGiaiNganID:
+        disbursementFilter === "all" ? null : Number(disbursementFilter),
       PageIndex: page,
       PageSize: pageSize,
     };
-  }, [searchInput, providerFilter, statusFilter, disbursementFilter, page, pageSize]);
+  }, [
+    searchInput,
+    providerFilter,
+    statusFilter,
+    disbursementFilter,
+    page,
+    pageSize,
+  ]);
 
-  const { data, isLoading, isFetching, refetch } = useGetHopDongTraGop(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetHopDongTraGop(queryParams);
 
   const items: HopDongTraGop[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateHopDongTraGop();
   const chuyenTrangThaiMutation = useChuyenTrangThaiHopDong();
@@ -374,7 +392,7 @@ export const useHopDongTraGopHook = () => {
   };
 
   const handleSubmitAdd = async (
-    payloadOrEvent?: React.FormEvent | CreateHopDongTraGopPayload
+    payloadOrEvent?: React.FormEvent | CreateHopDongTraGopPayload,
   ) => {
     let payload = formData;
     if (payloadOrEvent && "SoHopDong" in payloadOrEvent) {
@@ -396,36 +414,47 @@ export const useHopDongTraGopHook = () => {
       setOpenAdd(false);
       refetch();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Không thể lưu hợp đồng trả góp!");
+      toast.error(
+        err?.response?.data?.message || "Không thể lưu hợp đồng trả góp!",
+      );
     }
   };
 
-  const handleChuyenTrangThai = async (payload: ChuyenTrangThaiHopDongPayload) => {
+  const handleChuyenTrangThai = async (
+    payload: ChuyenTrangThaiHopDongPayload,
+  ) => {
     try {
       await chuyenTrangThaiMutation.mutateAsync(payload);
       toast.success("Cập nhật trạng thái thẩm định hồ sơ thành công!");
       setOpenStatusModal(false);
       refetch();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Lỗi khi cập nhật trạng thái!");
+      toast.error(
+        err?.response?.data?.message || "Lỗi khi cập nhật trạng thái!",
+      );
     }
   };
 
   const handleXacNhanGiaiNgan = async (payload: XacNhanGiaiNganPayload) => {
     try {
       await xacNhanGiaiNganMutation.mutateAsync(payload);
-      toast.success("Xác nhận tiền giải ngân thành công! Đã tự động cập nhật thanh toán đơn hàng.");
+      toast.success(
+        "Xác nhận tiền giải ngân thành công! Đã tự động cập nhật thanh toán đơn hàng.",
+      );
       setOpenDisburseModal(false);
       refetch();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Lỗi khi ghi nhận giải ngân!");
+      toast.error(
+        err?.response?.data?.message || "Lỗi khi ghi nhận giải ngân!",
+      );
     }
   };
 
   const handleDelete = async (contract: HopDongTraGop) => {
     const id = contract.hopDongTraGopID || contract.id;
     if (!id) return;
-    if (!confirm(`Bạn có chắc muốn hủy hồ sơ trả góp "${contract.soHopDong}"?`)) return;
+    if (!confirm(`Bạn có chắc muốn hủy hồ sơ trả góp "${contract.soHopDong}"?`))
+      return;
     try {
       await deleteMutation.mutateAsync(id);
       toast.success("Đã hủy hồ sơ trả góp!");

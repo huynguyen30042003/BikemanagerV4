@@ -29,14 +29,19 @@ export const DEFAULT_PAGE_SIZE = 50;
 export const DEBOUNCE_DELAY = 400;
 
 export const soSerialSchema = z.object({
-  bienTheSanPhamID: z.string().min(1, "Vui lòng chọn dòng xe / biến thể sản phẩm"),
+  bienTheSanPhamID: z
+    .string()
+    .min(1, "Vui lòng chọn dòng xe / biến thể sản phẩm"),
   maSerial: z.string().trim().min(1, "Vui lòng nhập mã serial tem dán"),
 });
 
 /**
  * Fallback map cho trạng thái Serial khi chưa load xong API
  */
-export const STATUS_SERIAL_MAP: Record<number, { label: string; color: string }> = {
+export const STATUS_SERIAL_MAP: Record<
+  number,
+  { label: string; color: string }
+> = {
   59: { label: "Trong kho / Tồn kho", color: "emerald" },
   60: { label: "Đang vận chuyển / Chuyển kho", color: "blue" },
   61: { label: "Đã bán cho khách", color: "indigo" },
@@ -74,7 +79,9 @@ export function useSoSerial(initialBienTheId?: string) {
     isLoading: isLoadingSerialStatuses,
   } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.TRANG_THAI_SERIAL);
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
-  const [bienTheFilter, setBienTheFilter] = useState<string>(initialBienTheId ?? "");
+  const [bienTheFilter, setBienTheFilter] = useState<string>(
+    initialBienTheId ?? "",
+  );
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -84,37 +91,49 @@ export function useSoSerial(initialBienTheId?: string) {
   const [open, setOpen] = useState<boolean>(false);
   const [openWarranty, setOpenWarranty] = useState<boolean>(false);
   const [openChangeStatus, setOpenChangeStatus] = useState<boolean>(false);
-  const [selectedSerial, setSelectedSerial] = useState<SP_SoSerial | null>(null);
+  const [selectedSerial, setSelectedSerial] = useState<SP_SoSerial | null>(
+    null,
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Query Biến thể cho dropdown
-  const { data: dataVariants, isLoading: isLoadingVariants } = useGetBienTheSanPham({
-    QuanLyTheoSerial: true,
-    PageIndex: 1,
-    PageSize: 100,
-  });
+  const { data: dataVariants, isLoading: isLoadingVariants } =
+    useGetBienTheSanPham({
+      QuanLyTheoSerial: true,
+      PageIndex: 1,
+      PageSize: 100,
+    });
 
   const variantOptions = useMemo(() => {
     const list = dataVariants?.data ?? dataVariants?.items ?? [];
-    return list.map((v: { bienTheSanPhamID: string; tenBienThe: string; maSKU: string }) => ({
-      value: v.bienTheSanPhamID,
-      label: `${v.tenBienThe} [${v.maSKU}]`,
-    }));
+    return list.map(
+      (v: { bienTheSanPhamID: string; tenBienThe: string; maSKU: string }) => ({
+        value: v.bienTheSanPhamID,
+        label: `${v.tenBienThe} [${v.maSKU}]`,
+      }),
+    );
   }, [dataVariants]);
 
   // Query khách hàng cho dropdown kích hoạt bảo hành
-  const { data: dataCustomers, isLoading: isLoadingCustomers } = useGetKhachHang({
-    PageIndex: 1,
-    PageSize: 100,
-    TrangThai: true,
-  });
+  const { data: dataCustomers, isLoading: isLoadingCustomers } =
+    useGetKhachHang({
+      PageIndex: 1,
+      PageSize: 100,
+      TrangThai: true,
+    });
 
   const customerOptions = useMemo(() => {
     const list = dataCustomers?.data ?? dataCustomers?.items ?? [];
-    return list.map((c: { khachHangID: string; tenKhachHang: string; dienThoai: string }) => ({
-      value: c.khachHangID,
-      label: `${c.tenKhachHang} - ${c.dienThoai}`,
-    }));
+    return list.map(
+      (c: {
+        khachHangID: string;
+        tenKhachHang: string;
+        dienThoai: string;
+      }) => ({
+        value: c.khachHangID,
+        label: `${c.tenKhachHang} - ${c.dienThoai}`,
+      }),
+    );
   }, [dataCustomers]);
 
   // Form thêm mới
@@ -141,11 +160,12 @@ export function useSoSerial(initialBienTheId?: string) {
   });
 
   // Form chuyển trạng thái
-  const [dataChangeStatus, setDataChangeStatus] = useState<ChuyenTrangThaiSerialPayload>({
-    SoSerialID: "",
-    TrangThaiID: 1,
-    GhiChu: "",
-  });
+  const [dataChangeStatus, setDataChangeStatus] =
+    useState<ChuyenTrangThaiSerialPayload>({
+      SoSerialID: "",
+      TrangThaiID: 1,
+      GhiChu: "",
+    });
 
   const queryParams = useMemo(() => {
     return {
@@ -169,13 +189,9 @@ export function useSoSerial(initialBienTheId?: string) {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateSoSerial();
   const warrantyMutation = useKichHoatBaoHanh();

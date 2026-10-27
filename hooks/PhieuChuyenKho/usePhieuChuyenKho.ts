@@ -31,7 +31,10 @@ export const DEBOUNCE_DELAY = 400;
 /**
  * Fallback map cho trạng thái chuyển kho khi chưa load kịp dữ liệu từ API
  */
-export const STATUS_TRANSFER_MAP: Record<number, { label: string; color: string }> = {
+export const STATUS_TRANSFER_MAP: Record<
+  number,
+  { label: string; color: string }
+> = {
   22: { label: "Chờ xuất kho", color: "amber" },
   23: { label: "Đang vận chuyển", color: "blue" },
   24: { label: "Đã nhận hàng", color: "emerald" },
@@ -71,7 +74,9 @@ export function usePhieuChuyenKho() {
 
   const [openCreate, setOpenCreate] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
-  const [selectedPhieu, setSelectedPhieu] = useState<KHO_PhieuChuyenKho | null>(null);
+  const [selectedPhieu, setSelectedPhieu] = useState<KHO_PhieuChuyenKho | null>(
+    null,
+  );
 
   // Dropdown kho
   const { data: dataKhos, isLoading: isLoadingKhos } = useGetKho({
@@ -89,17 +94,20 @@ export function usePhieuChuyenKho() {
   }, [dataKhos]);
 
   // Dropdown biến thể
-  const { data: dataVariants, isLoading: isLoadingVariants } = useGetBienTheSanPham({
-    PageIndex: 1,
-    PageSize: 100,
-  });
+  const { data: dataVariants, isLoading: isLoadingVariants } =
+    useGetBienTheSanPham({
+      PageIndex: 1,
+      PageSize: 100,
+    });
 
   const variantOptions = useMemo(() => {
     const list = dataVariants?.data ?? dataVariants?.items ?? [];
-    return list.map((v: { bienTheSanPhamID: string; tenBienThe: string; maSKU: string }) => ({
-      value: v.bienTheSanPhamID,
-      label: `${v.tenBienThe} [${v.maSKU}]`,
-    }));
+    return list.map(
+      (v: { bienTheSanPhamID: string; tenBienThe: string; maSKU: string }) => ({
+        value: v.bienTheSanPhamID,
+        label: `${v.tenBienThe} [${v.maSKU}]`,
+      }),
+    );
   }, [dataVariants]);
 
   // Form tạo phiếu mới
@@ -129,19 +137,16 @@ export function usePhieuChuyenKho() {
     };
   }, [searchTerm, khoFilter, statusFilter, page, pageSize]);
 
-  const { data, isLoading, isFetching, refetch } = useGetPhieuChuyenKho(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetPhieuChuyenKho(queryParams);
 
   const items: KHO_PhieuChuyenKho[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreatePhieuChuyenKho();
   const xuatKhoMutation = useXuatKhoChuyenKho();
@@ -205,10 +210,12 @@ export function usePhieuChuyenKho() {
       return;
     }
     const validChiTiets = (data.ChiTiets || []).filter(
-      (c) => c.BienTheSanPhamID && c.SoLuongChuyen > 0
+      (c) => c.BienTheSanPhamID && c.SoLuongChuyen > 0,
     );
     if (validChiTiets.length === 0) {
-      toast.error("Vui lòng thêm ít nhất 1 sản phẩm với số lượng chuyển hợp lệ!");
+      toast.error(
+        "Vui lòng thêm ít nhất 1 sản phẩm với số lượng chuyển hợp lệ!",
+      );
       return;
     }
 
@@ -237,7 +244,7 @@ export function usePhieuChuyenKho() {
   };
 
   const handleNhanHang = async (
-    phieuOrPayload: KHO_PhieuChuyenKho | NhanHangPayload
+    phieuOrPayload: KHO_PhieuChuyenKho | NhanHangPayload,
   ) => {
     try {
       let payload: NhanHangPayload;
@@ -261,7 +268,9 @@ export function usePhieuChuyenKho() {
     }
   };
 
-  const handleHuyPhieu = async (phieuIdOrPayload: string | HuyPhieuChuyenPayload) => {
+  const handleHuyPhieu = async (
+    phieuIdOrPayload: string | HuyPhieuChuyenPayload,
+  ) => {
     try {
       const payload: HuyPhieuChuyenPayload =
         typeof phieuIdOrPayload === "string"
@@ -280,7 +289,7 @@ export function usePhieuChuyenKho() {
   };
 
   const hasActiveFilters = Boolean(
-    searchInput || khoFilter || statusFilter !== null
+    searchInput || khoFilter || statusFilter !== null,
   );
 
   const handleResetFilters = () => {

@@ -97,7 +97,8 @@ export function useThuongHieu() {
     };
   }, [searchTerm, page, pageSize, statusFilter]);
 
-  const { data, isLoading, isFetching, refetch } = useGetThuongHieu(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetThuongHieu(queryParams);
 
   const {
     data: kpiData,
@@ -109,13 +110,9 @@ export function useThuongHieu() {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateThuongHieu();
   const updateMutation = useUpdateThuongHieu();

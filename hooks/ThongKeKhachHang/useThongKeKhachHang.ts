@@ -29,7 +29,9 @@ export function useThongKeKhachHang() {
   });
 
   const [openUpdate, setOpenUpdate] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = useState<KH_ThongKeKhachHang | null>(null);
+  const [selectedItem, setSelectedItem] = useState<KH_ThongKeKhachHang | null>(
+    null,
+  );
 
   const [dataUpdate, setDataUpdate] = useState<UpdateThongKeKhachHangPayload>({
     KhachHangID: "",
@@ -48,7 +50,8 @@ export function useThongKeKhachHang() {
     };
   }, [searchTerm, tierFilter, page, pageSize]);
 
-  const { data, isLoading, isFetching, refetch } = useGetThongKeKhachHang(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetThongKeKhachHang(queryParams);
 
   const {
     data: kpiData,
@@ -56,18 +59,13 @@ export function useThongKeKhachHang() {
     refetch: refetchKPI,
   } = useGetThongKeKhachHangKPI();
 
-
   const items: KH_ThongKeKhachHang[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const updateMutation = useUpdateThongKeKhachHang();
 
@@ -128,4 +126,3 @@ export function useThongKeKhachHang() {
     isUpdating: updateMutation.isPending,
   };
 }
-

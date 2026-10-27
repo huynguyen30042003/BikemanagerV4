@@ -30,7 +30,6 @@ import { useGetDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
 import { useGetKho } from "@/hooks/Kho/useKhoApi";
 import { useGetPhuTungs } from "@/hooks/BienTheSanPham/useBienTheSanPhamApi";
 
-
 export const useDichVuHook = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -83,13 +82,9 @@ export const useDichVuHook = () => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateDichVu();
   const updateMutation = useUpdateDichVu();
@@ -99,7 +94,9 @@ export const useDichVuHook = () => {
     setFormData({
       MaDichVu: `DV-${Date.now().toString().slice(-4)}`,
       TenDichVu: "",
-      DanhMucChiTietID: serviceTypeOptions[0]?.value ? Number(serviceTypeOptions[0].value) : 114,
+      DanhMucChiTietID: serviceTypeOptions[0]?.value
+        ? Number(serviceTypeOptions[0].value)
+        : 114,
       MoTa: "",
       GiaCoBan: 50000,
       GiaKhuyenMai: null,
@@ -126,7 +123,10 @@ export const useDichVuHook = () => {
     setOpenEdit(true);
   };
 
-  const handleSubmitAdd = async (e?: React.FormEvent, customData?: CreateDichVuPayload) => {
+  const handleSubmitAdd = async (
+    e?: React.FormEvent,
+    customData?: CreateDichVuPayload,
+  ) => {
     e?.preventDefault?.();
     const payload = customData || formData;
     if (!payload.TenDichVu.trim()) {
@@ -145,13 +145,17 @@ export const useDichVuHook = () => {
 
   const handleSubmitEdit = async (
     e?: React.FormEvent,
-    customData?: UpdateDichVuPayload
+    customData?: UpdateDichVuPayload,
   ) => {
     e?.preventDefault?.();
-    const payload = customData || (selectedItem ? {
-      ...formData,
-      DichVuID: selectedItem.dichVuID,
-    } : null);
+    const payload =
+      customData ||
+      (selectedItem
+        ? {
+            ...formData,
+            DichVuID: selectedItem.dichVuID,
+          }
+        : null);
     if (!payload) return;
     try {
       await updateMutation.mutateAsync(payload);
@@ -213,8 +217,12 @@ export const usePhieuSuaChuaHook = () => {
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<number | null>(null);
-  const [serviceTypeFilter, setServiceTypeFilter] = useState<number | null>(null);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<number | null>(
+    null,
+  );
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<number | null>(
+    null,
+  );
 
   // Lookups động từ DM_DanhMucChiTiet
   const {
@@ -243,23 +251,42 @@ export const usePhieuSuaChuaHook = () => {
     isLoading: isLoadingPaymentMethods,
   } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.PHUONG_THUC_THANH_TOAN);
 
-  const { data: dataCustomers } = useGetKhachHang({ PageIndex: 1, PageSize: 100 });
+  const { data: dataCustomers } = useGetKhachHang({
+    PageIndex: 1,
+    PageSize: 100,
+  });
   const customerOptions = useMemo(() => {
     const list = dataCustomers?.data ?? dataCustomers?.items ?? [];
-    return list.map((c: { khachHangID: string; tenKhachHang: string; dienThoai: string }) => ({
-      value: c.khachHangID,
-      label: `${c.tenKhachHang} - ${c.dienThoai}`,
-    }));
+    return list.map(
+      (c: {
+        khachHangID: string;
+        tenKhachHang: string;
+        dienThoai: string;
+      }) => ({
+        value: c.khachHangID,
+        label: `${c.tenKhachHang} - ${c.dienThoai}`,
+      }),
+    );
   }, [dataCustomers]);
 
-  const { data: dataVehicles } = useGetPhuongTienKhachHang({ PageIndex: 1, PageSize: 100 });
+  const { data: dataVehicles } = useGetPhuongTienKhachHang({
+    PageIndex: 1,
+    PageSize: 100,
+  });
   const vehicleOptions = useMemo(() => {
     const list = dataVehicles?.data ?? dataVehicles?.items ?? [];
-    return list.map((v: { id: string; tenModel: string; bienSo: string; khachHangID: string }) => ({
-      value: v.id,
-      label: `${v.tenModel} [${v.bienSo || "Chưa có biển"}]`,
-      khachHangID: v.khachHangID,
-    }));
+    return list.map(
+      (v: {
+        id: string;
+        tenModel: string;
+        bienSo: string;
+        khachHangID: string;
+      }) => ({
+        value: v.id,
+        label: `${v.tenModel} [${v.bienSo || "Chưa có biển"}]`,
+        khachHangID: v.khachHangID,
+      }),
+    );
   }, [dataVehicles]);
 
   const { data: dataDiaDiems } = useGetDiaDiem({ PageIndex: 1, PageSize: 100 });
@@ -280,7 +307,6 @@ export const usePhieuSuaChuaHook = () => {
     }));
   }, [dataKhos]);
 
-
   // Lookup danh mục tiền công / dịch vụ sửa chữa có sẵn
   const { data: dataServices } = useGetDichVu({ PageIndex: 1, PageSize: 100 });
   const serviceOptions = useMemo(() => {
@@ -295,7 +321,10 @@ export const usePhieuSuaChuaHook = () => {
   }, [dataServices]);
 
   // Lookup danh mục phụ tùng thay thế có sẵn chuyên biệt (GetPhuTungs)
-  const { data: dataVariants } = useGetPhuTungs({ PageIndex: 1, PageSize: 200 });
+  const { data: dataVariants } = useGetPhuTungs({
+    PageIndex: 1,
+    PageSize: 200,
+  });
   const partOptions = useMemo(() => {
     const list = dataVariants?.data ?? dataVariants?.items ?? [];
     return list.map(
@@ -309,7 +338,8 @@ export const usePhieuSuaChuaHook = () => {
         donViTinhID?: number;
       }) => {
         const price = v.giaSuaChua ?? v.giaBan ?? 0;
-        const tonLabel = v.tonKhoTaiKho !== undefined ? ` [Tồn: ${v.tonKhoTaiKho}]` : "";
+        const tonLabel =
+          v.tonKhoTaiKho !== undefined ? ` [Tồn: ${v.tonKhoTaiKho}]` : "";
         return {
           value: v.bienTheSanPhamID,
           label: `${v.tenBienThe} (${v.maSKU})${tonLabel} - ${price.toLocaleString("vi-VN")} đ`,
@@ -319,7 +349,7 @@ export const usePhieuSuaChuaHook = () => {
           donViTinhID: v.donViTinhID,
           tonKhoTaiKho: v.tonKhoTaiKho,
         };
-      }
+      },
     );
   }, [dataVariants]);
 
@@ -362,7 +392,9 @@ export const usePhieuSuaChuaHook = () => {
     GhiChu: "",
   });
 
-  const [selectedTicket, setSelectedTicket] = useState<SC_PhieuSuaChua | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<SC_PhieuSuaChua | null>(
+    null,
+  );
   const [openDetail, setOpenDetail] = useState(false);
   const handleOpenDetail = (ticket: SC_PhieuSuaChua) => {
     setSelectedTicket(ticket);
@@ -378,21 +410,25 @@ export const usePhieuSuaChuaHook = () => {
       PageIndex: page,
       PageSize: pageSize,
     };
-  }, [searchInput, statusFilter, paymentStatusFilter, serviceTypeFilter, page, pageSize]);
+  }, [
+    searchInput,
+    statusFilter,
+    paymentStatusFilter,
+    serviceTypeFilter,
+    page,
+    pageSize,
+  ]);
 
-  const { data, isLoading, isFetching, refetch } = useGetPhieuSuaChua(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetPhieuSuaChua(queryParams);
 
   const items: SC_PhieuSuaChua[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreatePhieuSuaChua();
   const updateMutation = useUpdatePhieuSuaChua();
@@ -426,7 +462,7 @@ export const usePhieuSuaChuaHook = () => {
 
   const handleSubmitEdit = async (
     e?: React.FormEvent,
-    customData?: UpdatePhieuSuaChuaPayload
+    customData?: UpdatePhieuSuaChuaPayload,
   ) => {
     e?.preventDefault?.();
     if (!customData) return;
@@ -498,7 +534,7 @@ export const usePhieuSuaChuaHook = () => {
 
   const handleSubmitCreate = async (
     e?: React.FormEvent,
-    customData?: CreatePhieuSuaChuaPayload
+    customData?: CreatePhieuSuaChuaPayload,
   ) => {
     e?.preventDefault?.();
     const payload = customData || dataCreate;
@@ -536,7 +572,7 @@ export const usePhieuSuaChuaHook = () => {
       PhieuSuaChuaID: string;
       TrangThaiID: number;
       GhiChu?: string;
-    }
+    },
   ) => {
     e?.preventDefault?.();
     const payload = customData || dataStatusChange;
@@ -564,7 +600,7 @@ export const usePhieuSuaChuaHook = () => {
 
   const handleSubmitPayment = async (
     e?: React.FormEvent,
-    customData?: ThanhToanSuaChuaPayload
+    customData?: ThanhToanSuaChuaPayload,
   ) => {
     e?.preventDefault?.();
     const payload = customData || dataPayment;

@@ -34,8 +34,12 @@ export const bienTheSchema = z.object({
 export function useBienTheSanPham(initialSanPhamId?: string) {
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
-  const [sanPhamFilter, setSanPhamFilter] = useState<string>(initialSanPhamId ?? "");
-  const [laPhuongTienFilter, setLaPhuongTienFilter] = useState<boolean | null>(null);
+  const [sanPhamFilter, setSanPhamFilter] = useState<string>(
+    initialSanPhamId ?? "",
+  );
+  const [laPhuongTienFilter, setLaPhuongTienFilter] = useState<boolean | null>(
+    null,
+  );
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -58,10 +62,12 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
 
   const productOptions = useMemo(() => {
     const list = dataProducts?.data ?? dataProducts?.items ?? [];
-    return list.map((p: { sanPhamID: string; tenSanPham: string; maSanPham: string }) => ({
-      value: p.sanPhamID,
-      label: `${p.tenSanPham} [${p.maSanPham}]`,
-    }));
+    return list.map(
+      (p: { sanPhamID: string; tenSanPham: string; maSanPham: string }) => ({
+        value: p.sanPhamID,
+        label: `${p.tenSanPham} [${p.maSanPham}]`,
+      }),
+    );
   }, [dataProducts]);
 
   // Form states
@@ -113,7 +119,8 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
     };
   }, [sanPhamFilter, laPhuongTienFilter, searchTerm, page, pageSize]);
 
-  const { data, isLoading, isFetching, refetch } = useGetBienTheSanPham(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetBienTheSanPham(queryParams);
 
   const {
     data: kpiData,
@@ -125,13 +132,9 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateBienThe();
   const updateMutation = useUpdateBienThe();

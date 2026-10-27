@@ -3,13 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Tags,
-  SquarePen,
-  Trash2,
-  Globe,
-  Package,
-} from "lucide-react";
+import { Tags, SquarePen, Trash2, Globe, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
 import { Pagination } from "@/components/Common/Pagination";

@@ -34,23 +34,39 @@ export const useBaoHanhHook = () => {
     isLoading: isLoadingStatuses,
   } = useDanhMucChiTietLookup(DANH_MUC_CHUNG.TRANG_THAI_SO_BAO_HANH);
 
-  const { data: dataCustomers } = useGetKhachHang({ PageIndex: 1, PageSize: 100 });
+  const { data: dataCustomers } = useGetKhachHang({
+    PageIndex: 1,
+    PageSize: 100,
+  });
   const customerOptions = useMemo(() => {
     const list = dataCustomers?.data ?? dataCustomers?.items ?? [];
-    return list.map((c: { khachHangID: string; tenKhachHang: string; dienThoai: string }) => ({
-      value: c.khachHangID,
-      label: `${c.tenKhachHang} - ${c.dienThoai}`,
-    }));
+    return list.map(
+      (c: {
+        khachHangID: string;
+        tenKhachHang: string;
+        dienThoai: string;
+      }) => ({
+        value: c.khachHangID,
+        label: `${c.tenKhachHang} - ${c.dienThoai}`,
+      }),
+    );
   }, [dataCustomers]);
 
   const { data: dataSerials } = useGetSoSerial({ PageIndex: 1, PageSize: 100 });
   const serialOptions = useMemo(() => {
     const list = dataSerials?.data ?? dataSerials?.items ?? [];
-    return list.map((s: { soSerialID: string; maSerial: string; soKhung?: string; bienTheSanPhamID: string }) => ({
-      value: s.soSerialID,
-      label: `${s.maSerial}${s.soKhung ? ` [VIN: ${s.soKhung}]` : ""}`,
-      bienTheID: s.bienTheSanPhamID,
-    }));
+    return list.map(
+      (s: {
+        soSerialID: string;
+        maSerial: string;
+        soKhung?: string;
+        bienTheSanPhamID: string;
+      }) => ({
+        value: s.soSerialID,
+        label: `${s.maSerial}${s.soKhung ? ` [VIN: ${s.soKhung}]` : ""}`,
+        bienTheID: s.bienTheSanPhamID,
+      }),
+    );
   }, [dataSerials]);
 
   const [openAdd, setOpenAdd] = useState(false);
@@ -60,11 +76,14 @@ export const useBaoHanhHook = () => {
     KhachHangID: "",
     NgayKichHoat: new Date().toISOString(),
     NgayBatDau: new Date().toISOString(),
-    NgayKetThuc: new Date(Date.now() + 365 * 24 * 3600 * 1000 * 3).toISOString(), // 3 năm
+    NgayKetThuc: new Date(
+      Date.now() + 365 * 24 * 3600 * 1000 * 3,
+    ).toISOString(), // 3 năm
     SoThangBaoHanh: 36,
     GioiHanKm: 30000,
     TrangThaiID: 91, // Đang hiệu lực
-    DieuKienBaoHanh: "Bảo hành 3 năm hoặc 30.000 km đối với khung sườn, động cơ và pin",
+    DieuKienBaoHanh:
+      "Bảo hành 3 năm hoặc 30.000 km đối với khung sườn, động cơ và pin",
     GhiChu: "",
   });
 
@@ -83,13 +102,9 @@ export const useBaoHanhHook = () => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateBaoHanh();
   const deleteMutation = useDeleteBaoHanh();
@@ -101,11 +116,14 @@ export const useBaoHanhHook = () => {
       KhachHangID: customerOptions[0]?.value ?? "",
       NgayKichHoat: new Date().toISOString(),
       NgayBatDau: new Date().toISOString(),
-      NgayKetThuc: new Date(Date.now() + 365 * 24 * 3600 * 1000 * 3).toISOString(),
+      NgayKetThuc: new Date(
+        Date.now() + 365 * 24 * 3600 * 1000 * 3,
+      ).toISOString(),
       SoThangBaoHanh: 36,
       GioiHanKm: 30000,
       TrangThaiID: 91,
-      DieuKienBaoHanh: "Bảo hành 3 năm hoặc 30.000 km đối với khung sườn, động cơ và pin",
+      DieuKienBaoHanh:
+        "Bảo hành 3 năm hoặc 30.000 km đối với khung sườn, động cơ và pin",
       GhiChu: "",
     });
     setOpenAdd(true);
@@ -132,7 +150,8 @@ export const useBaoHanhHook = () => {
   };
 
   const handleDelete = async (item: BH_BaoHanh) => {
-    if (!confirm(`Bạn có chắc muốn hủy sổ bảo hành "${item.maBaoHanh}"?`)) return;
+    if (!confirm(`Bạn có chắc muốn hủy sổ bảo hành "${item.maBaoHanh}"?`))
+      return;
     try {
       await deleteMutation.mutateAsync(item.baoHanhID);
       toast.success("Đã hủy sổ bảo hành!");
@@ -207,7 +226,9 @@ export const usePhieuBaoHanhHook = () => {
 
   const [openAdd, setOpenAdd] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<BH_PhieuBaoHanh | null>(null);
+  const [selectedItem, setSelectedItem] = useState<BH_PhieuBaoHanh | null>(
+    null,
+  );
 
   const handleOpenDetail = (item: BH_PhieuBaoHanh) => {
     setSelectedItem(item);
@@ -238,20 +259,16 @@ export const usePhieuBaoHanhHook = () => {
     };
   }, [searchInput, statusFilter, actionFilter, page, pageSize]);
 
-  const { data, isLoading, isFetching, refetch } = useGetPhieuBaoHanh(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetPhieuBaoHanh(queryParams);
 
   const items: BH_PhieuBaoHanh[] = useMemo(() => {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
-
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
   const createMutation = useCreatePhieuBaoHanh();
   const deleteMutation = useDeletePhieuBaoHanh();
 
@@ -290,7 +307,8 @@ export const usePhieuBaoHanhHook = () => {
   };
 
   const handleDelete = async (claim: BH_PhieuBaoHanh) => {
-    if (!confirm(`Bạn có chắc muốn xóa phiếu "${claim.maPhieuBaoHanh}"?`)) return;
+    if (!confirm(`Bạn có chắc muốn xóa phiếu "${claim.maPhieuBaoHanh}"?`))
+      return;
     try {
       await deleteMutation.mutateAsync(claim.phieuBaoHanhID);
       toast.success("Đã xóa phiếu bảo hành!");

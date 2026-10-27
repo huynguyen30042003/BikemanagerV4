@@ -34,7 +34,9 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [khachHangFilter, setKhachHangFilter] = useState<string>(initialKhachHangId ?? "");
+  const [khachHangFilter, setKhachHangFilter] = useState<string>(
+    initialKhachHangId ?? "",
+  );
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -49,18 +51,25 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Query khách hàng cho dropdown
-  const { data: dataCustomers, isLoading: isLoadingCustomers } = useGetKhachHang({
-    PageIndex: 1,
-    PageSize: 100,
-    TrangThai: true,
-  });
+  const { data: dataCustomers, isLoading: isLoadingCustomers } =
+    useGetKhachHang({
+      PageIndex: 1,
+      PageSize: 100,
+      TrangThai: true,
+    });
 
   const customerOptions = useMemo(() => {
     const list = dataCustomers?.data ?? dataCustomers?.items ?? [];
-    return list.map((c: { khachHangID: string; tenKhachHang: string; dienThoai: string }) => ({
-      value: c.khachHangID,
-      label: `${c.tenKhachHang} - ${c.dienThoai}`,
-    }));
+    return list.map(
+      (c: {
+        khachHangID: string;
+        tenKhachHang: string;
+        dienThoai: string;
+      }) => ({
+        value: c.khachHangID,
+        label: `${c.tenKhachHang} - ${c.dienThoai}`,
+      }),
+    );
   }, [dataCustomers]);
 
   // Form states
@@ -109,7 +118,8 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
     };
   }, [khachHangFilter, searchTerm, page, pageSize, statusFilter]);
 
-  const { data, isLoading, isFetching, refetch } = useGetPhuongTienKhachHang(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetPhuongTienKhachHang(queryParams);
 
   const {
     data: kpiData,
@@ -121,13 +131,9 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreatePhuongTien();
   const updateMutation = useUpdatePhuongTien();

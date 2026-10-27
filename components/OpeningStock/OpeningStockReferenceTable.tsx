@@ -63,9 +63,9 @@ export const OpeningStockReferenceTable: React.FC<
   });
 
   const items: KHO_TonKho[] = data?.data ?? data?.items ?? [];
-  const totalCount = data?.totalItems ?? data?.totalCount ?? items.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
   const columns: Column<KHO_TonKho>[] = [
     {
       key: "maSKU",

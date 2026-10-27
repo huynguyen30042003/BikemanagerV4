@@ -28,12 +28,19 @@ export const chuyenQuyenSchema = z.object({
   lyDo: z.string().min(1, "Vui lòng chọn lý do chuyển quyền"),
 });
 
-export function useLichSuSoHuuPhuongTien(initialPhuongTienId?: string, initialKhachHangId?: string) {
+export function useLichSuSoHuuPhuongTien(
+  initialPhuongTienId?: string,
+  initialKhachHangId?: string,
+) {
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [lyDoFilter, setLyDoFilter] = useState<string>("all");
-  const [vehicleFilter, setVehicleFilter] = useState<string>(initialPhuongTienId ?? "");
-  const [customerFilter, setCustomerFilter] = useState<string>(initialKhachHangId ?? "");
+  const [vehicleFilter, setVehicleFilter] = useState<string>(
+    initialPhuongTienId ?? "",
+  );
+  const [customerFilter, setCustomerFilter] = useState<string>(
+    initialKhachHangId ?? "",
+  );
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -53,11 +60,12 @@ export function useLichSuSoHuuPhuongTien(initialPhuongTienId?: string, initialKh
   });
 
   // Query xe cho dropdown
-  const { data: dataVehicles, isLoading: isLoadingVehicles } = useGetPhuongTienKhachHang({
-    PageIndex: 1,
-    PageSize: 100,
-    TrangThai: true,
-  });
+  const { data: dataVehicles, isLoading: isLoadingVehicles } =
+    useGetPhuongTienKhachHang({
+      PageIndex: 1,
+      PageSize: 100,
+      TrangThai: true,
+    });
 
   const vehicleOptions = useMemo(() => {
     const list = dataVehicles?.data ?? dataVehicles?.items ?? [];
@@ -68,18 +76,25 @@ export function useLichSuSoHuuPhuongTien(initialPhuongTienId?: string, initialKh
   }, [dataVehicles]);
 
   // Query khách hàng cho dropdown
-  const { data: dataCustomers, isLoading: isLoadingCustomers } = useGetKhachHang({
-    PageIndex: 1,
-    PageSize: 100,
-    TrangThai: true,
-  });
+  const { data: dataCustomers, isLoading: isLoadingCustomers } =
+    useGetKhachHang({
+      PageIndex: 1,
+      PageSize: 100,
+      TrangThai: true,
+    });
 
   const customerOptions = useMemo(() => {
     const list = dataCustomers?.data ?? dataCustomers?.items ?? [];
-    return list.map((c: { khachHangID: string; tenKhachHang: string; dienThoai: string }) => ({
-      value: c.khachHangID,
-      label: `${c.tenKhachHang} - ${c.dienThoai}`,
-    }));
+    return list.map(
+      (c: {
+        khachHangID: string;
+        tenKhachHang: string;
+        dienThoai: string;
+      }) => ({
+        value: c.khachHangID,
+        label: `${c.tenKhachHang} - ${c.dienThoai}`,
+      }),
+    );
   }, [dataCustomers]);
 
   const queryParams = useMemo(() => {
@@ -92,7 +107,8 @@ export function useLichSuSoHuuPhuongTien(initialPhuongTienId?: string, initialKh
     };
   }, [vehicleFilter, customerFilter, searchTerm, page, pageSize]);
 
-  const { data, isLoading, isFetching, refetch } = useGetLichSuSoHuu(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetLichSuSoHuu(queryParams);
 
   const {
     data: kpiData,
@@ -109,13 +125,9 @@ export function useLichSuSoHuuPhuongTien(initialPhuongTienId?: string, initialKh
     return rawItems.filter((i) => i.lyDo === lyDoFilter);
   }, [rawItems, lyDoFilter]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const transferMutation = useChuyenQuyenSoHuu();
 

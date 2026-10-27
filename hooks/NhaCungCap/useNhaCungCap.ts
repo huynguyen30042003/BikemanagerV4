@@ -67,11 +67,12 @@ export function useNhaCungCap() {
   }, [dataCountries]);
 
   // Query Tỉnh / Thành phố
-  const { data: dataProvinces, isLoading: isLoadingProvinces } = useGetDiaPhuongCapTinh({
-    PageIndex: 1,
-    PageSize: 100,
-    TrangThai: true,
-  });
+  const { data: dataProvinces, isLoading: isLoadingProvinces } =
+    useGetDiaPhuongCapTinh({
+      PageIndex: 1,
+      PageSize: 100,
+      TrangThai: true,
+    });
 
   const provinceOptions = useMemo(() => {
     const list = dataProvinces?.data ?? dataProvinces?.items ?? [];
@@ -155,14 +156,25 @@ export function useNhaCungCap() {
     return {
       TuKhoa: searchTerm,
       QuocGiaID: quocGiaFilter ? Number(quocGiaFilter) : null,
-      CoCongNo: coCongNoFilter === "hasDebt" ? true : coCongNoFilter === "noDebt" ? false : null,
+      CoCongNo:
+        coCongNoFilter === "hasDebt"
+          ? true
+          : coCongNoFilter === "noDebt"
+            ? false
+            : null,
       PageIndex: page,
       PageSize: pageSize,
-      TrangThai: statusFilter === "active" ? true : statusFilter === "inactive" ? false : null,
+      TrangThai:
+        statusFilter === "active"
+          ? true
+          : statusFilter === "inactive"
+            ? false
+            : null,
     };
   }, [searchTerm, quocGiaFilter, coCongNoFilter, page, pageSize, statusFilter]);
 
-  const { data, isLoading, isFetching, refetch } = useGetNhaCungCap(queryParams);
+  const { data, isLoading, isFetching, refetch } =
+    useGetNhaCungCap(queryParams);
 
   const {
     data: kpiData,
@@ -174,13 +186,9 @@ export function useNhaCungCap() {
     return data?.data ?? data?.items ?? [];
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return data?.totalItems ?? data?.totalCount ?? items.length;
-  }, [data, items.length]);
-
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / pageSize));
-  }, [totalCount, pageSize]);
+  const totalCount =
+    data?.pagination?.totalItems ?? data?.recordsTotal ?? items.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
   const createMutation = useCreateNhaCungCap();
   const updateMutation = useUpdateNhaCungCap();
@@ -209,7 +217,7 @@ export function useNhaCungCap() {
 
   const handleOpenEdit = (item: NH_NhaCungCap) => {
     console.log(item);
-    
+
     setSelectSupplierId(item.nhaCungCapID);
     setDataUpdate({
       MaNhaCungCap: item.maNhaCungCap,
@@ -273,8 +281,8 @@ export function useNhaCungCap() {
       tenNhaCungCap: dataUpdate.TenNhaCungCap,
       dienThoai: dataUpdate.DienThoai,
     });
-      console.log(validation);
-      
+    console.log(validation);
+
     if (!validation.success) {
       const fieldErrors: Record<string, string> = {};
       validation.error.issues.forEach((err) => {
@@ -300,7 +308,9 @@ export function useNhaCungCap() {
       toast.success("Xóa nhà cung cấp thành công!");
       setOpenDelete(false);
     } catch {
-      toast.error("Không thể xóa nhà cung cấp. Có thể đã phát sinh đơn nhập hàng!");
+      toast.error(
+        "Không thể xóa nhà cung cấp. Có thể đã phát sinh đơn nhập hàng!",
+      );
     }
   };
 
