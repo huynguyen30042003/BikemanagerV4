@@ -44,6 +44,8 @@ function ProductsContent() {
     isLoadingBrands,
     categoryOptions,
     isLoadingCategories,
+    donViTinhOptions,
+    isLoadingDonViTinh,
 
     items,
     totalCount,
@@ -234,6 +236,8 @@ function ProductsContent() {
         isLoadingBrands={isLoadingBrands}
         categoryOptions={categoryOptions}
         isLoadingCategories={isLoadingCategories}
+        donViTinhOptions={donViTinhOptions}
+        isLoadingDonViTinh={isLoadingDonViTinh}
         defaultBrandId={brandFilter}
         defaultCategoryId={categoryFilter ? Number(categoryFilter) : 0}
         onSuccess={() => {
@@ -251,6 +255,8 @@ function ProductsContent() {
         isLoadingBrands={isLoadingBrands}
         categoryOptions={categoryOptions}
         isLoadingCategories={isLoadingCategories}
+        donViTinhOptions={donViTinhOptions}
+        isLoadingDonViTinh={isLoadingDonViTinh}
         onSuccess={() => {
           refetch();
           refetchKPI();

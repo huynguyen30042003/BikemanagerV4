@@ -37,6 +37,8 @@ interface UpdateProductSlideOverProps {
   isLoadingBrands?: boolean;
   categoryOptions: SelectOption[];
   isLoadingCategories?: boolean;
+  donViTinhOptions?: SelectOption[];
+  isLoadingDonViTinh?: boolean;
   onSuccess?: () => void;
 }
 
@@ -48,6 +50,8 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
   isLoadingBrands = false,
   categoryOptions,
   isLoadingCategories = false,
+  donViTinhOptions = [],
+  isLoadingDonViTinh = false,
   onSuccess,
 }) => {
   const [formData, setFormData] = useState<UpdateSanPhamPayload>({
@@ -314,6 +318,26 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
               }))
             }
             className="rounded-lg font-mono bg-background"
+          />
+        </div>
+
+        {/* Đơn vị tính */}
+        <div className="col-span-1 flex flex-col gap-1.5">
+          <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+            Đơn vị tính
+          </label>
+          <SearchSelect
+            options={donViTinhOptions}
+            value={formData.DonViTinhID || ""}
+            onChange={(val) =>
+              setFormData((prev) => ({
+                ...prev,
+                DonViTinhID: val ? Number(val) : null,
+              }))
+            }
+            placeholder="Chọn đơn vị tính (Chiếc, Xe...)"
+            isLoading={isLoadingDonViTinh}
+            height={10}
           />
         </div>
 

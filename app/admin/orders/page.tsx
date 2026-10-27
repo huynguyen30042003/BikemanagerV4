@@ -1,12 +1,11 @@
 "use client";
 
-import React, { Suspense, useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { useDonHang } from "@/hooks/DonHang/useDonHang";
 import {
   OrdersKpiGrid,
   OrdersFilterBar,
   OrdersTable,
-  CreateOrderSlideOver,
   OrderStatusChangeModal,
   OrderPaymentModal,
   OrderDetailSlideOver,
@@ -61,7 +60,6 @@ function OrdersContent() {
 
     openCreate,
     setOpenCreate,
-    handleOpenCreate,
     handleSubmitCreate,
     isCreating,
 
@@ -146,7 +144,6 @@ function OrdersContent() {
   const handleRefresh = async () => {
     await Promise.all([refetch(), refetchKPI()]);
   };
-  console.log("render");
 
   return (
     <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
@@ -174,7 +171,6 @@ function OrdersContent() {
         isFetching={isFetching}
         isLoadingKPI={isLoadingKPI}
         onRefresh={handleRefresh}
-        onOpenCreate={handleOpenCreate}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={handleResetFilters}
       />
@@ -208,24 +204,6 @@ function OrdersContent() {
         onOpenPayment={handleOpenPayment}
         onHoanThanhVaGiaoXe={handleHoanThanhVaGiaoXe}
         onDelete={handleDelete}
-        onOpenCreate={handleOpenCreate}
-      />
-
-      {/* 4. Drawer Tạo mới đơn hàng (State Form cô lập hoàn toàn) */}
-      <CreateOrderSlideOver
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-        customerOptions={customerOptions}
-        isLoadingCustomers={isLoadingCustomers}
-        diaDiemOptions={diaDiemOptions}
-        khoOptions={khoOptions}
-        isLoadingKhos={isLoadingKhos}
-        orderTypeOptions={orderTypeOptions}
-        isLoadingOrderTypes={isLoadingOrderTypes}
-        variantOptions={variantOptions}
-        isLoadingVariants={isLoadingVariants}
-        onSubmit={(payload) => handleSubmitCreate(undefined, payload)}
-        isCreating={isCreating}
       />
 
       {/* 5. Drawer Chuyển trạng thái đơn hàng */}

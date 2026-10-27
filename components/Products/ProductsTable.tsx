@@ -87,6 +87,14 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                 <span className="font-mono">slug: /{row.duongDan}</span>
                 <span>•</span>
                 <span>BH: {row.soThangBaoHanhMacDinh ?? 12}T</span>
+                {row.tenDonViTinh && (
+                  <>
+                    <span>•</span>
+                    <span className="font-medium text-foreground/80">
+                      ĐVT: {row.tenDonViTinh}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

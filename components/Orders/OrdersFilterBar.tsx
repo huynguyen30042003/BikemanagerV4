@@ -41,7 +41,6 @@ export interface OrdersFilterBarProps {
   isFetching: boolean;
   isLoadingKPI: boolean;
   onRefresh: () => void;
-  onOpenCreate: () => void;
   hasActiveFilters: boolean;
   onResetFilters: () => void;
 }
@@ -77,7 +76,6 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
   isFetching,
   isLoadingKPI,
   onRefresh,
-  onOpenCreate,
   hasActiveFilters,
   onResetFilters,
 }) => {
@@ -85,12 +83,18 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
 
   // All options wrappers
   const allOrderStatusOptions = useMemo(
-    () => [{ value: "", label: "-- Tất cả trạng thái đơn --" }, ...orderStatusOptions],
+    () => [
+      { value: "", label: "-- Tất cả trạng thái đơn --" },
+      ...orderStatusOptions,
+    ],
     [orderStatusOptions],
   );
 
   const allPaymentStatusOptions = useMemo(
-    () => [{ value: "", label: "-- Tất cả thanh toán --" }, ...paymentStatusOptions],
+    () => [
+      { value: "", label: "-- Tất cả thanh toán --" },
+      ...paymentStatusOptions,
+    ],
     [paymentStatusOptions],
   );
 
@@ -224,7 +228,8 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
                   Quản Lý Đơn Hàng & Bán Hàng
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">
-                  Theo dõi quy trình bán xe điện, phụ tùng, xuất kho serial và tiến độ thanh toán
+                  Theo dõi quy trình bán xe điện, phụ tùng, xuất kho serial và
+                  tiến độ thanh toán
                 </p>
               </div>
             </div>
@@ -244,17 +249,10 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
                   isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""
                 }`}
               />
-              <span className="text-xs font-medium hidden xs:inline">Làm mới</span>
+              <span className="text-xs font-medium hidden xs:inline">
+                Làm mới
+              </span>
               <span className="text-xs font-medium xs:hidden">Reload</span>
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={onOpenCreate}
-              className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-sm active:scale-[0.98] transition-transform cursor-pointer font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="text-xs font-medium">Tạo đơn mới</span>
             </Button>
           </div>
         </div>
@@ -372,8 +370,14 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
                 <SearchSelect
                   placeholder="Tất cả thanh toán..."
                   options={allPaymentStatusOptions}
-                  value={paymentStatusFilter !== null ? String(paymentStatusFilter) : ""}
-                  onChange={(val) => setPaymentStatusFilter(val ? Number(val) : null)}
+                  value={
+                    paymentStatusFilter !== null
+                      ? String(paymentStatusFilter)
+                      : ""
+                  }
+                  onChange={(val) =>
+                    setPaymentStatusFilter(val ? Number(val) : null)
+                  }
                   isLoading={isLoadingPaymentStatuses}
                   className="h-9.5 text-xs w-full"
                   height={9.5}
@@ -388,8 +392,12 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
                 <SearchSelect
                   placeholder="Tất cả loại đơn..."
                   options={allOrderTypeOptions}
-                  value={orderTypeFilter !== null ? String(orderTypeFilter) : ""}
-                  onChange={(val) => setOrderTypeFilter(val ? Number(val) : null)}
+                  value={
+                    orderTypeFilter !== null ? String(orderTypeFilter) : ""
+                  }
+                  onChange={(val) =>
+                    setOrderTypeFilter(val ? Number(val) : null)
+                  }
                   isLoading={isLoadingOrderTypes}
                   className="h-9.5 text-xs w-full"
                   height={9.5}
@@ -459,8 +467,14 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
               <SearchSelect
                 placeholder="Thanh toán..."
                 options={allPaymentStatusOptions}
-                value={paymentStatusFilter !== null ? String(paymentStatusFilter) : ""}
-                onChange={(val) => setPaymentStatusFilter(val ? Number(val) : null)}
+                value={
+                  paymentStatusFilter !== null
+                    ? String(paymentStatusFilter)
+                    : ""
+                }
+                onChange={(val) =>
+                  setPaymentStatusFilter(val ? Number(val) : null)
+                }
                 isLoading={isLoadingPaymentStatuses}
                 className="h-9.5 text-xs w-full"
                 height={9.5}

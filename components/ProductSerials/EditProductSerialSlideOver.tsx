@@ -78,12 +78,10 @@ export const EditProductSerialSlideOver: React.FC<
     const list = dataKho?.data ?? dataKho?.items ?? [];
     return [
       { value: "", label: "Chưa phân kho" },
-      ...list.map(
-        (k: { khoID: string; tenKho: string; maKho?: string }) => ({
-          value: k.khoID,
-          label: `${k.tenKho} ${k.maKho ? `[${k.maKho}]` : ""}`,
-        })
-      ),
+      ...list.map((k: { khoID: string; tenKho: string; maKho?: string }) => ({
+        value: k.khoID,
+        label: `${k.tenKho} ${k.maKho ? `[${k.maKho}]` : ""}`,
+      })),
     ];
   }, [dataKho]);
 
@@ -223,66 +221,68 @@ export const EditProductSerialSlideOver: React.FC<
         </div>
 
         {/* Định danh xe: Số khung, máy, pin */}
-        <div className="p-3.5 rounded-lg border border-border/80 bg-muted/40 space-y-3">
-          <span className="text-xs font-semibold text-foreground flex items-center gap-1">
-            <Package className="w-3.5 h-3.5 text-blue-500" />
-            Định danh xe máy điện / Phương tiện
-          </span>
+        {!!selectSerial?.laPhuongTien && (
+          <div className="p-3.5 rounded-lg border border-border/80 bg-muted/40 space-y-3">
+            <span className="text-xs font-semibold text-foreground flex items-center gap-1">
+              <Package className="w-3.5 h-3.5 text-blue-500" />
+              Định danh xe máy điện / Phương tiện
+            </span>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-medium text-muted-foreground mb-1">
-                Số khung (Số VIN)
-              </label>
-              <Input
-                placeholder="Ví dụ: RL4HF0500... (17 ký tự)"
-                value={formData.SoKhung || ""}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    SoKhung: e.target.value.toUpperCase(),
-                  }))
-                }
-                className="text-xs font-mono uppercase"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                  Số khung (Số VIN)
+                </label>
+                <Input
+                  placeholder="Ví dụ: RL4HF0500... (17 ký tự)"
+                  value={formData.SoKhung || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      SoKhung: e.target.value.toUpperCase(),
+                    }))
+                  }
+                  className="text-xs font-mono uppercase"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-amber-500" /> Số máy / Động cơ
+                </label>
+                <Input
+                  placeholder="Ví dụ: EM-1500W-2026-X"
+                  value={formData.SoMay || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      SoMay: e.target.value.toUpperCase(),
+                    }))
+                  }
+                  className="text-xs font-mono uppercase"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                <Zap className="w-3 h-3 text-amber-500" /> Số máy / Động cơ
+                <BatteryCharging className="w-3 h-3 text-emerald-500" /> Số
+                Serial khối Pin
               </label>
               <Input
-                placeholder="Ví dụ: EM-1500W-2026-X"
-                value={formData.SoMay || ""}
+                placeholder="Ví dụ: BAT-LFP-72V30AH-889"
+                value={formData.SoPin || ""}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    SoMay: e.target.value.toUpperCase(),
+                    SoPin: e.target.value.toUpperCase(),
                   }))
                 }
                 className="text-xs font-mono uppercase"
               />
             </div>
           </div>
-
-          <div>
-            <label className="block text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1">
-              <BatteryCharging className="w-3 h-3 text-emerald-500" /> Số Serial
-              khối Pin
-            </label>
-            <Input
-              placeholder="Ví dụ: BAT-LFP-72V30AH-889"
-              value={formData.SoPin || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  SoPin: e.target.value.toUpperCase(),
-                }))
-              }
-              className="text-xs font-mono uppercase"
-            />
-          </div>
-        </div>
+        )}
 
         {/* Kho hàng & Vị trí lưu trữ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

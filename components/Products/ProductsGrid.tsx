@@ -198,6 +198,12 @@ export const ProductsGrid: React.FC<ProductsGridProps> = ({
                         BH: {product.soThangBaoHanhMacDinh ?? 12} tháng
                       </span>
 
+                      {product.tenDonViTinh && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-foreground/80 px-2 py-0.5 rounded bg-muted/60 border border-border/60">
+                          ĐVT: {product.tenDonViTinh}
+                        </span>
+                      )}
+
                       <span className="text-[11px] font-mono text-muted-foreground truncate max-w-[140px]">
                         /{product.duongDan}
                       </span>

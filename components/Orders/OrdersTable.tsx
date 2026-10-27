@@ -32,7 +32,6 @@ export interface OrdersTableProps {
   onOpenPayment: (order: DH_DonHang) => void;
   onHoanThanhVaGiaoXe: (order: DH_DonHang) => void;
   onDelete: (order: DH_DonHang) => void;
-  onOpenCreate: () => void;
 }
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({
@@ -50,7 +49,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   onOpenPayment,
   onHoanThanhVaGiaoXe,
   onDelete,
-  onOpenCreate,
 }) => {
   const columns: Column<DH_DonHang>[] = useMemo(
     () => [
@@ -263,13 +261,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
           <p className="text-xs text-muted-foreground max-w-sm mt-1">
             Chưa có đơn hàng nào khớp với các tiêu chí tìm kiếm hiện tại.
           </p>
-          <Button
-            size="sm"
-            onClick={onOpenCreate}
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer font-medium shadow-xs"
-          >
-            <Plus className="w-4 h-4 mr-1.5" /> Tạo đơn hàng mới
-          </Button>
         </div>
       </div>
     );

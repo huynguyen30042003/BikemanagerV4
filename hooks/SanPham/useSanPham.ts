@@ -29,15 +29,24 @@ export const sanPhamSchema = z.object({
   maSanPham: z.string().trim().min(1, "Vui lòng nhập mã sản phẩm"),
   tenSanPham: z.string().trim().min(1, "Vui lòng nhập tên sản phẩm"),
   thuongHieuID: z.string().min(1, "Vui lòng chọn thương hiệu / hãng sản xuất"),
-  danhMucChiTietID: z.number().min(1, "Vui lòng chọn ngành hàng / danh mục chi tiết"),
+  danhMucChiTietID: z
+    .number()
+    .min(1, "Vui lòng chọn ngành hàng / danh mục chi tiết"),
 });
 
-export function useSanPham(initialThuongHieuId?: string, initialDanhMucId?: number) {
+export function useSanPham(
+  initialThuongHieuId?: string,
+  initialDanhMucId?: number,
+) {
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [brandFilter, setBrandFilter] = useState<string>(initialThuongHieuId ?? "");
-  const [categoryFilter, setCategoryFilter] = useState<string | number>(initialDanhMucId ?? "");
+  const [brandFilter, setBrandFilter] = useState<string>(
+    initialThuongHieuId ?? "",
+  );
+  const [categoryFilter, setCategoryFilter] = useState<string | number>(
+    initialDanhMucId ?? "",
+  );
 
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
     delay: DEBOUNCE_DELAY,
@@ -67,13 +76,20 @@ export function useSanPham(initialThuongHieuId?: string, initialDanhMucId?: numb
   }, [dataBrands]);
 
   // Query Danh mục chi tiết (Ngành hàng)
-  const { data: dataCategories, isLoading: isLoadingCategories } = useGetDanhMucChiTiet({
-    DanhMucID: 10,
-    PageIndex: 1,
-    PageSize: 100,
-    TrangThai: true,
-  });
-
+  const { data: dataCategories, isLoading: isLoadingCategories } =
+    useGetDanhMucChiTiet({
+      DanhMucID: 10,
+      PageIndex: 1,
+      PageSize: 100,
+      TrangThai: true,
+    });
+  const { data: dataDonViTinh, isLoading: isLoadingDonViTinh } =
+    useGetDanhMucChiTiet({
+      DanhMucID: 11,
+      PageIndex: 1,
+      PageSize: 100,
+      TrangThai: true,
+    });
   const categoryOptions = useMemo(() => {
     const list = dataCategories?.data ?? dataCategories?.items ?? [];
     return list.map((c: { danhMucChiTietID: number; ten: string }) => ({
@@ -81,6 +97,14 @@ export function useSanPham(initialThuongHieuId?: string, initialDanhMucId?: numb
       label: c.ten,
     }));
   }, [dataCategories]);
+
+  const donViTinhOptions = useMemo(() => {
+    const list = dataDonViTinh?.data ?? dataDonViTinh?.items ?? [];
+    return list.map((c: { danhMucChiTietID: number; ten: string }) => ({
+      value: c.danhMucChiTietID,
+      label: c.ten,
+    }));
+  }, [dataDonViTinh]);
 
   // Form states
   const [dataAdd, setDataAdd] = useState<CreateSanPhamPayload>({
@@ -293,6 +317,10 @@ export function useSanPham(initialThuongHieuId?: string, initialDanhMucId?: numb
     isLoadingBrands,
     categoryOptions,
     isLoadingCategories,
+    donViTinhOptions,
+    unitOptions: donViTinhOptions,
+    dataDonViTinh,
+    isLoadingDonViTinh,
 
     items,
     totalCount,

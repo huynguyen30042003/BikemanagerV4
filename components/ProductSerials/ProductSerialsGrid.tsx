@@ -299,16 +299,6 @@ export const ProductSerialsGrid: React.FC<ProductSerialsGridProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onOpenWarranty(serial)}
-                  className="flex-1 h-8 text-xs flex items-center justify-center gap-1 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer shadow-2xs"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Bảo hành</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
                   onClick={() => onOpenChangeStatus(serial)}
                   className="flex-1 h-8 text-xs flex items-center justify-center gap-1 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer shadow-2xs"
                 >

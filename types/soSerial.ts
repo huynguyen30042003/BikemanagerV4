@@ -3,6 +3,7 @@ export interface SP_SoSerial {
   bienTheSanPhamID: string;
   tenBienThe?: string;
   tenSanPham?: string;
+  laPhuongTien?: boolean;
   maSerial: string;
   soKhung?: string | null;
   soMay?: string | null;
@@ -97,4 +98,3 @@ export interface SoSerialKPI {
   total_DaXuatBan: number;
   total_BaoHanhXuong: number;
 }
-
