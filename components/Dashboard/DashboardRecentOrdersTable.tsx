@@ -98,9 +98,13 @@ export const DashboardRecentOrdersTable: React.FC<
                       )}
                     </td>
                     <td className="py-2.5 text-right text-muted-foreground whitespace-nowrap">
-                      {format(parseISO(dh.ngayBan), "dd/MM/yyyy", {
-                        locale: vi,
-                      })}
+                      {format(
+                        parseISO(dh?.ngayBan || "2000-01-01"),
+                        "dd/MM/yyyy",
+                        {
+                          locale: vi,
+                        },
+                      )}
                     </td>
                   </tr>
                 ))}
