@@ -26,7 +26,7 @@ import { useGetQuocGia } from "../QuocGia/useQuocGiaApi";
 export * from "./useKhachHangApi";
 
 export const DEFAULT_PAGE = 1;
-export const DEFAULT_PAGE_SIZE = 20;
+export const DEFAULT_PAGE_SIZE = 5;
 export const DEBOUNCE_DELAY = 400;
 
 export const khachHangSchema = z.object({
