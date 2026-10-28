@@ -22,13 +22,16 @@ import {
 
 export default function AdminDashboardPage() {
   const { user } = useAuthStore();
-  const [timeRange, setTimeRange] = useState<TimeRangeType>("tat_ca");
+  const [timeRange, setTimeRange] = useState<TimeRangeType>("hom_nay");
   const [selectedKhoId, setSelectedKhoId] = useState<string>("");
   const [selectedDiaDiemId, setSelectedDiaDiemId] = useState<string>("");
+  // Khoảng ngày tùy chọn (yyyy-MM-dd) - chỉ có tác dụng khi timeRange === "tuy_chon"
+  const [customFrom, setCustomFrom] = useState<string>("");
+  const [customTo, setCustomTo] = useState<string>("");
 
   // Tạo filter query tự động theo preset thời gian và chi nhánh / kho
   const filter: DashboardOverviewFilter = useMemo(() => {
-    const { TuNgay, DenNgay } = getFilterDates(timeRange);
+    const { TuNgay, DenNgay } = getFilterDates(timeRange, customFrom, customTo);
     return {
       TuNgay,
       DenNgay,
@@ -36,7 +39,7 @@ export default function AdminDashboardPage() {
       DiaDiemID: selectedDiaDiemId || null,
       loaiThoiGian: timeRange,
     };
-  }, [timeRange, selectedKhoId, selectedDiaDiemId]);
+  }, [timeRange, customFrom, customTo, selectedKhoId, selectedDiaDiemId]);
 
   // Fetch dữ liệu tổng quan
   const {
@@ -72,7 +75,7 @@ export default function AdminDashboardPage() {
 
   const diaDiemOptions: SelectOption[] = useMemo(() => {
     return [
-      { value: "", label: "🏬 Tất cả chi nhánh" },
+      { value: "", label: "Tất cả chi nhánh" },
       ...diaDiemList.map((dd: DM_DiaDiem) => ({
         value: dd.diaDiemID,
         label: `📍 ${dd.tenDiaDiem}${dd.diaChiSo ? ` - ${dd.diaChiSo}` : ""}`,
@@ -83,12 +86,12 @@ export default function AdminDashboardPage() {
   const khoOptions: SelectOption[] = useMemo(() => {
     const filteredKhos = selectedDiaDiemId
       ? khoList.filter(
-          (k: KHO_Kho) => !k.diaDiemID || k.diaDiemID === selectedDiaDiemId
+          (k: KHO_Kho) => !k.diaDiemID || k.diaDiemID === selectedDiaDiemId,
         )
       : khoList;
 
     return [
-      { value: "", label: "🏢 Tất cả kho" },
+      { value: "", label: "Tất cả kho" },
       ...filteredKhos.map((kho: KHO_Kho) => ({
         value: kho.khoID,
         label: `📦 ${kho.tenKho} (${kho.maKho})`,
@@ -100,7 +103,9 @@ export default function AdminDashboardPage() {
   const handleSelectDiaDiem = (nextVal: string) => {
     setSelectedDiaDiemId(nextVal);
     if (nextVal && selectedKhoId) {
-      const currentKho = khoList.find((k: KHO_Kho) => k.khoID === selectedKhoId);
+      const currentKho = khoList.find(
+        (k: KHO_Kho) => k.khoID === selectedKhoId,
+      );
       if (currentKho?.diaDiemID && currentKho.diaDiemID !== nextVal) {
         setSelectedKhoId("");
       }
@@ -112,7 +117,7 @@ export default function AdminDashboardPage() {
     if (!dashboard?.doanhThuTheoNgay || dashboard.doanhThuTheoNgay.length === 0)
       return 10000000;
     const maxVal = Math.max(
-      ...dashboard.doanhThuTheoNgay.map((d) => d.doanhThu)
+      ...dashboard.doanhThuTheoNgay.map((d) => d.doanhThu),
     );
     return maxVal > 0 ? maxVal * 1.15 : 10000000;
   }, [dashboard]);
@@ -125,6 +130,8 @@ export default function AdminDashboardPage() {
         selectedDiaDiemId={selectedDiaDiemId}
         selectedKhoId={selectedKhoId}
         timeRange={timeRange}
+        customFrom={customFrom}
+        customTo={customTo}
         diaDiemOptions={diaDiemOptions}
         khoOptions={khoOptions}
         isLoadingDiaDiem={isLoadingDiaDiem}
@@ -133,6 +140,8 @@ export default function AdminDashboardPage() {
         onSelectDiaDiem={handleSelectDiaDiem}
         onSelectKho={setSelectedKhoId}
         onChangeTimeRange={setTimeRange}
+        onChangeCustomFrom={setCustomFrom}
+        onChangeCustomTo={setCustomTo}
         onRefresh={() => refetch()}
       />
 
@@ -147,10 +156,7 @@ export default function AdminDashboardPage() {
           maxDayChartValue={maxDayChartValue}
           timeRange={timeRange}
         />
-        <DashboardOrderStatusCard
-          dashboard={dashboard}
-          kpi={dashboard?.kpi}
-        />
+        <DashboardOrderStatusCard dashboard={dashboard} kpi={dashboard?.kpi} />
       </div>
 
       {/* 4. Danh sách nghiệp vụ: Đơn hàng mới nhất & Top sản phẩm bán chạy */}

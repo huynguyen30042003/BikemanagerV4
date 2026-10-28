@@ -1,10 +1,19 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { TrendingUp, BarChart3, Table as TableIcon, Calendar } from "lucide-react";
+import {
+  TrendingUp,
+  BarChart3,
+  Table as TableIcon,
+  Calendar,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { DashboardOverviewResponse, DashboardKPI, TimeRangeType } from "@/types/dashboard";
-import { formatCurrency } from "./dashboardUtils";
+import {
+  DashboardOverviewResponse,
+  DashboardKPI,
+  TimeRangeType,
+} from "@/types/dashboard";
+import { formatCurrency, formatCompactCurrency } from "./dashboardUtils";
 
 interface DashboardRevenueChartProps {
   dashboard?: DashboardOverviewResponse | null;
@@ -101,13 +110,13 @@ export function DashboardRevenueChart({
     if (viewMode === "thang") {
       if (!monthlyData.length) return 10000000;
       const maxVal = Math.max(
-        ...monthlyData.map((m) => Math.max(m.doanhThu || 0, m.chiPhiNhap || 0))
+        ...monthlyData.map((m) => Math.max(m.doanhThu || 0, m.chiPhiNhap || 0)),
       );
       return maxVal > 0 ? maxVal * 1.15 : 10000000;
     } else {
       if (!dailyData.length) return 10000000;
       const maxVal = Math.max(
-        ...dailyData.map((d) => Math.max(d.doanhThu || 0, d.daThanhToan || 0))
+        ...dailyData.map((d) => Math.max(d.doanhThu || 0, d.daThanhToan || 0)),
       );
       return maxVal > 0 ? maxVal * 1.15 : 10000000;
     }
@@ -229,23 +238,24 @@ export function DashboardRevenueChart({
                   {monthlyData.map((item, idx) => {
                     const dtHeight = Math.min(
                       100,
-                      Math.round(((item.doanhThu || 0) / maxValue) * 100)
+                      Math.round(((item.doanhThu || 0) / maxValue) * 100),
                     );
                     const cpHeight = Math.min(
                       100,
-                      Math.round(((item.chiPhiNhap || 0) / maxValue) * 100)
+                      Math.round(((item.chiPhiNhap || 0) / maxValue) * 100),
                     );
                     const monthFull = formatMonthFull(item.thang);
                     const monthLabel = formatMonthLabel(item.thang);
-                    const grossProfit = (item.doanhThu || 0) - (item.chiPhiNhap || 0);
+                    const grossProfit =
+                      (item.doanhThu || 0) - (item.chiPhiNhap || 0);
 
                     return (
                       <div
                         key={idx}
                         className="flex-1 flex flex-col items-center h-full justify-end group relative min-w-[42px]"
                       >
-                        {/* Hover Tooltip */}
-                        <div className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[11px] p-2 rounded-md shadow-md border border-border pointer-events-none z-20 whitespace-nowrap min-w-[130px]">
+                        {/* Hover Tooltip (chỉ từ sm trở lên, mobile không hover được) */}
+                        <div className="hidden sm:block absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[11px] p-2 rounded-md shadow-md border border-border pointer-events-none z-20 whitespace-nowrap min-w-[130px]">
                           <div className="font-semibold text-xs border-b pb-1 mb-1">
                             {monthFull}
                           </div>
@@ -270,7 +280,9 @@ export function DashboardRevenueChart({
                             className="w-2.5 sm:w-4 bg-blue-500 rounded-t-sm hover:brightness-110 transition-all shadow-2xs"
                           />
                           <div
-                            style={{ height: `${Math.max(cpHeight, item.chiPhiNhap > 0 ? 4 : 0)}%` }}
+                            style={{
+                              height: `${Math.max(cpHeight, item.chiPhiNhap > 0 ? 4 : 0)}%`,
+                            }}
                             className="w-2.5 sm:w-4 bg-amber-500 rounded-t-sm hover:brightness-110 transition-all shadow-2xs"
                           />
                         </div>
@@ -279,6 +291,16 @@ export function DashboardRevenueChart({
                         <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate w-full text-center">
                           {monthLabel}
                         </span>
+
+                        {/* Số liệu hiển thị trực tiếp trên màn hình nhỏ */}
+                        <div className="sm:hidden w-full text-center leading-tight pt-0.5 pb-1 text-[9px] font-semibold">
+                          <div className="text-blue-500 truncate">
+                            {formatCompactCurrency(item.doanhThu)}
+                          </div>
+                          <div className="text-amber-500 truncate">
+                            {formatCompactCurrency(item.chiPhiNhap)}
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
@@ -290,77 +312,90 @@ export function DashboardRevenueChart({
                 <span>Chưa có dữ liệu doanh thu theo tháng</span>
               </div>
             )
-          ) : (
-            /* BIỂU ĐỒ THEO NGÀY */
-            dailyData.length > 0 ? (
-              <div className="pt-4 pb-2 overflow-x-auto">
-                <div className="h-56 flex items-end justify-between gap-2 sm:gap-4 px-2 border-b border-border/60 min-w-[340px]">
-                  {dailyData.map((item, idx) => {
-                    const dtHeight = Math.min(
-                      100,
-                      Math.round(((item.doanhThu || 0) / maxValue) * 100)
-                    );
-                    const ttHeight = Math.min(
-                      100,
-                      Math.round(((item.daThanhToan || 0) / maxValue) * 100)
-                    );
-                    const dateFull = formatDayFull(item.ngay);
-                    const dateLabel = formatDayLabel(item.ngay);
-                    const unpaid = Math.max(0, (item.doanhThu || 0) - (item.daThanhToan || 0));
+          ) : /* BIỂU ĐỒ THEO NGÀY */
+          dailyData.length > 0 ? (
+            <div className="pt-4 pb-2 overflow-x-auto">
+              <div className="h-56 flex items-end justify-between gap-2 sm:gap-4 px-2 border-b border-border/60 min-w-[340px]">
+                {dailyData.map((item, idx) => {
+                  const dtHeight = Math.min(
+                    100,
+                    Math.round(((item.doanhThu || 0) / maxValue) * 100),
+                  );
+                  const ttHeight = Math.min(
+                    100,
+                    Math.round(((item.daThanhToan || 0) / maxValue) * 100),
+                  );
+                  const dateFull = formatDayFull(item.ngay);
+                  const dateLabel = formatDayLabel(item.ngay);
+                  const unpaid = Math.max(
+                    0,
+                    (item.doanhThu || 0) - (item.daThanhToan || 0),
+                  );
 
-                    return (
-                      <div
-                        key={idx}
-                        className="flex-1 flex flex-col items-center h-full justify-end group relative min-w-[38px]"
-                      >
-                        {/* Hover Tooltip */}
-                        <div className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[11px] p-2 rounded-md shadow-md border border-border pointer-events-none z-20 whitespace-nowrap min-w-[130px]">
-                          <div className="font-semibold text-xs border-b pb-1 mb-1">
-                            {dateFull}
-                          </div>
-                          <div className="text-blue-500 font-medium">
-                            Doanh thu: {formatCurrency(item.doanhThu)}
-                          </div>
-                          <div className="text-emerald-500 font-medium">
-                            Đã thu: {formatCurrency(item.daThanhToan)}
-                          </div>
-                          {unpaid > 0 && (
-                            <div className="text-amber-500 font-medium">
-                              Còn nợ: {formatCurrency(unpaid)}
-                            </div>
-                          )}
-                          <div className="text-muted-foreground text-[10px] mt-0.5">
-                            Số đơn hàng: {item.soDonHang} đơn
-                          </div>
+                  return (
+                    <div
+                      key={idx}
+                      className="flex-1 flex flex-col items-center h-full justify-end group relative min-w-[38px]"
+                    >
+                      {/* Hover Tooltip (chỉ từ sm trở lên, mobile không hover được) */}
+                      <div className="hidden sm:block absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[11px] p-2 rounded-md shadow-md border border-border pointer-events-none z-20 whitespace-nowrap min-w-[130px]">
+                        <div className="font-semibold text-xs border-b pb-1 mb-1">
+                          {dateFull}
                         </div>
-
-                        {/* Cột kép: Doanh thu & Thực thu */}
-                        <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-full pb-2">
-                          <div
-                            style={{ height: `${Math.max(dtHeight, 4)}%` }}
-                            className="w-2 sm:w-3.5 bg-blue-500 rounded-t-sm hover:brightness-110 transition-all shadow-2xs"
-                          />
-                          <div
-                            style={{ height: `${Math.max(ttHeight, item.daThanhToan > 0 ? 4 : 0)}%` }}
-                            className="w-2 sm:w-3.5 bg-emerald-500 rounded-t-sm hover:brightness-110 transition-all shadow-2xs"
-                          />
+                        <div className="text-blue-500 font-medium">
+                          Doanh thu: {formatCurrency(item.doanhThu)}
                         </div>
-
-                        {/* Label Ngày */}
-                        <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate w-full text-center">
-                          {dateLabel}
-                        </span>
+                        <div className="text-emerald-500 font-medium">
+                          Đã thu: {formatCurrency(item.daThanhToan)}
+                        </div>
+                        {unpaid > 0 && (
+                          <div className="text-amber-500 font-medium">
+                            Còn nợ: {formatCurrency(unpaid)}
+                          </div>
+                        )}
+                        <div className="text-muted-foreground text-[10px] mt-0.5">
+                          Số đơn hàng: {item.soDonHang} đơn
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      {/* Cột kép: Doanh thu & Thực thu */}
+                      <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-full pb-2">
+                        <div
+                          style={{ height: `${Math.max(dtHeight, 4)}%` }}
+                          className="w-2 sm:w-3.5 bg-blue-500 rounded-t-sm hover:brightness-110 transition-all shadow-2xs"
+                        />
+                        <div
+                          style={{
+                            height: `${Math.max(ttHeight, item.daThanhToan > 0 ? 4 : 0)}%`,
+                          }}
+                          className="w-2 sm:w-3.5 bg-emerald-500 rounded-t-sm hover:brightness-110 transition-all shadow-2xs"
+                        />
+                      </div>
+
+                      {/* Label Ngày */}
+                      <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate w-full text-center">
+                        {dateLabel}
+                      </span>
+
+                      {/* Số liệu hiển thị trực tiếp trên màn hình nhỏ */}
+                      <div className="sm:hidden w-full text-center leading-tight pt-0.5 pb-1 text-[9px] font-semibold">
+                        <div className="text-blue-500 truncate">
+                          {formatCompactCurrency(item.doanhThu)}
+                        </div>
+                        <div className="text-emerald-500 truncate">
+                          {formatCompactCurrency(item.daThanhToan)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ) : (
-              <div className="h-56 flex flex-col items-center justify-center text-muted-foreground text-xs gap-2">
-                <BarChart3 className="w-8 h-8 opacity-40" />
-                <span>Chưa có dữ liệu doanh thu theo ngày</span>
-              </div>
-            )
+            </div>
+          ) : (
+            <div className="h-56 flex flex-col items-center justify-center text-muted-foreground text-xs gap-2">
+              <BarChart3 className="w-8 h-8 opacity-40" />
+              <span>Chưa có dữ liệu doanh thu theo ngày</span>
+            </div>
           )
         ) : (
           /* BẢNG DỮ LIỆU CHI TIẾT (TABLE VIEW) */
@@ -390,9 +425,13 @@ export function DashboardRevenueChart({
                   {viewMode === "thang" ? (
                     monthlyData.length > 0 ? (
                       monthlyData.map((item, idx) => {
-                        const grossProfit = (item.doanhThu || 0) - (item.chiPhiNhap || 0);
+                        const grossProfit =
+                          (item.doanhThu || 0) - (item.chiPhiNhap || 0);
                         return (
-                          <tr key={idx} className="hover:bg-muted/30 transition-colors">
+                          <tr
+                            key={idx}
+                            className="hover:bg-muted/30 transition-colors"
+                          >
                             <td className="py-2 px-3 font-semibold text-foreground flex items-center gap-1.5">
                               <Calendar className="w-3.5 h-3.5 text-blue-500" />
                               {formatMonthFull(item.thang)}
@@ -416,16 +455,25 @@ export function DashboardRevenueChart({
                       })
                     ) : (
                       <tr>
-                        <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                        <td
+                          colSpan={5}
+                          className="py-6 text-center text-muted-foreground"
+                        >
                           Không có dữ liệu theo tháng
                         </td>
                       </tr>
                     )
                   ) : dailyData.length > 0 ? (
                     dailyData.map((item, idx) => {
-                      const unpaid = Math.max(0, (item.doanhThu || 0) - (item.daThanhToan || 0));
+                      const unpaid = Math.max(
+                        0,
+                        (item.doanhThu || 0) - (item.daThanhToan || 0),
+                      );
                       return (
-                        <tr key={idx} className="hover:bg-muted/30 transition-colors">
+                        <tr
+                          key={idx}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
                           <td className="py-2 px-3 font-semibold text-foreground flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5 text-blue-500" />
                             {formatDayFull(item.ngay)}
@@ -447,7 +495,9 @@ export function DashboardRevenueChart({
                                 {formatCurrency(unpaid)}
                               </span>
                             ) : (
-                              <span className="text-emerald-500 font-medium">0 đ</span>
+                              <span className="text-emerald-500 font-medium">
+                                0 đ
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -455,7 +505,10 @@ export function DashboardRevenueChart({
                     })
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                      <td
+                        colSpan={5}
+                        className="py-6 text-center text-muted-foreground"
+                      >
                         Không có dữ liệu theo ngày
                       </td>
                     </tr>
@@ -487,6 +540,15 @@ export function DashboardRevenueChart({
               Doanh thu hôm nay:{" "}
               <span className="text-blue-600 dark:text-blue-400 font-bold">
                 {formatCurrency(kpi?.doanhThuHomNay)}
+              </span>
+            </span>
+          ) : timeRange === "tuy_chon" ? (
+            <span className="font-medium text-foreground">
+              Doanh thu trong khoảng đã chọn:{" "}
+              <span className="text-blue-600 dark:text-blue-400 font-bold">
+                {formatCurrency(
+                  dailyData.reduce((sum, d) => sum + (d.doanhThu || 0), 0),
+                )}
               </span>
             </span>
           ) : (

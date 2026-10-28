@@ -5,14 +5,18 @@ import { RefreshCw, LayoutDashboard, X, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
+import { DatePicker } from "@/components/ui/datePicker";
 import { TimeRangeType } from "@/types/dashboard";
 import { UserProfile } from "@/types/auth";
+import DatePickerInput from "../ui/DatePickerInput";
 
 interface DashboardFilterBarProps {
   user: UserProfile | null;
   selectedDiaDiemId: string;
   selectedKhoId: string;
   timeRange: TimeRangeType;
+  customFrom: string;
+  customTo: string;
   diaDiemOptions: SelectOption[];
   khoOptions: SelectOption[];
   isLoadingDiaDiem: boolean;
@@ -21,6 +25,8 @@ interface DashboardFilterBarProps {
   onSelectDiaDiem: (val: string) => void;
   onSelectKho: (val: string) => void;
   onChangeTimeRange: (range: TimeRangeType) => void;
+  onChangeCustomFrom: (val: string) => void;
+  onChangeCustomTo: (val: string) => void;
   onRefresh: () => void;
 }
 
@@ -30,13 +36,55 @@ const TIME_RANGE_TABS: { key: TimeRangeType; label: string }[] = [
   { key: "7_ngay", label: "7 ngày" },
   { key: "thang_nay", label: "Tháng này" },
   { key: "quy_nay", label: "Quý này" },
+  { key: "tuy_chon", label: "Tùy chọn" },
 ];
+
+interface CustomDateRangeProps {
+  customFrom: string;
+  customTo: string;
+  onChangeCustomFrom: (val: string) => void;
+  onChangeCustomTo: (val: string) => void;
+  stacked?: boolean;
+}
+
+/** Bộ chọn Từ ngày - Đến ngày, ngày bắt đầu không được lớn hơn ngày kết thúc */
+function CustomDateRange({
+  customFrom,
+  customTo,
+  onChangeCustomFrom,
+  onChangeCustomTo,
+  stacked = false,
+}: CustomDateRangeProps) {
+  return (
+    <div className={`flex gap-2.5 ${stacked ? "flex-col" : "items-center"}`}>
+      <div className={stacked ? "w-full" : "w-[190px]"}>
+        <DatePickerInput
+          value={customFrom}
+          onChange={onChangeCustomFrom}
+          max={customTo || undefined}
+          placeholder="dd/MM/yyyy"
+        />
+      </div>
+      <span className="text-xs text-muted-foreground hidden sm:inline">→</span>
+      <div className={stacked ? "w-full" : "w-[190px]"}>
+        <DatePickerInput
+          value={customTo}
+          onChange={onChangeCustomTo}
+          min={customFrom || undefined}
+          placeholder="dd/MM/yyyy"
+        />
+      </div>
+    </div>
+  );
+}
 
 export function DashboardFilterBar({
   user,
   selectedDiaDiemId,
   selectedKhoId,
   timeRange,
+  customFrom,
+  customTo,
   diaDiemOptions,
   khoOptions,
   isLoadingDiaDiem,
@@ -45,6 +93,8 @@ export function DashboardFilterBar({
   onSelectDiaDiem,
   onSelectKho,
   onChangeTimeRange,
+  onChangeCustomFrom,
+  onChangeCustomTo,
   onRefresh,
 }: DashboardFilterBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -61,6 +111,8 @@ export function DashboardFilterBar({
     onSelectDiaDiem("");
     onSelectKho("");
     onChangeTimeRange("tat_ca");
+    onChangeCustomFrom("");
+    onChangeCustomTo("");
   };
 
   return (
@@ -87,7 +139,8 @@ export function DashboardFilterBar({
               <span className="font-semibold text-foreground">
                 {user?.fullName || user?.username || "Quản trị viên"}
               </span>
-              , số liệu được tổng hợp trực tiếp từ hệ thống bán xe, xưởng dịch vụ và kho bãi.
+              , số liệu được tổng hợp trực tiếp từ hệ thống bán xe, xưởng dịch
+              vụ và kho bãi.
             </p>
           </div>
         </div>
@@ -130,7 +183,9 @@ export function DashboardFilterBar({
             <RefreshCw
               className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
             />
-            <span className="text-xs font-medium hidden xs:inline">Làm mới</span>
+            <span className="text-xs font-medium hidden xs:inline">
+              Làm mới
+            </span>
             <span className="text-xs font-medium xs:hidden">Reload</span>
           </Button>
         </div>
@@ -208,6 +263,17 @@ export function DashboardFilterBar({
                 </button>
               ))}
             </div>
+            {timeRange === "tuy_chon" && (
+              <div className="mt-2.5">
+                <CustomDateRange
+                  customFrom={customFrom}
+                  customTo={customTo}
+                  onChangeCustomFrom={onChangeCustomFrom}
+                  onChangeCustomTo={onChangeCustomTo}
+                  stacked
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -260,6 +326,18 @@ export function DashboardFilterBar({
           ))}
         </div>
       </div>
+
+      {/* 4. Khoảng ngày tùy chọn trên Desktop */}
+      {timeRange === "tuy_chon" && (
+        <div className="hidden lg:flex items-center justify-end animate-in fade-in-50 slide-in-from-top-1 duration-200">
+          <CustomDateRange
+            customFrom={customFrom}
+            customTo={customTo}
+            onChangeCustomFrom={onChangeCustomFrom}
+            onChangeCustomTo={onChangeCustomTo}
+          />
+        </div>
+      )}
     </div>
   );
 }

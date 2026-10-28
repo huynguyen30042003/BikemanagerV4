@@ -12,6 +12,21 @@ export function formatCurrency(val: number | null | undefined): string {
 }
 
 /**
+ * Định dạng tiền rút gọn cho không gian hẹp (vd: 1,2tỷ · 12,5tr · 500k · 0)
+ */
+export function formatCompactCurrency(val: number | null | undefined): string {
+  const n = val ?? 0;
+  const abs = Math.abs(n);
+  const fmt = (v: number) =>
+    new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }).format(v);
+  if (abs >= 1_000_000_000) return `${fmt(n / 1_000_000_000)}tỷ`;
+  if (abs >= 1_000_000) return `${fmt(n / 1_000_000)}tr`;
+  if (abs >= 1_000) return `${fmt(n / 1_000)}k`;
+  return fmt(n);
+}
+
+
+/**
  * Định dạng ngày giờ thân thiện theo locale Việt Nam
  */
 export function formatDate(dateStr: string | null | undefined): string {
@@ -46,12 +61,25 @@ function formatToLocalISO(d: Date, timeStr: "00:00:00" | "23:59:59"): string {
  * Trích xuất ngày bắt đầu (TuNgay) và ngày kết thúc (DenNgay) theo TimeRangeType
  * Đảm bảo giờ bắt đầu luôn là 00:00:00 và giờ kết thúc luôn là 23:59:59
  */
-export function getFilterDates(range: TimeRangeType): {
+export function getFilterDates(
+  range: TimeRangeType,
+  customFrom?: string,
+  customTo?: string,
+): {
   TuNgay: string | null;
   DenNgay: string | null;
 } {
   if (range === "tat_ca") {
     return { TuNgay: null, DenNgay: null };
+  }
+  if (range === "tuy_chon") {
+    // customFrom / customTo có dạng yyyy-MM-dd (từ DatePicker)
+    const from = customFrom ? customFrom.slice(0, 10) : "";
+    const to = customTo ? customTo.slice(0, 10) : "";
+    return {
+      TuNgay: from ? `${from}T00:00:00` : null,
+      DenNgay: to ? `${to}T23:59:59` : null,
+    };
   }
   const now = new Date();
   if (range === "hom_nay") {
