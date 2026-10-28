@@ -372,7 +372,7 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
                   options={allPaymentStatusOptions}
                   value={
                     paymentStatusFilter !== null
-                      ? String(paymentStatusFilter)
+                      ? Number(paymentStatusFilter)
                       : ""
                   }
                   onChange={(val) =>
@@ -393,7 +393,7 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
                   placeholder="Tất cả loại đơn..."
                   options={allOrderTypeOptions}
                   value={
-                    orderTypeFilter !== null ? String(orderTypeFilter) : ""
+                    orderTypeFilter !== null ? Number(orderTypeFilter) : ""
                   }
                   onChange={(val) =>
                     setOrderTypeFilter(val ? Number(val) : null)
