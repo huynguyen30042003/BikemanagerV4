@@ -116,6 +116,13 @@ export const hoanThanhVaGiaoXeDonHangApi = async (donHangId: string) => {
       headers: getAuthHeaders(),
     }
   );
+  if (response.data && response.data.isSuccess === false) {
+    throw new Error(
+      response.data?.error?.message ||
+        response.data?.message ||
+        "Không thể xác nhận hoàn thành & bàn giao xe!"
+    );
+  }
   return response.data;
 };
 

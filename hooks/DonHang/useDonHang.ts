@@ -7,7 +7,6 @@ import {
   useChuyenTrangThaiDonHang,
   useHoanThanhVaGiaoXeDonHang,
   useAddLichSuThanhToanDonHang,
-  useThanhToanDonHang,
   useDeleteDonHang,
   useGetLichSuThanhToanDonHang,
   useGetSanPhamBanHang,
@@ -19,7 +18,6 @@ import {
   ChuyenTrangThaiDonHangPayload,
   AddLichSuThanhToanPayload,
   ThanhToanDonHangPayload,
-  DonHangKPI,
   SP_SanPhamBanHang,
 } from "@/types/donHang";
 import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
@@ -303,7 +301,9 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
     if (!dataPaymentHistory) return [];
     if (Array.isArray(dataPaymentHistory)) return dataPaymentHistory;
     return (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (dataPaymentHistory as any)?.data ??
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (dataPaymentHistory as any)?.items ??
       []
     );
@@ -597,6 +597,18 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
     }
   };
 
+  const extractErrorMessage = (err: unknown, fallback: string): string => {
+    const errorObj = err as {
+      response?: {
+        data?: { error?: { message?: string }; message?: string };
+      };
+      error?: { message?: string };
+      message?: string;
+    };
+    
+    return errorObj?.response?.data?.error?.message || fallback;
+  };
+
   const handleHoanThanhVaGiaoXe = async (order: DH_DonHang) => {
     if (
       !confirm(
@@ -608,8 +620,8 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
       await hoanThanhVaGiaoXeMutation.mutateAsync(order.donHangID);
       toast.success("Xác nhận hoàn thành đơn và bàn giao xe thành công!");
       refetch();
-    } catch {
-      toast.error("Không thể xác nhận hoàn thành & bàn giao xe!");
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, "Không thể xác nhận hoàn thành & bàn giao xe!"));
     }
   };
 
