@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Pagination } from "@/components/Common/Pagination";
 import { SP_BienTheSanPham } from "@/types/bienTheSanPham";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 function formatCurrency(val: number | null | undefined): string {
   if (val == null) return "0 đ";
@@ -108,7 +108,7 @@ export const ProductVariantsGrid: React.FC<ProductVariantsGridProps> = ({
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4"
       >
         {items.map((variant) => {
-          const imgUrl = variant.hinhAnh ? getImageUrl(variant.hinhAnh) : null;
+          const imgUrl = variant.hinhAnh ? takeImage(variant.hinhAnh,480) : null;
 
           return (
             <Card

@@ -28,8 +28,8 @@ import {
   useDeleteSoSerialHinhAnh,
 } from "@/hooks/SoSerial/useSoSerialApi";
 import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
-import { getImageUrl } from "@/shared/constants/apiConstants";
 import { ConfirmModal } from "../ui/ConfirmModal";
+import { takeImage } from "@/utils";
 
 interface SerialImagesSlideOverProps {
   open: boolean;
@@ -419,7 +419,7 @@ export function SerialImagesSlideOver({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {filteredImages.map((img) => {
                 const badge = getLoaiBadge(img.loaiAnhID);
-                const imgUrl = getImageUrl(img.duongDanAnh);
+                const imgUrl = takeImage(img.duongDanAnh, 480);
 
                 return (
                   <div
@@ -429,7 +429,7 @@ export function SerialImagesSlideOver({
                     {/* Thumbnail Image */}
                     <div
                       className="relative aspect-video bg-muted/30 cursor-pointer overflow-hidden"
-                      onClick={() => setPreviewModalImg(imgUrl)}
+                      onClick={() => setPreviewModalImg(takeImage(img.duongDanAnh))}
                     >
                       <Image
                         src={imgUrl}
