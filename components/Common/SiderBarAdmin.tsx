@@ -127,31 +127,31 @@ export const MENU_SECTIONS: MenuSection[] = [
         title: "Địa bàn & Cơ sở",
         href: "/admin/diaDiem",
         icon: Store,
-        roles: ["Administrator", "AdminAccess"],
+        roles: ["Administrator"],
         items: [
           {
             title: "Chi nhánh & Showroom",
             href: "/admin/diaDiem",
             icon: Store,
-            roles: ["Administrator", "AdminAccess"],
+            roles: ["Administrator"],
           },
           {
             title: "Cấp Tỉnh & Thành phố",
             href: "/admin/diaPhuongCapTinh",
             icon: Building2,
-            roles: ["Administrator", "AdminAccess"],
+            roles: ["Administrator"],
           },
           {
             title: "Cấp Xã & Phường",
             href: "/admin/diaPhuongCapXa",
             icon: Compass,
-            roles: ["Administrator", "AdminAccess"],
+            roles: ["Administrator"],
           },
           {
             title: "Danh mục Quốc gia",
             href: "/admin/quocGia",
             icon: Globe,
-            roles: ["Administrator", "AdminAccess"],
+            roles: ["Administrator"],
           },
         ],
       },
@@ -967,7 +967,6 @@ export default function SiderBarAdmin() {
         "
         title="Kéo để thay đổi kích thước sidebar"
       />
-
     </aside>
   );
 }
