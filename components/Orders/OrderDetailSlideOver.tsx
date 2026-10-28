@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Package, CreditCard } from "lucide-react";
+import { Package, CreditCard, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { DH_DonHang, DH_LichSuThanhToan } from "@/types/donHang";
@@ -72,6 +72,18 @@ export const OrderDetailSlideOver: React.FC<OrderDetailSlideOverProps> = ({
                 </span>
               </div>
             </div>
+
+            {DonHangDetail?.ghiChu && (
+              <div className="pt-2 border-t border-border/60">
+                <span className="text-muted-foreground flex items-center gap-1 text-[11px] mb-0.5">
+                  <FileText className="w-3 h-3 text-blue-500" />
+                  Ghi chú đơn hàng
+                </span>
+                <p className="text-foreground text-xs whitespace-pre-wrap bg-background/60 p-2 rounded-lg border border-border/50">
+                  {DonHangDetail.ghiChu}
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60 text-center">
               <div className="p-2 rounded-lg bg-background/60 border border-border/50">

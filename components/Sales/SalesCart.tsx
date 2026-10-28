@@ -424,6 +424,21 @@ export const SalesCart: React.FC<SalesCartProps> = ({
           </div>
         </div>
 
+        {/* Ghi chú đơn hàng */}
+        <div>
+          <label className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-blue-500" />
+            <span>Ghi chú đơn hàng</span>
+          </label>
+          <Textarea
+            value={orderNote}
+            onChange={(e) => onOrderNoteChange?.(e.target.value)}
+            placeholder="Nhập ghi chú thêm (VD: Thu cũ đổi mới, tặng kèm phụ kiện, hẹn ngày lấy biển số...)"
+            rows={2}
+            className="text-xs resize-none"
+          />
+        </div>
+
         {/* Checkout Button */}
         <Button
           type="button"
