@@ -388,6 +388,12 @@ export const QUERY_KEYS = {
 ```
 
 - **Tự động làm mới dữ liệu**: Sau khi thêm/sửa/xóa thành công trong `useMutation`, bắt buộc gọi `queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS.ALL })` để UI tự động cập nhật mà không cần F5.
+- **Lazy Query / Conditional Fetching (`enabled`) cho dữ liệu phụ thuộc & Modal**:
+  - ❌ **CẤM**: Gọi các `useQuery` phục vụ riêng cho Modal Thêm/Sửa (ví dụ: lấy danh sách Xã/Phường theo Tỉnh/Thành của Form Add/Edit, hoặc danh sách Biến thể trong Modal) ở cấp `use<Feature>.ts` hoặc khi Modal đang đóng (`open = false`).
+  - ✅ **BẮT BUỘC**: Đặt các query phụ thuộc đó bên trong `Create...SlideOver.tsx` / `Update...SlideOver.tsx` và truyền cờ `enabled: Boolean(open && parentId)` để chỉ tải dữ liệu khi người dùng thực sự mở Modal và đã chọn danh mục cha.
+- **Chuẩn hóa Endpoint & Cấu trúc `ApiResponse<T>`**:
+  - Mỗi hàm trong `shared/api/<Feature>/index.ts` chỉ gọi **đúng 1 endpoint và 1 HTTP method chuẩn** đã thống nhất với Backend. Tuyệt đối cấm bọc 4-5 tầng `try/catch` đoán mò nhiều URL gây spam lỗi 404/405 trên tab Network.
+  - Đảm bảo truyền đầy đủ 100% các trường lọc từ `Filter` interface vào payload gửi lên API (tránh bỏ sót trường lọc như `LoaiKhachHang`, `TinhID`, `TrangThai`).
 
 ### 8.2. Streaming UI (`loading.tsx`) & Error Boundary (`error.tsx`)
 
@@ -433,7 +439,7 @@ const isSafeUrl = (url: string | null) => {
 
 ---
 
-## 10. Quy chuẩn Form & UI Controls: Bắt buộc dùng Custom Select Search
+## 10. Quy chuẩn Form & UI Controls: Bắt buộc dùng Custom Select Search & Confirm Dialog
 
 ### 10.1. Nguyên tắc cốt lõi (Core Rule)
 
@@ -461,33 +467,103 @@ const isSafeUrl = (url: string | null) => {
 />
 ```
 
-- **Áp dụng cho cả Phân trang (Page Size Selector)**:
+### 10.3. Quy chuẩn Quản lý File Upload, `FormData` & Chống Rò rỉ Bộ nhớ (`ObjectURL`)
 
-## 11. Quy chuẩn Tách Component Modal / Drawer (Form State Isolation Pattern)
+1. **Đồng bộ 100% tên trường File giữa Interface & `FormData`**:
+   - Mọi trường tệp đính kèm trong `Create...Payload` / `Update...Payload` (ví dụ `fileAnhChanDung`, `fileAnhBieuTrung`) bắt buộc phải được khai báo tường minh trong `types/<feature>.ts` và được `formData.append(...)` đầy đủ trong `shared/api/<Feature>/index.ts`.
+2. **Thu hồi bộ nhớ Preview Ảnh (`URL.revokeObjectURL`)**:
+   - Khi sử dụng `URL.createObjectURL(file)` để hiển thị ảnh xem trước trong Modal/SlideOver, **bắt buộc** phải có `useEffect` cleanup giải phóng bộ nhớ khi thay đổi ảnh hoặc đóng Modal:
+     ```tsx
+     useEffect(() => {
+       return () => {
+         if (previewUrl) URL.revokeObjectURL(previewUrl);
+       };
+     }, [previewUrl]);
+     ```
+3. **Logic hiển thị nút "Xóa ảnh hiện tại" trong Form Cập nhật**:
+   - Chỉ hiển thị nút xóa ảnh khi thực sự có ảnh mới đang preview hoặc bản ghi gốc đang có ảnh và chưa bị đánh dấu xóa:
+     `Boolean(previewUrl || (!formData.XoaAnh && formData.anhHienTai))`.
+
+### 10.4. Quy chuẩn Hộp thoại Xác nhận Hành vi Nguy hiểm (Cấm tuyệt đối `window.confirm`)
+
+- ❌ **TUYỆT ĐỐI CẤM DÙNG `window.confirm(...)` HOẶC `confirm(...)` MẶC ĐỊNH**:
+  - Gây đứng luồng chính (Blocking Main Thread) làm đơ mọi animation, timer và React state.
+  - Không có cờ `isLoading` khiến người dùng dễ bấm đúp (double-click) gây lỗi trừ kho kép, trừ tiền kép khi API đang chạy.
+  - Giao diện thô cứng của hệ điều hành, phá vỡ Dark/Light Design System và có thể bị chặn trên Mobile WebView.
+  - Cấm nhúng hàm `confirm(...)` vào trong Custom Hook nghiệp vụ (Hook chỉ cung cấp hàm mutation).
+- ✅ **BẮT BUỘC SỬ DỤNG 1 TRONG 2 CƠ CHẾ CHUẨN**:
+  1. **Cơ chế Promise-based (`useConfirm()`)** (Khuyến nghị cho Hooks / Event Handlers):
+     - Được cấp phát toàn cục thông qua `ConfirmProvider` tại `providers/QueryProvider.tsx`.
+     - Cho phép gọi hộp thoại xác nhận bất đồng bộ cực kỳ sạch sẽ mà không cần khai báo thêm `useState` quản lý modal:
+     ```tsx
+     import { useConfirm } from "@/components/Common/ConfirmContext";
+
+     const { confirm } = useConfirm();
+
+     const handleAction = async (item: T) => {
+       const isConfirmed = await confirm({
+         title: "Xác nhận hoàn thành và bàn giao xe",
+         variant: "warning",
+         confirmText: "Xác nhận bàn giao",
+         description: `Xác nhận bàn giao xe cho đơn hàng "${item.maDonHang}"? Hệ thống sẽ trừ kho và kích hoạt bảo hành điện tử.`,
+       });
+       if (!isConfirmed) return;
+       // Gọi API mutation...
+     };
+     ```
+  2. **Cơ chế State-driven Component (`<ConfirmModal />` từ `@/components/ui/ConfirmModal`)**:
+     - Dành cho các trang cần hiển thị trạng thái đang xử lý (`isLoading={mutation.isPending}`) trực tiếp trên nút bấm xác nhận của Modal.
+     - Quản lý đóng/mở qua state đối tượng cần xác nhận (State-driven Confirmation):
+     ```tsx
+     const [confirmItem, setConfirmItem] = useState<T | null>(null);
+
+     <ConfirmModal
+       open={Boolean(confirmItem)}
+       onClose={() => setConfirmItem(null)}
+       onConfirm={handleExecuteConfirm}
+       isLoading={mutation.isPending}
+       variant="warning"
+       title="..."
+       description="..."
+     />
+     ```
+
+---
+
+## 11. Quy chuẩn Tách Component Modal / Drawer & Hook (Form State Isolation Pattern)
 
 > [!IMPORTANT]
-> **Vấn đề "Re-render Trap"**: Khi đặt form state (`dataAdd`, `dataUpdate`, `errors`, `onChange`) trực tiếp trong `page.tsx`, mỗi khi người dùng gõ 1 ký tự vào input, toàn bộ trang cha (Ribbon KPI, thanh tìm kiếm, bộ lọc trạng thái, toàn bộ danh sách Showcase Grid Cards với motion animations và Data Table) đều bị re-render theo từng ký tự. Điều này gây ra độ trễ phím (typing latency) và làm file `page.tsx` phình to quá tải (> 1.100 dòng).
+> **Vấn đề "Re-render Trap" & "Tách File Giả" (Fake State Isolation)**:
+> Nếu đặt form state (`dataAdd`, `dataUpdate`, `errors`, `avatarPreview`) trực tiếp trong `page.tsx` **HOẶC đặt trong hook tổng `use<Feature>.ts` được gọi bởi `page.tsx`**, thì mỗi khi người dùng gõ 1 ký tự vào ô `<Input>` trong Modal, `setDataAdd` sẽ kích hoạt re-render cho toàn bộ `page.tsx` (kéo theo FilterBar, KPI Ribbon, Showcase Grid Cards và Data Table đều bị render lại theo từng phím bấm).
 
-### 11.1. Nguyên tắc cô lập State cục bộ (State Isolation)
+### 11.1. Nguyên tắc cô lập State cục bộ (Strict State Isolation)
 
-Mọi Slide-over Drawer / Modal phục vụ chức năng **Thêm mới (Create)** hoặc **Cập nhật (Update)** bắt buộc phải được tách thành component độc lập và lưu trữ tại thư mục:
-`components/<FeatureName>/` (ví dụ: `components/DanhMucChung/CreateDanhMucChungSlideOver.tsx`).
+1. **Tách biệt hoàn toàn File & State**:
+   - Mọi Slide-over Drawer / Modal phục vụ chức năng **Thêm mới (Create)** hoặc **Cập nhật (Update)** bắt buộc phải được tách thành component độc lập tại `components/<FeatureName>/Create...SlideOver.tsx` và `Update...SlideOver.tsx`.
+   - ❌ **NGHIÊM CẤM "TÁCH FILE GIẢ"**: Tuyệt đối cấm việc tách file `Create...SlideOver.tsx` nhưng lại truyền `dataAdd`, `setDataAdd`, `dataUpdate`, `setDataUpdate`, `errors` từ `use<Feature>.ts` / `page.tsx` xuống qua props.
 
-### 11.2. Phân chia trách nhiệm rõ ràng
+### 11.2. Phân chia trách nhiệm 3 tầng rõ ràng
 
-1. **Trang cha (`page.tsx`)**:
-   - Chỉ chịu trách nhiệm quản lý danh sách, phân trang, bộ lọc và trạng thái mở/đóng modal:
+1. **Hook tổng của trang (`hooks/<FeatureName>/use<FeatureName>.ts`)**:
+   - **CHỈ ĐƯỢC PHÉP** quản lý:
+     - State phân trang (`page`, `pageSize`), tìm kiếm (`searchInput`, `searchTerm`), bộ lọc (`statusFilter`, ...).
+     - Query danh sách chính (`useGet...`), Query thống kê (`useGet...KPI`), và các danh mục dùng chung cho thanh FilterBar.
+     - State & mutation cho Modal Xác nhận Xóa (`openDelete`, `selectItemName`, `handleOpenDelete`, `handleSubmitDelete`).
+     - Export `zod` schema (ví dụ: `export const khachHangSchema = z.object(...)`) để các SlideOver tái sử dụng.
+   - **TUYỆT ĐỐI KHÔNG** chứa `dataAdd`, `setDataAdd`, `dataUpdate`, `setDataUpdate`, `errors`, `useCreate...`, `useUpdate...`.
+2. **Trang cha (`page.tsx`)**:
+   - Chỉ chịu trách nhiệm điều phối danh sách, phân trang, bộ lọc và giữ đúng **2 state đóng/mở gọn nhẹ**:
      ```tsx
      const [openCreate, setOpenCreate] = useState<boolean>(false);
      const [editingItem, setEditingItem] = useState<DM_DanhMucChung | null>(
        null,
      );
      ```
-   - Trang cha **HOÀN TOÀN KHÔNG** lưu trữ giá trị text của form (`Ten`, `MoTa`, `ThuTu`...).
-2. **Component Modal con (`Create...SlideOver.tsx` / `Update...SlideOver.tsx`)**:
-   - Tự quản lý state form nội bộ (`formData`), validation errors (`errors`), và mutation hook (`useCreateDanhMucChung`, `useUpdateDanhMucChung`).
-   - Tự động reset dữ liệu khi mở (`useEffect(() => { if (open) resetForm(); }, [open])`).
-   - Khi người dùng gõ phím, **chỉ duy nhất Modal con re-render**, toàn bộ bảng/grid của trang cha đứng yên 100%.
+   - Trang cha **HOÀN TOÀN KHÔNG** lưu trữ bất kỳ giá trị text hay file preview nào của form.
+3. **Component Modal con (`Create...SlideOver.tsx` / `Update...SlideOver.tsx`)**:
+   - Tự quản lý 100% state nội bộ: `formData`, `errors`, `previewUrl`, các query phụ thuộc (như Xã/Phường theo Tỉnh đang chọn trong form) và mutation hook (`useCreate...`, `useUpdate...`).
+   - Tự động reset/đồng bộ dữ liệu khi mở (`useEffect(() => { if (open) ... }, [open, data])`).
+   - Khi người dùng gõ phím hoặc chọn dropdown trong form, **100% chỉ duy nhất Modal con re-render**, toàn bộ `page.tsx` đứng yên tuyệt đối.
 
 ### 11.3. Cấu trúc Props chuẩn của Modal tách riêng
 
@@ -508,6 +584,52 @@ interface UpdateSlideOverProps {
   onSuccess?: () => void;
 }
 ```
+
+### 11.4. Quy chuẩn "Single Source of Truth" cho State Modal Cập nhật (`editingItem` Pattern & Conditional Mounting)
+
+- ❌ **CẤM DÙNG 2 STATE RỜI RẠC CHO MỘT MODAL SỬA**:
+  ```tsx
+  // ❌ SAI: Dễ quên đồng bộ, lệch pha dữ liệu, phải check rườm rà
+  const [openEdit, setOpenEdit] = useState<boolean>(false);
+  const [selectItem, setSelectItem] = useState<T | null>(null);
+  ```
+  - Dễ gây lỗi "modal mở nhưng chưa kịp set data" hoặc "modal đóng rồi nhưng data cũ vẫn treo trong bộ nhớ".
+  - Phải kiểm tra 2 lần: `{openEdit && selectItem && <Update...SlideOver />}`.
+
+- ✅ **BẮT BUỘC DÙNG 1 STATE DUY NHẤT (`editingItem: T | null`)**:
+  Bản thân biến `editingItem` vừa làm dữ liệu vừa làm "công tắc" kép tự nhiên:
+  - `editingItem === null` 👉 **Không chọn bản ghi nào = Modal ĐÓNG**.
+  - `editingItem !== null` (đang giữ 1 object dữ liệu) 👉 **Có dữ liệu = Modal MỞ**.
+
+  ```tsx
+  // 1. Khai báo 1 state duy nhất tại page.tsx
+  const [editingItem, setEditingItem] = useState<T | null>(null);
+
+  // 2. Mở Modal: Gán dữ liệu vào là Modal tự mở (1 dòng duy nhất)
+  onEdit={(item) => setEditingItem(item)}
+
+  // 3. Đóng Modal: Gán về null là Modal tự đóng và dọn rác sạch sẽ (1 dòng duy nhất)
+  onClose={() => setEditingItem(null)}
+
+  // 4. Render qua Conditional Mounting:
+  {editingItem && (
+    <Update...SlideOver
+      open={Boolean(editingItem)}
+      data={editingItem}
+      onClose={() => setEditingItem(null)}
+      onSuccess={() => {
+        refetch();
+        refetchKPI();
+      }}
+    />
+  )}
+  ```
+
+- **4 Lợi ích Cốt lõi của Pattern này**:
+  1. **Bớt 1 state**: Triệt tiêu hoàn toàn biến boolean `openEdit`, code ngắn và gọn gàng hơn.
+  2. **Chống lệch pha 100%**: Không bao giờ có trường hợp modal mở mà dữ liệu `null`, hay modal đóng mà dữ liệu cũ bị giữ ngầm.
+  3. **Type-Safety tuyệt đối cho TypeScript**: Trong phạm vi `{editingItem && ( ... )}`, TypeScript tự động narrow kiểu của `editingItem` thành `T` (không thể `null`), triệt tiêu cảnh báo `possibly null` và ngăn ngừa crash runtime.
+  4. **Tối ưu RAM & Ngắt API ngầm (Conditional Mounting)**: Khi đóng modal (`editingItem = null`), component modal con bị unmount hoàn toàn khỏi bộ nhớ, tự động hủy các state bẩn nhập dở và ngắt hoàn toàn các API query phụ thuộc bên trong nó.
 
 ---
 
@@ -539,6 +661,8 @@ Mỗi khi thêm một trang hoặc module mới (ví dụ: `/admin/reports` ho�
 2. **Sidebar Menu**: Thêm mục menu mới vào `MENU_SECTIONS` trong `components/Common/SiderBarAdmin.tsx` kèm roles tương ứng.
 3. **Kiến trúc Modal & Performance**:
    - Tách Slide-over/Modal Thêm & Sửa thành component con đặt tại `components/<Feature>/`.
+   - Áp dụng `editingItem: T | null` (Mục 11.4) và Conditional Mounting cho modal sửa.
+   - Dùng `<ConfirmModal />` thay cho `window.confirm` (Mục 10.4).
    - Đảm bảo việc gõ phím trong form không gây re-render cho trang cha.
 4. **Controls & Form**:
    - Sử dụng `<SearchSelect>` / `<MultiSearchSelect>` thay cho thẻ `<select>` mặc định ở tất cả dropdown (kể cả bộ chọn số bản ghi phân trang).
@@ -708,13 +832,8 @@ Tất cả các trang trong hệ thống phải đảm bảo trải nghiệm ho�
    - Trên mobile luôn hiển thị đúng **2 cột cân đối**, chữ số co giãn (`text-sm sm:text-base lg:text-xl`), không để 1 cột quá to hoặc 3 cột bị chèn vỡ chữ.
 4. **Bảng Dữ liệu & Biểu đồ chống tràn ngang**:
    - Mọi bảng dữ liệu `Table` bắt buộc phải có container `overflow-x-auto` và đặt `min-w-[...]` cho table.
+   - Mảng cấu hình cột `columns: Column<T>[]` trong `...Table.tsx` bắt buộc phải bọc qua `useMemo` và các hàm thao tác sự kiện bọc qua `useCallback` để tránh khởi tạo lại mảng cột ở mỗi chu kỳ render.
    - Container biểu đồ luôn có `min-w-[340px]` kết hợp cuộn ngang để các cột đồ thị không bị nén về 0px trên màn hình nhỏ.
-5. **Quy chuẩn Responsive Mobile (BẮT BUỘC 100% - MANDATORY REQUIREMENT)**:
-   - Mọi trang và component khi tạo mới hoặc cập nhật **BẮT BUỘC PHẢI RESPONSIVE HOÀN HẢO** trên tất cả độ phân giải:
-     - Desktop lớn (1440px - 1920px)
-     - Laptop & Tablet (768px - 1024px)
-     - Mobile (375px - 428px, đặc biệt chuẩn kích thước iPhone Xs Max: 414px và iPhone 12/13/14 Pro Max: 428px).
-   - Tuyệt đối cấm để giao diện bị vỡ bố cục, tràn viền ngang (horizontal page blowout), đè chữ hoặc nút bấm bị cắt xén.
 
 ### 14.4. Quy chuẩn Tách Component Dùng Chung & Responsive Cho Thanh Điều Hướng Tab Con (`BaseNavTabs`)
 
@@ -795,3 +914,30 @@ Tất cả các trang trong hệ thống phải đảm bảo trải nghiệm ho�
 4. **Công thức tính tiền trả góp hàng tháng tự động**:
    - Số tiền góp hàng tháng (`SoTienTraHangThang`) được tính tự động từ: Số tiền vay (`SoTienVay`), kỳ hạn (`SoThangTraGop`), lãi suất (`LaiSuat`) và phí bảo hiểm (`PhiBaoHiemKhoanVay`).
    - Khi chưa có khoản vay (`SoTienVay <= 0`), ô trả góp hàng tháng hiển thị rỗng kèm placeholder *"Tự động tính theo khoản vay..."*.
+
+---
+
+## 16. Tiêu chuẩn Kiến trúc Doanh nghiệp Nâng cao (Enterprise-Grade Engineering Standards)
+
+Để đảm bảo hệ thống vận hành ổn định ở quy mô lớn (Production-Ready), dễ bảo trì và đạt hiệu năng tối đa, toàn bộ dự án tuân thủ thêm 5 quy chuẩn kỹ thuật cấp doanh nghiệp sau:
+
+1. **Chuẩn hóa Tầng Giao tiếp API & Axios Interceptors (`shared/api/index.ts`)**:
+   - Ưu tiên xử lý tập trung việc đính kèm `Authorization: Bearer ${token}`, `withCredentials: true` và bắt lỗi `401/403` tại Axios Request/Response Interceptors thay vì lặp lại thủ công ở từng file dịch vụ.
+   - Mọi hàm gọi API phải định nghĩa kiểu dữ liệu đầu vào (`Payload` / `Filter`) và kiểu trả về (`Promise<ApiResponse<T>>` hoặc `Promise<T>`) rõ ràng, tuyệt đối cấm dùng `any` hoặc ép kiểu mù (`as unknown as ...`).
+
+2. **Tối ưu Hiệu năng Biểu mẫu Phức tạp (Zero-Latency Form Architecture)**:
+   - Với các biểu mẫu lớn nhiều trường dữ liệu (như Hồ sơ Khách hàng, Sản phẩm, Hợp đồng Trả góp, Đơn hàng), bắt buộc cô lập state bên trong SlideOver/Modal hoặc sử dụng `React Hook Form` kết hợp `@hookform/resolvers/zod` để đạt **0ms typing latency**.
+   - Tuyệt đối không để việc nhập liệu trong bất kỳ ô `<Input>` / `<Textarea>` nào kích hoạt re-render lên danh sách/bảng dữ liệu ở trang cha.
+
+3. **Quản lý Tập trung Query Keys & Đồng bộ Invalidation (`Single Source of Truth`)**:
+   - Mọi Query Key của TanStack React Query phải được định nghĩa nhất quán theo cấu trúc phân cấp (`all`, `lists`, `list(params)`, `details`, `detail(id)`, `kpi`, `navTabs`).
+   - Khi thực hiện `useMutation` (Thêm / Sửa / Xóa / Đồng bộ) làm thay đổi dữ liệu, bắt buộc `invalidateQueries` đồng bộ cho cả 3 nhóm: **Danh sách (`lists`)**, **Thống kê đầu trang (`kpi`)** và **Huy hiệu số lượng trên thanh điều hướng (`navTabs`)**.
+
+4. **Quản lý Vòng đời Tài nguyên & Chống Memory Leak**:
+   - Mọi `ObjectURL` sinh ra từ `URL.createObjectURL(file)`, bộ đếm `setTimeout` / `setInterval`, hoặc event listener gắn vào `window` / `document` đều bắt buộc phải được giải phóng trong hàm cleanup của `useEffect`.
+   - Các component thẻ hiển thị lặp lại số lượng lớn trong lưới (`...Card.tsx`) bắt buộc bọc `React.memo` và các cột của bảng (`...Table.tsx`) bắt buộc bọc `useMemo`.
+
+5. **Cổng Kiểm soát Chất lượng Code trước khi Hoàn tất (`Pre-flight Quality Gate`)**:
+   - Tuyệt đối xóa sạch toàn bộ câu lệnh debug (`console.log`, `debugger`) trước khi bàn giao tính năng.
+   - Không để sót các import, biến, state hoặc API query không sử dụng (`unused variables / dead queries`).
+   - Bắt buộc chạy kiểm tra tĩnh `npx tsc --noEmit` đạt **0 lỗi** sau mỗi lần chỉnh sửa hoặc nâng cấp tính năng.

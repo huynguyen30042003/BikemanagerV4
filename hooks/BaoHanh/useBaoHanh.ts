@@ -19,8 +19,10 @@ import { DANH_MUC_CHUNG } from "@/constants/danhMuc";
 import { useGetKhachHang } from "@/hooks/KhachHang/useKhachHangApi";
 import { useGetSoSerial } from "@/hooks/SoSerial/useSoSerialApi";
 import { useGetDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 
 export const useBaoHanhHook = () => {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState("");
@@ -150,8 +152,13 @@ export const useBaoHanhHook = () => {
   };
 
   const handleDelete = async (item: BH_BaoHanh) => {
-    if (!confirm(`Bạn có chắc muốn hủy sổ bảo hành "${item.maBaoHanh}"?`))
-      return;
+    const isConfirmed = await confirm({
+      title: "Xác nhận hủy sổ bảo hành",
+      variant: "danger",
+      confirmText: "Hủy bảo hành",
+      description: `Bạn có chắc muốn hủy sổ bảo hành "${item.maBaoHanh}" không? Thao tác này không thể hoàn tác.`,
+    });
+    if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(item.baoHanhID);
       toast.success("Đã hủy sổ bảo hành!");
@@ -194,6 +201,7 @@ export const useBaoHanhHook = () => {
 };
 
 export const usePhieuBaoHanhHook = () => {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState("");
@@ -307,8 +315,13 @@ export const usePhieuBaoHanhHook = () => {
   };
 
   const handleDelete = async (claim: BH_PhieuBaoHanh) => {
-    if (!confirm(`Bạn có chắc muốn xóa phiếu "${claim.maPhieuBaoHanh}"?`))
-      return;
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa phiếu bảo hành",
+      variant: "danger",
+      confirmText: "Xóa phiếu",
+      description: `Bạn có chắc muốn xóa phiếu "${claim.maPhieuBaoHanh}" không? Thao tác này không thể hoàn tác.`,
+    });
+    if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(claim.phieuBaoHanhID);
       toast.success("Đã xóa phiếu bảo hành!");

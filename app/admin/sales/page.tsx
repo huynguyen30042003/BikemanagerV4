@@ -15,8 +15,10 @@ import {
   SalesFloatingCheckoutBar,
 } from "@/components/Sales";
 import { format } from "date-fns";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 
 function SalesContent() {
+  const { confirm } = useConfirm();
   // Mobile tab state: "catalog" (chọn sản phẩm) hoặc "cart" (giỏ hàng & thanh toán)
   const [mobileTab, setMobileTab] = useState<"catalog" | "cart">("catalog");
 
@@ -292,8 +294,14 @@ function SalesContent() {
     setCart((prev) => prev.filter((i) => i.bienTheSanPhamID !== id));
   };
 
-  const handleClearCart = () => {
-    if (confirm("Bạn có chắc chắn muốn làm mới toàn bộ giỏ hàng này?")) {
+  const handleClearCart = async () => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận làm mới giỏ hàng",
+      variant: "warning",
+      confirmText: "Làm mới giỏ hàng",
+      description: "Bạn có chắc chắn muốn làm mới toàn bộ giỏ hàng này không? Mọi sản phẩm đang chọn sẽ bị xóa khỏi giỏ.",
+    });
+    if (isConfirmed) {
       setCart([]);
     }
   };

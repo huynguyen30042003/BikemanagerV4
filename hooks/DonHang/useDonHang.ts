@@ -26,6 +26,7 @@ import { useGetKhachHang } from "@/hooks/KhachHang/useKhachHangApi";
 import { useGetDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
 import { useGetKho } from "@/hooks/Kho/useKhoApi";
 import { useGetBienTheSanPham } from "@/hooks/BienTheSanPham/useBienTheSanPhamApi";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 
 export interface UseDonHangOptions {
   KhoID?: string | null;
@@ -36,6 +37,7 @@ export interface UseDonHangOptions {
 }
 
 export const useDonHang = (hookOptions?: UseDonHangOptions) => {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchInput, setSearchInput] = useState("");
@@ -605,29 +607,40 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
       error?: { message?: string };
       message?: string;
     };
-    
+
     return errorObj?.response?.data?.error?.message || fallback;
   };
 
   const handleHoanThanhVaGiaoXe = async (order: DH_DonHang) => {
-    if (
-      !confirm(
-        `Xác nhận hoàn thành và bàn giao xe cho đơn hàng "${order.maDonHang}"?\nHệ thống sẽ trigger trừ tồn kho thực tế, tính giá vốn FIFO, kích hoạt bảo hành điện tử và tích điểm cho khách.`,
-      )
-    )
-      return;
+    const isConfirmed = await confirm({
+      title: "Xác nhận hoàn thành và bàn giao xe",
+      variant: "warning",
+      confirmText: "Xác nhận bàn giao",
+      description: `Xác nhận hoàn thành và bàn giao xe cho đơn hàng "${order.maDonHang}"? Hệ thống sẽ trigger trừ tồn kho thực tế, tính giá vốn FIFO, kích hoạt bảo hành điện tử và tích điểm cho khách.`,
+    });
+    if (!isConfirmed) return;
     try {
       await hoanThanhVaGiaoXeMutation.mutateAsync(order.donHangID);
       toast.success("Xác nhận hoàn thành đơn và bàn giao xe thành công!");
       refetch();
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, "Không thể xác nhận hoàn thành & bàn giao xe!"));
+      toast.error(
+        extractErrorMessage(
+          err,
+          "Không thể xác nhận hoàn thành & bàn giao xe!",
+        ),
+      );
     }
   };
 
   const handleDelete = async (order: DH_DonHang) => {
-    if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng "${order.maDonHang}"?`))
-      return;
+    const isConfirmed = await confirm({
+      title: "Xác nhận hủy đơn hàng",
+      variant: "danger",
+      confirmText: "Hủy đơn hàng",
+      description: `Bạn có chắc chắn muốn hủy đơn hàng "${order.maDonHang}" không? Thao tác này không thể hoàn tác.`,
+    });
+    if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(order.donHangID);
       toast.success("Đã hủy đơn hàng thành công!");

@@ -36,6 +36,7 @@ export const getKhachHangApi = async (
     TuKhoa: "",
     TrangThai: null,
     TinhID: null,
+    LoaiKhachHang: null,
   },
 ) => {
   const response = await api.post(
@@ -43,6 +44,7 @@ export const getKhachHangApi = async (
     {
       TuKhoa: filter.TuKhoa ?? "",
       TinhID: filter.TinhID ?? null,
+      LoaiKhachHang: filter.LoaiKhachHang ?? null,
       PageIndex: filter.PageIndex ?? 1,
       PageSize: filter.PageSize ?? 20,
       TrangThai: filter.TrangThai ?? null,
@@ -124,6 +126,9 @@ export const createKhachHangApi = async (payload: CreateKhachHangPayload) => {
     if (payload.anhBieuTrung) {
       formData.append("anhBieuTrung", payload.anhBieuTrung);
     }
+    if (payload.fileAnhBieuTrung) {
+      formData.append("fileAnhBieuTrung", payload.fileAnhBieuTrung);
+    }
   }
 
   const response = await api.post(`${APP_URL}/KhachHangApi/Add`, formData, {
@@ -188,6 +193,9 @@ export const updateKhachHangApi = async (payload: UpdateKhachHangPayload) => {
     if (payload.TrangChu) formData.append("TrangChu", payload.TrangChu);
     if (payload.anhBieuTrung) {
       formData.append("anhBieuTrung", payload.anhBieuTrung);
+    }
+    if (payload.fileAnhBieuTrung) {
+      formData.append("fileAnhBieuTrung", payload.fileAnhBieuTrung);
     }
   }
 

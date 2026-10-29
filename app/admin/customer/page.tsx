@@ -5,12 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useKhachHang } from "@/hooks/KhachHang/useKhachHang";
-import {
-  KH_KhachHang,
-  KhachHangKPI,
-  CreateKhachHangPayload,
-  UpdateKhachHangPayload,
-} from "@/types/khachHang";
+import { KH_KhachHang } from "@/types/khachHang";
 import {
   CustomerFilterBar,
   CustomerKpiGrid,
@@ -26,6 +21,11 @@ function CustomerContent() {
   const searchParams = useSearchParams();
   const initialTinhId = searchParams.get("tinhId") || undefined;
 
+  // Cô lập hoàn toàn state đóng/mở Modal khỏi Form State để chống Re-render Trap
+  const [openCreate, setOpenCreate] = useState<boolean>(false);
+  const [editingCustomer, setEditingCustomer] = useState<KH_KhachHang | null>(
+    null,
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const {
@@ -56,31 +56,9 @@ function CustomerContent() {
     isLoadingKPI,
     refetchKPI,
 
-    // Tỉnh/Thành & Xã/Phường
+    // Tỉnh/Thành phố cho bộ lọc & modal
     provinceOptions,
     isLoadingTinh,
-    communeOptionsAdd,
-    isLoadingXaAdd,
-    communeOptionsUpdate,
-    isLoadingXaUpdate,
-
-    // Modal Thêm mới
-    open,
-    setOpen,
-    dataAdd,
-    setDataAdd,
-    handleModalAdd,
-    handleSubmit,
-    isCreating,
-
-    // Modal Cập nhật
-    openUpdate,
-    setOpenUpdate,
-    dataUpdate,
-    setDataUpdate,
-    handleOpenEdit,
-    handleSubmitUpdate,
-    isUpdating,
 
     // Modal Xóa
     openDelete,
@@ -89,21 +67,9 @@ function CustomerContent() {
     handleOpenDelete,
     handleSubmitDelete,
     isDeleting,
-
-    errors,
   } = useKhachHang(initialTinhId);
 
-  // File upload previews
-  const [avatarPreviewAdd, setAvatarPreviewAdd] = useState<string | null>(null);
-  const [logoPreviewAdd, setLogoPreviewAdd] = useState<string | null>(null);
-  const [avatarPreviewUpdate, setAvatarPreviewUpdate] = useState<string | null>(
-    null,
-  );
-  const [logoPreviewUpdate, setLogoPreviewUpdate] = useState<string | null>(
-    null,
-  );
-
-  // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback lọc cục bộ)
+  // Metrics (Ưu tiên lấy từ API GetKPI, fallback lọc cục bộ)
   const individualCount = useMemo(
     () => items.filter((i: KH_KhachHang) => i.loaiKhachHang === 1).length,
     [items],
@@ -117,81 +83,19 @@ function CustomerContent() {
     [items],
   );
 
-  const kpi = kpiData as unknown as
-    | (KhachHangKPI & { data?: KhachHangKPI })
-    | undefined;
+  const total_KhachHang = kpiData?.total_KhachHang ?? totalCount;
+  const total_CaNhan = kpiData?.total_CaNhan ?? individualCount;
+  const total_ToChuc = kpiData?.total_ToChuc ?? businessCount;
+  const total_HoatDong = kpiData?.total_HoatDong ?? activeCount;
 
-  const total_KhachHang =
-    kpi?.data?.total_KhachHang ?? kpi?.total_KhachHang ?? totalCount;
-  const total_CaNhan =
-    kpi?.data?.total_CaNhan ?? kpi?.total_CaNhan ?? individualCount;
-  const total_ToChuc =
-    kpi?.data?.total_ToChuc ?? kpi?.total_ToChuc ?? businessCount;
-  const total_HoatDong =
-    kpi?.data?.total_HoatDong ?? kpi?.total_HoatDong ?? activeCount;
+  const hasActiveFilters = Boolean(
+    searchInput || statusFilter !== "all" || loaiFilter !== "all" || tinhFilter,
+  );
 
   const handleReload = () => {
     refetch();
     refetchKPI();
   };
-
-  const handleAvatarChangeAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setDataAdd((prev: CreateKhachHangPayload) => ({
-        ...prev,
-        fileAnhChanDung: file,
-      }));
-      setAvatarPreviewAdd(URL.createObjectURL(file));
-    }
-  };
-
-  const handleLogoChangeAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setDataAdd((prev: CreateKhachHangPayload) => ({
-        ...prev,
-        fileAnhBieuTrung: file,
-      }));
-      setLogoPreviewAdd(URL.createObjectURL(file));
-    }
-  };
-
-  const handleAvatarChangeUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setDataUpdate((prev: UpdateKhachHangPayload) => ({
-        ...prev,
-        fileAnhChanDung: file,
-        XoaAnhChanDung: true,
-      }));
-      setAvatarPreviewUpdate(URL.createObjectURL(file));
-    }
-  };
-
-  const handleLogoChangeUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setDataUpdate((prev: UpdateKhachHangPayload) => ({
-        ...prev,
-        fileAnhBieuTrung: file,
-        XoaAnhBieuTrung: true,
-      }));
-      setLogoPreviewUpdate(URL.createObjectURL(file));
-    }
-  };
-  const handleClearAvatar = () => {
-
-    setDataUpdate((prev: UpdateKhachHangPayload) => ({
-      ...prev,
-      fileAnhChanDung: null,
-      XoaAnhChanDung: true,
-    }));
-    setAvatarPreviewUpdate(null);
-  };
-  const hasActiveFilters = Boolean(
-    searchInput || statusFilter !== "all" || loaiFilter !== "all" || tinhFilter,
-  );
 
   const handleResetFilters = () => {
     handleSearch("");
@@ -201,21 +105,9 @@ function CustomerContent() {
     setPage(1);
   };
 
-  const handleOpenEditWrapper = (customer: KH_KhachHang) => {
-    setAvatarPreviewUpdate(null);
-    setLogoPreviewUpdate(null);
-    handleOpenEdit(customer);
-  };
-
-  const handleOpenAddWrapper = () => {
-    setAvatarPreviewAdd(null);
-    setLogoPreviewAdd(null);
-    handleModalAdd();
-  };
-
   return (
-    <div className="p-3 sm:p-4 md:p-8 min-h-screen space-y-4 sm:space-y-6 max-w-full overflow-x-hidden">
-      {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút 3 gạch trên Mobile) */}
+    <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+      {/* 1. Header & Thanh lọc tìm kiếm (Tối ưu Responsive Nút Bộ lọc trên Mobile) */}
       <CustomerFilterBar
         totalKhachHang={total_KhachHang}
         totalCaNhan={total_CaNhan}
@@ -242,7 +134,7 @@ function CustomerContent() {
         }}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-        onOpenCreate={handleOpenAddWrapper}
+        onOpenCreate={() => setOpenCreate(true)}
         onRefresh={handleReload}
         isFetching={isFetching}
         isLoadingKPI={isLoadingKPI}
@@ -277,9 +169,9 @@ function CustomerContent() {
           pageSize={pageSize}
           setPage={setPage}
           setPageSize={setPageSize}
-          onEdit={handleOpenEditWrapper}
+          onEdit={(customer) => setEditingCustomer(customer)}
           onDelete={handleOpenDelete}
-          onOpenCreate={handleOpenAddWrapper}
+          onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
         />
@@ -292,51 +184,29 @@ function CustomerContent() {
           pageSize={pageSize}
           setPage={setPage}
           setPageSize={setPageSize}
-          onEdit={handleOpenEditWrapper}
+          onEdit={(customer) => setEditingCustomer(customer)}
           onDelete={handleOpenDelete}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
-          onOpenCreate={handleOpenAddWrapper}
+          onOpenCreate={() => setOpenCreate(true)}
         />
       )}
 
-      {/* Slide-over Drawer: THÊM MỚI KHÁCH HÀNG */}
+      {/* Slide-over Drawer: THÊM MỚI KHÁCH HÀNG (Cô lập Form State) */}
       <CreateCustomerSlideOver
-        open={open}
-        onClose={() => setOpen(false)}
-        dataAdd={dataAdd}
-        setDataAdd={setDataAdd}
-        handleSubmit={handleSubmit}
-        isCreating={isCreating}
-        errors={errors}
+        open={openCreate}
+        onClose={() => setOpenCreate(false)}
         provinceOptions={provinceOptions}
         isLoadingTinh={isLoadingTinh}
-        communeOptionsAdd={communeOptionsAdd}
-        isLoadingXaAdd={isLoadingXaAdd}
-        avatarPreviewAdd={avatarPreviewAdd}
-        logoPreviewAdd={logoPreviewAdd}
-        handleAvatarChangeAdd={handleAvatarChangeAdd}
-        handleLogoChangeAdd={handleLogoChangeAdd}
       />
 
-      {/* Slide-over Drawer: CẬP NHẬT HỒ SƠ KHÁCH HÀNG */}
+      {/* Slide-over Drawer: CẬP NHẬT HỒ SƠ KHÁCH HÀNG (Cô lập Form State) */}
       <UpdateCustomerSlideOver
-        open={openUpdate}
-        onClose={() => setOpenUpdate(false)}
-        dataUpdate={dataUpdate}
-        setDataUpdate={setDataUpdate}
-        handleSubmitUpdate={handleSubmitUpdate}
-        isUpdating={isUpdating}
-        errors={errors}
+        open={Boolean(editingCustomer)}
+        onClose={() => setEditingCustomer(null)}
+        customer={editingCustomer}
         provinceOptions={provinceOptions}
         isLoadingTinh={isLoadingTinh}
-        communeOptionsUpdate={communeOptionsUpdate}
-        isLoadingXaUpdate={isLoadingXaUpdate}
-        avatarPreviewUpdate={avatarPreviewUpdate}
-        logoPreviewUpdate={logoPreviewUpdate}
-        handleAvatarChangeUpdate={handleAvatarChangeUpdate}
-        handleLogoChangeUpdate={handleLogoChangeUpdate}
-        handleClearAvatar={handleClearAvatar}
       />
 
       {/* Modal Xác nhận Xóa */}
@@ -371,9 +241,9 @@ export default function CustomerPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-3 sm:p-4 md:p-8 space-y-4 sm:space-y-6 max-w-full">
+        <div className="p-3 sm:p-5 lg:p-7 space-y-3 sm:space-y-6 max-w-[1600px] mx-auto">
           <Skeleton className="h-10 w-64" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <Skeleton className="h-24 w-full rounded-xl" />
             <Skeleton className="h-24 w-full rounded-xl" />
             <Skeleton className="h-24 w-full rounded-xl" />

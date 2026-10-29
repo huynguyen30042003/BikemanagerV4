@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   useGetDonViTraGop,
   useCreateDonViTraGop,
@@ -284,6 +285,7 @@ export const useDonViTraGopHook = () => {
    HOOK QUẢN LÝ HỢP ĐỒNG TRẢ GÓP
    ============================================================================== */
 export const useHopDongTraGopHook = () => {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState("");
@@ -453,8 +455,13 @@ export const useHopDongTraGopHook = () => {
   const handleDelete = async (contract: HopDongTraGop) => {
     const id = contract.hopDongTraGopID || contract.id;
     if (!id) return;
-    if (!confirm(`Bạn có chắc muốn hủy hồ sơ trả góp "${contract.soHopDong}"?`))
-      return;
+    const isConfirmed = await confirm({
+      title: "Xác nhận hủy hồ sơ trả góp",
+      variant: "danger",
+      confirmText: "Hủy hồ sơ",
+      description: `Bạn có chắc muốn hủy hồ sơ trả góp "${contract.soHopDong}" không? Thao tác này không thể hoàn tác.`,
+    });
+    if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(id);
       toast.success("Đã hủy hồ sơ trả góp!");

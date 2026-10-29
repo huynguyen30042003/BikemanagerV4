@@ -1,61 +1,246 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
+import { toast } from "sonner";
 import {
   SquarePen,
   RefreshCw,
   Upload,
   AlertCircle,
   User,
-  Package,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SlideOver } from "@/components/ui/SlideOver";
-import { SearchSelect } from "@/components/ui/selectSearch";
+import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { DatePickerInput } from "@/components/ui/DatePickerInput";
-import { UpdateKhachHangPayload } from "@/types/khachHang";
-import Image from "next/image";
+import { KH_KhachHang, UpdateKhachHangPayload } from "@/types/khachHang";
+import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
 import { getImageUrl } from "@/shared/constants/apiConstants";
+import {
+  khachHangSchema,
+  useUpdateKhachHang,
+} from "@/hooks/KhachHang/useKhachHang";
+import { useGetDiaPhuongCapXa } from "@/hooks/DiaPhuongCapXa/useDiaPhuongCapXaApi";
 
-interface UpdateCustomerSlideOverProps {
+export interface UpdateCustomerSlideOverProps {
   open: boolean;
   onClose: () => void;
-  dataUpdate: UpdateKhachHangPayload;
-  setDataUpdate: React.Dispatch<React.SetStateAction<UpdateKhachHangPayload>>;
-  handleSubmitUpdate: () => void;
-  isUpdating: boolean;
-  errors: Record<string, string>;
-  provinceOptions: Array<{ value: number | string; label: string }>;
+  customer: KH_KhachHang | null;
+  provinceOptions: SelectOption[];
   isLoadingTinh: boolean;
-  communeOptionsUpdate: Array<{ value: number | string; label: string }>;
-  isLoadingXaUpdate: boolean;
-  avatarPreviewUpdate: string | null;
-  logoPreviewUpdate: string | null;
-  handleAvatarChangeUpdate: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleLogoChangeUpdate: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleClearAvatar: () => void;
+  onSuccess?: () => void;
 }
+
+const INITIAL_UPDATE_DATA: UpdateKhachHangPayload = {
+  KhachHangID: "",
+  LoaiKhachHang: 1,
+  TenKhachHang: "",
+  DienThoai: "",
+  HopThu: "",
+  DiaChi: "",
+  TinhID: null,
+  XaID: null,
+  GhiChu: "",
+  TrangThai: true,
+
+  XoaAnhChanDung: false,
+  XoaAnhBieuTrung: false,
+
+  // Cá nhân
+  MaDinhDanh: "",
+  NgayCapMaDinhDanh: "",
+  NoiCapMaDinhDanh: "",
+  NgaySinh: "",
+  GioiTinhID: null,
+  QuocTichID: null,
+  DanTocID: null,
+  anhChanDung: null,
+  fileAnhChanDung: null,
+
+  // Doanh nghiệp
+  MaSoThue: "",
+  NguoiDaiDien: "",
+  DienThoaiNguoiDaiDien: "",
+  ToChucCapChaID: null,
+  LoaiToChucID: null,
+  TrangChu: "",
+  anhBieuTrung: null,
+  fileAnhBieuTrung: null,
+};
 
 export function UpdateCustomerSlideOver({
   open,
   onClose,
-  dataUpdate,
-  setDataUpdate,
-  handleSubmitUpdate,
-  isUpdating,
-  errors,
+  customer,
   provinceOptions,
   isLoadingTinh,
-  communeOptionsUpdate,
-  isLoadingXaUpdate,
-  avatarPreviewUpdate,
-  logoPreviewUpdate,
-  handleAvatarChangeUpdate,
-  handleLogoChangeUpdate,
-  handleClearAvatar,
+  onSuccess,
 }: UpdateCustomerSlideOverProps) {
+  const updateMutation = useUpdateKhachHang();
+
+  const [formData, setFormData] =
+    useState<UpdateKhachHangPayload>(INITIAL_UPDATE_DATA);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  // Chỉ gọi API xã/phường khi SlideOver đang mở và đã chọn Tỉnh/Thành
+  const { data: dataXa, isLoading: isLoadingXa } = useGetDiaPhuongCapXa(
+    {
+      TinhID: formData.TinhID ? Number(formData.TinhID) : undefined,
+      PageIndex: 1,
+      PageSize: 200,
+    },
+    Boolean(open && formData.TinhID),
+  );
+
+  const communeOptions = useMemo(() => {
+    const communes: DM_DiaPhuongCapXa[] = dataXa?.data ?? [];
+    return communes.map((x) => ({
+      value: x.xaID,
+      label: x.ten,
+    }));
+  }, [dataXa]);
+
+  // Đồng bộ dữ liệu khách hàng cần sửa vào state nội bộ khi mở modal
+  useEffect(() => {
+    if (open && customer) {
+      setFormData({
+        KhachHangID: customer.khachHangID,
+        LoaiKhachHang: customer.loaiKhachHang,
+        TenKhachHang: customer.tenKhachHang,
+        DienThoai: customer.dienThoai,
+        HopThu: customer.hopThu || "",
+        DiaChi: customer.diaChi || "",
+        TinhID: customer.tinhID || null,
+        XaID: customer.xaID || null,
+        GhiChu: customer.ghiChu || "",
+        TrangThai: customer.trangThai,
+
+        XoaAnhChanDung: false,
+        XoaAnhBieuTrung: false,
+
+        MaDinhDanh: customer.maDinhDanh || "",
+        NgayCapMaDinhDanh: customer.ngayCapMaDinhDanh
+          ? customer.ngayCapMaDinhDanh.substring(0, 10)
+          : "",
+        NoiCapMaDinhDanh: customer.noiCapMaDinhDanh || "",
+        NgaySinh: customer.ngaySinh ? customer.ngaySinh.substring(0, 10) : "",
+        GioiTinhID: customer.gioiTinhID || null,
+        QuocTichID: customer.quocTichID || null,
+        DanTocID: customer.danTocID || null,
+        anhChanDung: customer.anhChanDung || null,
+        fileAnhChanDung: null,
+
+        MaSoThue: customer.maSoThue || "",
+        NguoiDaiDien: customer.nguoiDaiDien || "",
+        DienThoaiNguoiDaiDien: customer.dienThoaiNguoiDaiDien || "",
+        ToChucCapChaID: customer.toChucCapChaID || null,
+        LoaiToChucID: customer.loaiToChucID || null,
+        TrangChu: customer.trangChu || "",
+        anhBieuTrung: customer.anhBieuTrung || null,
+        fileAnhBieuTrung: null,
+      });
+      setErrors({});
+      setAvatarPreview(null);
+      setLogoPreview(null);
+    }
+  }, [open, customer]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    };
+  }, [avatarPreview]);
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+    };
+  }, [logoPreview]);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        fileAnhChanDung: file,
+        XoaAnhChanDung: true,
+      }));
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        fileAnhBieuTrung: file,
+        XoaAnhBieuTrung: true,
+      }));
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleClearAvatar = () => {
+    setFormData((prev) => ({
+      ...prev,
+      fileAnhChanDung: null,
+      XoaAnhChanDung: true,
+    }));
+    setAvatarPreview(null);
+  };
+
+  const handleClearLogo = () => {
+    setFormData((prev) => ({
+      ...prev,
+      fileAnhBieuTrung: null,
+      XoaAnhBieuTrung: true,
+    }));
+    setLogoPreview(null);
+  };
+
+  const handleSubmit = async () => {
+    const result = khachHangSchema.safeParse({
+      tenKhachHang: formData.TenKhachHang,
+      dienThoai: formData.DienThoai,
+      loaiKhachHang: formData.LoaiKhachHang,
+    });
+
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        if (issue.path[0]) {
+          fieldErrors[String(issue.path[0])] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Vui lòng kiểm tra lại thông tin cập nhật!");
+      return;
+    }
+
+    setErrors({});
+    try {
+      await updateMutation.mutateAsync(formData);
+      onSuccess?.();
+      onClose();
+    } catch {
+      // Toast lỗi đã được xử lý trong useUpdateKhachHang
+    }
+  };
+
+  const hasCurrentAvatar = Boolean(
+    avatarPreview || (!formData.XoaAnhChanDung && formData.anhChanDung),
+  );
+  const hasCurrentLogo = Boolean(
+    logoPreview || (!formData.XoaAnhBieuTrung && formData.anhBieuTrung),
+  );
+
   return (
     <SlideOver
       open={open}
@@ -69,16 +254,16 @@ export function UpdateCustomerSlideOver({
             variant="outline"
             className="flex-1 cursor-pointer"
             onClick={onClose}
-            disabled={isUpdating}
+            disabled={updateMutation.isPending}
           >
             Hủy
           </Button>
           <Button
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-sm active:scale-[0.98] transition-transform"
-            onClick={handleSubmitUpdate}
-            disabled={isUpdating}
+            onClick={handleSubmit}
+            disabled={updateMutation.isPending}
           >
-            {isUpdating ? (
+            {updateMutation.isPending ? (
               <RefreshCw className="w-4 h-4 animate-spin mr-1.5" />
             ) : null}
             Lưu thay đổi
@@ -93,9 +278,9 @@ export function UpdateCustomerSlideOver({
               Tên khách hàng <span className="text-red-500">*</span>
             </label>
             <Input
-              value={dataUpdate.TenKhachHang}
+              value={formData.TenKhachHang}
               onChange={(e) =>
-                setDataUpdate((prev) => ({
+                setFormData((prev) => ({
                   ...prev,
                   TenKhachHang: e.target.value,
                 }))
@@ -115,9 +300,9 @@ export function UpdateCustomerSlideOver({
               Số điện thoại <span className="text-red-500">*</span>
             </label>
             <Input
-              value={dataUpdate.DienThoai}
+              value={formData.DienThoai}
               onChange={(e) =>
-                setDataUpdate((prev) => ({
+                setFormData((prev) => ({
                   ...prev,
                   DienThoai: e.target.value,
                 }))
@@ -138,24 +323,24 @@ export function UpdateCustomerSlideOver({
             </label>
             <Input
               type="email"
-              value={dataUpdate.HopThu || ""}
+              value={formData.HopThu || ""}
               onChange={(e) =>
-                setDataUpdate((prev) => ({ ...prev, HopThu: e.target.value }))
+                setFormData((prev) => ({ ...prev, HopThu: e.target.value }))
               }
               className="rounded-lg"
             />
           </div>
 
-          {dataUpdate.LoaiKhachHang === 1 ? (
+          {formData.LoaiKhachHang === 1 ? (
             <>
               <div className="col-span-1 flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-foreground">
                   Số CCCD
                 </label>
                 <Input
-                  value={dataUpdate.MaDinhDanh || ""}
+                  value={formData.MaDinhDanh || ""}
                   onChange={(e) =>
-                    setDataUpdate((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       MaDinhDanh: e.target.value,
                     }))
@@ -169,9 +354,9 @@ export function UpdateCustomerSlideOver({
                   Ngày sinh
                 </label>
                 <DatePickerInput
-                  value={dataUpdate.NgaySinh || ""}
+                  value={formData.NgaySinh || ""}
                   onChange={(val) =>
-                    setDataUpdate((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       NgaySinh: val,
                     }))
@@ -187,18 +372,18 @@ export function UpdateCustomerSlideOver({
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center overflow-hidden shrink-0">
-                    {!!avatarPreviewUpdate ? (
+                    {avatarPreview ? (
                       <Image
-                        src={avatarPreviewUpdate}
+                        src={avatarPreview}
                         alt="Ảnh mới"
                         width={64}
                         height={64}
                         className="w-full h-full object-cover"
                         unoptimized
                       />
-                    ) : !dataUpdate.XoaAnhChanDung && dataUpdate.anhChanDung ? (
+                    ) : !formData.XoaAnhChanDung && formData.anhChanDung ? (
                       <Image
-                        src={getImageUrl(String(dataUpdate.anhChanDung))}
+                        src={getImageUrl(String(formData.anhChanDung))}
                         alt="Ảnh hiện tại"
                         width={64}
                         height={64}
@@ -216,11 +401,12 @@ export function UpdateCustomerSlideOver({
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={handleAvatarChangeUpdate}
+                      onChange={handleAvatarChange}
                     />
                   </label>
-                  {(avatarPreviewUpdate || !dataUpdate?.fileAnhChanDung) && (
+                  {hasCurrentAvatar && (
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       onClick={handleClearAvatar}
@@ -239,9 +425,9 @@ export function UpdateCustomerSlideOver({
                   Mã số thuế
                 </label>
                 <Input
-                  value={dataUpdate.MaSoThue || ""}
+                  value={formData.MaSoThue || ""}
                   onChange={(e) =>
-                    setDataUpdate((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       MaSoThue: e.target.value,
                     }))
@@ -255,9 +441,9 @@ export function UpdateCustomerSlideOver({
                   Người đại diện
                 </label>
                 <Input
-                  value={dataUpdate.NguoiDaiDien || ""}
+                  value={formData.NguoiDaiDien || ""}
                   onChange={(e) =>
-                    setDataUpdate((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       NguoiDaiDien: e.target.value,
                     }))
@@ -271,6 +457,29 @@ export function UpdateCustomerSlideOver({
                   Đổi logo doanh nghiệp
                 </label>
                 <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center overflow-hidden shrink-0">
+                    {logoPreview ? (
+                      <Image
+                        src={logoPreview}
+                        alt="Logo mới"
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : !formData.XoaAnhBieuTrung && formData.anhBieuTrung ? (
+                      <Image
+                        src={getImageUrl(String(formData.anhBieuTrung))}
+                        alt="Logo hiện tại"
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <Building2 className="w-6 h-6 text-muted-foreground/60" />
+                    )}
+                  </div>
                   <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-xs font-medium cursor-pointer transition-colors shadow-2xs">
                     <Upload className="w-3.5 h-3.5" />
                     Chọn logo mới
@@ -278,13 +487,19 @@ export function UpdateCustomerSlideOver({
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={handleLogoChangeUpdate}
+                      onChange={handleLogoChange}
                     />
                   </label>
-                  {logoPreviewUpdate && (
-                    <span className="text-xs text-emerald-600 font-medium">
-                      Đã chọn logo mới
-                    </span>
+                  {hasCurrentLogo && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearLogo}
+                      className="h-8 px-2 text-xs text-rose-600 hover:text-rose-800 hover:bg-rose-500/10 cursor-pointer"
+                    >
+                      Xóa logo hiện tại
+                    </Button>
                   )}
                 </div>
               </div>
@@ -297,9 +512,9 @@ export function UpdateCustomerSlideOver({
             </label>
             <SearchSelect
               options={provinceOptions}
-              value={dataUpdate.TinhID || ""}
+              value={formData.TinhID || ""}
               onChange={(val) =>
-                setDataUpdate((prev) => ({
+                setFormData((prev) => ({
                   ...prev,
                   TinhID: val ? Number(val) : null,
                   XaID: null,
@@ -316,19 +531,19 @@ export function UpdateCustomerSlideOver({
               Xã / Phường
             </label>
             <SearchSelect
-              options={communeOptionsUpdate}
-              value={dataUpdate.XaID || ""}
+              options={communeOptions}
+              value={formData.XaID || ""}
               onChange={(val) =>
-                setDataUpdate((prev) => ({
+                setFormData((prev) => ({
                   ...prev,
                   XaID: val ? Number(val) : null,
                 }))
               }
               placeholder={
-                dataUpdate.TinhID ? "Chọn Xã / Phường" : "Chọn Tỉnh trước"
+                formData.TinhID ? "Chọn Xã / Phường" : "Chọn Tỉnh trước"
               }
-              disabled={!dataUpdate.TinhID}
-              isLoading={isLoadingXaUpdate}
+              disabled={!formData.TinhID}
+              isLoading={isLoadingXa}
               height={10}
             />
           </div>
@@ -338,9 +553,9 @@ export function UpdateCustomerSlideOver({
               Địa chỉ chi tiết
             </label>
             <Input
-              value={dataUpdate.DiaChi || ""}
+              value={formData.DiaChi || ""}
               onChange={(e) =>
-                setDataUpdate((prev) => ({ ...prev, DiaChi: e.target.value }))
+                setFormData((prev) => ({ ...prev, DiaChi: e.target.value }))
               }
               className="rounded-lg"
             />
@@ -351,9 +566,9 @@ export function UpdateCustomerSlideOver({
               Ghi chú
             </label>
             <Input
-              value={dataUpdate.GhiChu || ""}
+              value={formData.GhiChu || ""}
               onChange={(e) =>
-                setDataUpdate((prev) => ({ ...prev, GhiChu: e.target.value }))
+                setFormData((prev) => ({ ...prev, GhiChu: e.target.value }))
               }
               className="rounded-lg"
             />
@@ -370,9 +585,9 @@ export function UpdateCustomerSlideOver({
             </div>
             <Switch
               id="isActiveKhachHangUpdate"
-              checked={dataUpdate.TrangThai}
+              checked={formData.TrangThai}
               onCheckedChange={(checked) =>
-                setDataUpdate((prev) => ({ ...prev, TrangThai: checked }))
+                setFormData((prev) => ({ ...prev, TrangThai: checked }))
               }
             />
           </div>

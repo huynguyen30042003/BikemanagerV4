@@ -32,10 +32,14 @@ export const useGetDiaPhuongCapXaKPI = () =>
     refetchOnWindowFocus: true,
   });
 
-export const useGetDiaPhuongCapXa = (params: DiaPhuongCapXaFilter) =>
+export const useGetDiaPhuongCapXa = (
+  params: DiaPhuongCapXaFilter,
+  enabled: boolean = true,
+) =>
   useQuery({
     queryKey: DIA_PHUONG_CAP_XA_KEYS.list(params),
     queryFn: () => getDiaPhuongCapXaApi(params),
+    enabled,
     staleTime: 1000 * 60 * 10,
   });
 

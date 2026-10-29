@@ -131,7 +131,7 @@ export const CustomerCard = memo(function CustomerCard({
               >
                 <span className="text-muted-foreground text-[10px]">Mã:</span>
                 <span className="font-semibold">
-                  {customer.maKhachHang || "KH—"}
+                  {customer.maKhachHang || "KH-"}
                 </span>
                 {copiedId === customer.maKhachHang ? (
                   <Check className="w-3 h-3 text-emerald-600" />

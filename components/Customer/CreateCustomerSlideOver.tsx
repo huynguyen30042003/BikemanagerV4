@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 import {
   Users,
   User,
@@ -11,51 +12,168 @@ import {
   AlertCircle,
   CreditCard,
   Briefcase,
-  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SlideOver } from "@/components/ui/SlideOver";
-import { SearchSelect } from "@/components/ui/selectSearch";
+import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { DatePickerInput } from "@/components/ui/DatePickerInput";
 import { CreateKhachHangPayload } from "@/types/khachHang";
+import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
+import {
+  khachHangSchema,
+  useCreateKhachHang,
+} from "@/hooks/KhachHang/useKhachHang";
+import { useGetDiaPhuongCapXa } from "@/hooks/DiaPhuongCapXa/useDiaPhuongCapXaApi";
 
-interface CreateCustomerSlideOverProps {
+export interface CreateCustomerSlideOverProps {
   open: boolean;
   onClose: () => void;
-  dataAdd: CreateKhachHangPayload;
-  setDataAdd: React.Dispatch<React.SetStateAction<CreateKhachHangPayload>>;
-  handleSubmit: () => void;
-  isCreating: boolean;
-  errors: Record<string, string>;
-  provinceOptions: Array<{ value: number | string; label: string }>;
+  provinceOptions: SelectOption[];
   isLoadingTinh: boolean;
-  communeOptionsAdd: Array<{ value: number | string; label: string }>;
-  isLoadingXaAdd: boolean;
-  avatarPreviewAdd: string | null;
-  logoPreviewAdd: string | null;
-  handleAvatarChangeAdd: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleLogoChangeAdd: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSuccess?: () => void;
 }
+
+const INITIAL_FORM_DATA: CreateKhachHangPayload = {
+  LoaiKhachHang: 1, // 1: Cá nhân, 2: Doanh nghiệp
+  TenKhachHang: "",
+  DienThoai: "",
+  HopThu: "",
+  DiaChi: "",
+  TinhID: 20,
+  XaID: 1819,
+  GhiChu: "",
+  TrangThai: true,
+
+  // Cá nhân
+  MaDinhDanh: "",
+  NgayCapMaDinhDanh: "",
+  NoiCapMaDinhDanh: "",
+  NgaySinh: "",
+  GioiTinhID: null,
+  QuocTichID: 10,
+  DanTocID: 8,
+  anhChanDung: null,
+  fileAnhChanDung: null,
+
+  // Doanh nghiệp
+  MaSoThue: "",
+  NguoiDaiDien: "",
+  DienThoaiNguoiDaiDien: "",
+  ToChucCapChaID: null,
+  LoaiToChucID: null,
+  TrangChu: "",
+  anhBieuTrung: null,
+  fileAnhBieuTrung: null,
+};
 
 export function CreateCustomerSlideOver({
   open,
   onClose,
-  dataAdd,
-  setDataAdd,
-  handleSubmit,
-  isCreating,
-  errors,
   provinceOptions,
   isLoadingTinh,
-  communeOptionsAdd,
-  isLoadingXaAdd,
-  avatarPreviewAdd,
-  logoPreviewAdd,
-  handleAvatarChangeAdd,
-  handleLogoChangeAdd,
+  onSuccess,
 }: CreateCustomerSlideOverProps) {
+  const createMutation = useCreateKhachHang();
+
+  const [formData, setFormData] =
+    useState<CreateKhachHangPayload>(INITIAL_FORM_DATA);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  // Chỉ gọi API xã/phường khi SlideOver đang mở và đã chọn Tỉnh/Thành
+  const { data: dataXa, isLoading: isLoadingXa } = useGetDiaPhuongCapXa(
+    {
+      TinhID: formData.TinhID ? Number(formData.TinhID) : undefined,
+      PageIndex: 1,
+      PageSize: 200,
+    },
+    Boolean(open && formData.TinhID),
+  );
+
+  const communeOptions = useMemo(() => {
+    const communes: DM_DiaPhuongCapXa[] = dataXa?.data ?? [];
+    return communes.map((x) => ({
+      value: x.xaID,
+      label: x.ten,
+    }));
+  }, [dataXa]);
+
+  // Reset form khi mở modal và dọn dẹp Object URL chống rò rỉ bộ nhớ
+  useEffect(() => {
+    if (open) {
+      setFormData(INITIAL_FORM_DATA);
+      setErrors({});
+      setAvatarPreview(null);
+      setLogoPreview(null);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    };
+  }, [avatarPreview]);
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+    };
+  }, [logoPreview]);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        fileAnhChanDung: file,
+      }));
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        fileAnhBieuTrung: file,
+      }));
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async () => {
+    const result = khachHangSchema.safeParse({
+      tenKhachHang: formData.TenKhachHang,
+      dienThoai: formData.DienThoai,
+      loaiKhachHang: formData.LoaiKhachHang,
+    });
+
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        if (issue.path[0]) {
+          fieldErrors[String(issue.path[0])] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Vui lòng kiểm tra lại các trường bắt buộc!");
+      return;
+    }
+
+    setErrors({});
+    try {
+      await createMutation.mutateAsync(formData);
+      onSuccess?.();
+      onClose();
+    } catch {
+      // Toast lỗi đã được xử lý trong useCreateKhachHang
+    }
+  };
+
   return (
     <SlideOver
       open={open}
@@ -69,16 +187,16 @@ export function CreateCustomerSlideOver({
             variant="outline"
             className="flex-1 cursor-pointer"
             onClick={onClose}
-            disabled={isCreating}
+            disabled={createMutation.isPending}
           >
             Hủy
           </Button>
           <Button
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-sm active:scale-[0.98] transition-transform"
             onClick={handleSubmit}
-            disabled={isCreating}
+            disabled={createMutation.isPending}
           >
-            {isCreating ? (
+            {createMutation.isPending ? (
               <RefreshCw className="w-4 h-4 animate-spin mr-1.5" />
             ) : null}
             Lưu hồ sơ
@@ -92,10 +210,10 @@ export function CreateCustomerSlideOver({
           <button
             type="button"
             onClick={() =>
-              setDataAdd((prev) => ({ ...prev, LoaiKhachHang: 1 }))
+              setFormData((prev) => ({ ...prev, LoaiKhachHang: 1 }))
             }
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              dataAdd.LoaiKhachHang === 1
+              formData.LoaiKhachHang === 1
                 ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs border border-border/50"
                 : "text-muted-foreground hover:text-foreground"
             }`}
@@ -106,10 +224,10 @@ export function CreateCustomerSlideOver({
           <button
             type="button"
             onClick={() =>
-              setDataAdd((prev) => ({ ...prev, LoaiKhachHang: 2 }))
+              setFormData((prev) => ({ ...prev, LoaiKhachHang: 2 }))
             }
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              dataAdd.LoaiKhachHang === 2
+              formData.LoaiKhachHang === 2
                 ? "bg-background text-indigo-600 dark:text-indigo-400 shadow-xs border border-border/50"
                 : "text-muted-foreground hover:text-foreground"
             }`}
@@ -122,21 +240,21 @@ export function CreateCustomerSlideOver({
         <div className="grid grid-cols-2 gap-3.5">
           <div className="col-span-2 flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
-              {dataAdd.LoaiKhachHang === 1
+              {formData.LoaiKhachHang === 1
                 ? "Họ và tên khách hàng"
                 : "Tên doanh nghiệp / Công ty"}{" "}
               <span className="text-red-500">*</span>
             </label>
             <Input
-              value={dataAdd.TenKhachHang}
+              value={formData.TenKhachHang}
               onChange={(e) =>
-                setDataAdd((prev) => ({
+                setFormData((prev) => ({
                   ...prev,
                   TenKhachHang: e.target.value,
                 }))
               }
               placeholder={
-                dataAdd.LoaiKhachHang === 1
+                formData.LoaiKhachHang === 1
                   ? "Ví dụ: Nguyễn Văn A"
                   : "Ví dụ: Công ty TNHH Vận Tải Xanh"
               }
@@ -155,9 +273,9 @@ export function CreateCustomerSlideOver({
               Số điện thoại (dùng Zalo) <span className="text-red-500">*</span>
             </label>
             <Input
-              value={dataAdd.DienThoai}
+              value={formData.DienThoai}
               onChange={(e) =>
-                setDataAdd((prev) => ({ ...prev, DienThoai: e.target.value }))
+                setFormData((prev) => ({ ...prev, DienThoai: e.target.value }))
               }
               placeholder="0901234567"
               className={`rounded-lg font-mono ${errors.dienThoai ? "border-red-500" : ""}`}
@@ -176,9 +294,9 @@ export function CreateCustomerSlideOver({
             </label>
             <Input
               type="email"
-              value={dataAdd.HopThu || ""}
+              value={formData.HopThu || ""}
               onChange={(e) =>
-                setDataAdd((prev) => ({ ...prev, HopThu: e.target.value }))
+                setFormData((prev) => ({ ...prev, HopThu: e.target.value }))
               }
               placeholder="customer@email.com"
               className="rounded-lg"
@@ -186,7 +304,7 @@ export function CreateCustomerSlideOver({
           </div>
 
           {/* DÀNH CHO CÁ NHÂN */}
-          {dataAdd.LoaiKhachHang === 1 ? (
+          {formData.LoaiKhachHang === 1 ? (
             <>
               <div className="col-span-1 flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
@@ -194,9 +312,9 @@ export function CreateCustomerSlideOver({
                   Số CCCD / CMND
                 </label>
                 <Input
-                  value={dataAdd.MaDinhDanh || ""}
+                  value={formData.MaDinhDanh || ""}
                   onChange={(e) =>
-                    setDataAdd((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       MaDinhDanh: e.target.value,
                     }))
@@ -211,9 +329,9 @@ export function CreateCustomerSlideOver({
                   Ngày sinh
                 </label>
                 <DatePickerInput
-                  value={dataAdd.NgaySinh || ""}
+                  value={formData.NgaySinh || ""}
                   onChange={(val) =>
-                    setDataAdd((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       NgaySinh: val,
                     }))
@@ -228,9 +346,9 @@ export function CreateCustomerSlideOver({
                   Ngày cấp CCCD
                 </label>
                 <DatePickerInput
-                  value={dataAdd.NgayCapMaDinhDanh || ""}
+                  value={formData.NgayCapMaDinhDanh || ""}
                   onChange={(val) =>
-                    setDataAdd((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       NgayCapMaDinhDanh: val,
                     }))
@@ -245,9 +363,9 @@ export function CreateCustomerSlideOver({
                   Nơi cấp CCCD
                 </label>
                 <Input
-                  value={dataAdd.NoiCapMaDinhDanh || ""}
+                  value={formData.NoiCapMaDinhDanh || ""}
                   onChange={(e) =>
-                    setDataAdd((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       NoiCapMaDinhDanh: e.target.value,
                     }))
@@ -263,9 +381,9 @@ export function CreateCustomerSlideOver({
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center overflow-hidden shrink-0">
-                    {avatarPreviewAdd ? (
+                    {avatarPreview ? (
                       <Image
-                        src={avatarPreviewAdd}
+                        src={avatarPreview}
                         alt="Avatar preview"
                         width={56}
                         height={56}
@@ -283,7 +401,7 @@ export function CreateCustomerSlideOver({
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={handleAvatarChangeAdd}
+                      onChange={handleAvatarChange}
                     />
                   </label>
                 </div>
@@ -298,9 +416,9 @@ export function CreateCustomerSlideOver({
                   Mã số thuế (MST)
                 </label>
                 <Input
-                  value={dataAdd.MaSoThue || ""}
+                  value={formData.MaSoThue || ""}
                   onChange={(e) =>
-                    setDataAdd((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       MaSoThue: e.target.value,
                     }))
@@ -315,9 +433,9 @@ export function CreateCustomerSlideOver({
                   Người đại diện
                 </label>
                 <Input
-                  value={dataAdd.NguoiDaiDien || ""}
+                  value={formData.NguoiDaiDien || ""}
                   onChange={(e) =>
-                    setDataAdd((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       NguoiDaiDien: e.target.value,
                     }))
@@ -332,9 +450,9 @@ export function CreateCustomerSlideOver({
                   SĐT người đại diện
                 </label>
                 <Input
-                  value={dataAdd.DienThoaiNguoiDaiDien || ""}
+                  value={formData.DienThoaiNguoiDaiDien || ""}
                   onChange={(e) =>
-                    setDataAdd((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       DienThoaiNguoiDaiDien: e.target.value,
                     }))
@@ -349,9 +467,9 @@ export function CreateCustomerSlideOver({
                   Website chủ
                 </label>
                 <Input
-                  value={dataAdd.TrangChu || ""}
+                  value={formData.TrangChu || ""}
                   onChange={(e) =>
-                    setDataAdd((prev) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       TrangChu: e.target.value,
                     }))
@@ -367,9 +485,9 @@ export function CreateCustomerSlideOver({
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center overflow-hidden shrink-0">
-                    {logoPreviewAdd ? (
+                    {logoPreview ? (
                       <Image
-                        src={logoPreviewAdd}
+                        src={logoPreview}
                         alt="Logo preview"
                         width={56}
                         height={56}
@@ -387,7 +505,7 @@ export function CreateCustomerSlideOver({
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={handleLogoChangeAdd}
+                      onChange={handleLogoChange}
                     />
                   </label>
                 </div>
@@ -402,9 +520,9 @@ export function CreateCustomerSlideOver({
             </label>
             <SearchSelect
               options={provinceOptions}
-              value={dataAdd.TinhID || ""}
+              value={formData.TinhID || ""}
               onChange={(val) =>
-                setDataAdd((prev) => ({
+                setFormData((prev) => ({
                   ...prev,
                   TinhID: val ? Number(val) : null,
                   XaID: null,
@@ -421,19 +539,19 @@ export function CreateCustomerSlideOver({
               Xã / Phường
             </label>
             <SearchSelect
-              options={communeOptionsAdd}
-              value={dataAdd.XaID || ""}
+              options={communeOptions}
+              value={formData.XaID || ""}
               onChange={(val) =>
-                setDataAdd((prev) => ({
+                setFormData((prev) => ({
                   ...prev,
                   XaID: val ? Number(val) : null,
                 }))
               }
               placeholder={
-                dataAdd.TinhID ? "Chọn Xã / Phường" : "Chọn Tỉnh trước"
+                formData.TinhID ? "Chọn Xã / Phường" : "Chọn Tỉnh trước"
               }
-              disabled={!dataAdd.TinhID}
-              isLoading={isLoadingXaAdd}
+              disabled={!formData.TinhID}
+              isLoading={isLoadingXa}
               height={10}
             />
           </div>
@@ -443,9 +561,9 @@ export function CreateCustomerSlideOver({
               Địa chỉ chi tiết
             </label>
             <Input
-              value={dataAdd.DiaChi || ""}
+              value={formData.DiaChi || ""}
               onChange={(e) =>
-                setDataAdd((prev) => ({ ...prev, DiaChi: e.target.value }))
+                setFormData((prev) => ({ ...prev, DiaChi: e.target.value }))
               }
               placeholder="Số nhà, tên đường, khu dân cư..."
               className="rounded-lg"
@@ -457,9 +575,9 @@ export function CreateCustomerSlideOver({
               Ghi chú
             </label>
             <Input
-              value={dataAdd.GhiChu || ""}
+              value={formData.GhiChu || ""}
               onChange={(e) =>
-                setDataAdd((prev) => ({ ...prev, GhiChu: e.target.value }))
+                setFormData((prev) => ({ ...prev, GhiChu: e.target.value }))
               }
               placeholder="Ghi chú thêm về sở thích, nguồn khách..."
               className="rounded-lg"
@@ -478,9 +596,9 @@ export function CreateCustomerSlideOver({
             </div>
             <Switch
               id="isActiveKhachHangAdd"
-              checked={dataAdd.TrangThai}
+              checked={formData.TrangThai}
               onCheckedChange={(checked) =>
-                setDataAdd((prev) => ({ ...prev, TrangThai: checked }))
+                setFormData((prev) => ({ ...prev, TrangThai: checked }))
               }
             />
           </div>

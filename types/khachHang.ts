@@ -72,7 +72,8 @@ export interface CreateKhachHangPayload {
   ToChucCapChaID?: string | null;
   LoaiToChucID?: number | null;
   TrangChu?: string;
-  anhBieuTrung?: File | null;
+  anhBieuTrung?: File | string | null;
+  fileAnhBieuTrung?: File | string | null;
 }
 
 export interface UpdateKhachHangPayload extends CreateKhachHangPayload {
