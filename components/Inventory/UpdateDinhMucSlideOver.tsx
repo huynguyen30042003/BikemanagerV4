@@ -1,10 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { KHO_TonKho, UpdateDinhMucPayload } from "@/types/tonKho";
+
+export const dinhMucTonKhoSchema = z.object({
+  soLuongToiThieu: z
+    .number()
+    .min(0, "Số lượng tối thiểu phải lớn hơn hoặc bằng 0"),
+  viTriLuuTru: z.string().optional(),
+});
+
+export type DinhMucTonKhoFormData = z.infer<typeof dinhMucTonKhoSchema>;
 
 export interface UpdateDinhMucSlideOverProps {
   open: boolean;
@@ -21,28 +34,36 @@ export const UpdateDinhMucSlideOver: React.FC<UpdateDinhMucSlideOverProps> = ({
   onSubmit,
   isUpdating,
 }) => {
-  const [formData, setFormData] = useState<UpdateDinhMucPayload>({
-    KhoID: "",
-    BienTheSanPhamID: "",
-    SoLuongToiThieu: 5,
-    ViTriLuuTru: "",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<DinhMucTonKhoFormData>({
+    resolver: zodResolver(dinhMucTonKhoSchema),
+    defaultValues: {
+      soLuongToiThieu: 5,
+      viTriLuuTru: "",
+    },
   });
 
   useEffect(() => {
     if (open && selectedItem) {
-      setFormData({
-        KhoID: selectedItem.khoID,
-        BienTheSanPhamID: selectedItem.bienTheSanPhamID,
-        SoLuongToiThieu: selectedItem.soLuongToiThieu ?? 5,
-        ViTriLuuTru: selectedItem.viTriLuuTru || "",
+      reset({
+        soLuongToiThieu: selectedItem.soLuongToiThieu ?? 5,
+        viTriLuuTru: selectedItem.viTriLuuTru || "",
       });
     }
-  }, [open, selectedItem]);
+  }, [open, selectedItem, reset]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onFormSubmit = async (values: DinhMucTonKhoFormData) => {
     if (!selectedItem) return;
-    await onSubmit(formData);
+    await onSubmit({
+      KhoID: selectedItem.khoID,
+      BienTheSanPhamID: selectedItem.bienTheSanPhamID,
+      SoLuongToiThieu: values.soLuongToiThieu,
+      ViTriLuuTru: values.viTriLuuTru?.trim() || "",
+    });
   };
 
   return (
@@ -53,7 +74,7 @@ export const UpdateDinhMucSlideOver: React.FC<UpdateDinhMucSlideOverProps> = ({
       description="Thiết lập ngưỡng tồn kho an toàn và vị trí dãy/kệ lưu trữ trong kho"
       maxWidth="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 py-2">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4 py-2">
         {selectedItem && (
           <div className="p-3.5 rounded-xl border border-border/80 bg-muted/40 space-y-1">
             <span className="font-mono text-xs font-bold text-foreground block">
@@ -70,24 +91,26 @@ export const UpdateDinhMucSlideOver: React.FC<UpdateDinhMucSlideOverProps> = ({
 
         <div>
           <label className="block text-xs font-semibold text-foreground mb-1">
-            Số lượng tồn kho tối thiểu (Ngưỡng cảnh báo)
+            Số lượng tồn kho tối thiểu (Ngưỡng cảnh báo){" "}
+            <span className="text-red-500">*</span>
           </label>
           <Input
             type="number"
             min={0}
-            value={formData.SoLuongToiThieu}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                SoLuongToiThieu: parseInt(e.target.value) || 0,
-              }))
-            }
-            className="text-xs font-mono"
-            required
+            {...register("soLuongToiThieu", { valueAsNumber: true })}
+            className={`text-xs font-mono ${errors.soLuongToiThieu ? "border-red-500 ring-1 ring-red-500/20" : ""}`}
           />
-          <p className="text-[11px] text-muted-foreground mt-1">
-            Hệ thống sẽ gắn cờ cảnh báo màu vàng khi số lượng khả dụng thấp hơn mức này
-          </p>
+          {errors.soLuongToiThieu ? (
+            <p className="text-xs text-red-600 flex items-center gap-1 mt-1">
+              <AlertCircle className="w-3.5 h-3.5" />
+              {errors.soLuongToiThieu.message}
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Hệ thống sẽ gắn cờ cảnh báo màu vàng khi số lượng khả dụng thấp
+              hơn mức này
+            </p>
+          )}
         </div>
 
         <div>
@@ -96,13 +119,7 @@ export const UpdateDinhMucSlideOver: React.FC<UpdateDinhMucSlideOverProps> = ({
           </label>
           <Input
             placeholder="Ví dụ: Kệ A1 - Tầng 2, Dãy Bãi 03"
-            value={formData.ViTriLuuTru || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                ViTriLuuTru: e.target.value,
-              }))
-            }
+            {...register("viTriLuuTru")}
             className="text-xs"
           />
         </div>

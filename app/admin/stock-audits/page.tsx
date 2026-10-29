@@ -1,10 +1,11 @@
 "use client";
 
-import React, { Suspense, useMemo } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WarehouseNavTabs } from "@/components/Common/WarehouseNavTabs";
 import { usePhieuKiemKe } from "@/hooks/PhieuKiemKe/usePhieuKiemKe";
 import { useGetPhieuKiemKeKPI } from "@/hooks/PhieuKiemKe/usePhieuKiemKeApi";
+import { KHO_PhieuKiemKe } from "@/types/phieuKiemKe";
 import {
   StockAuditsKpiGrid,
   StockAuditsFilterBar,
@@ -49,14 +50,6 @@ function StockAuditsContent() {
     handleSubmitCreate,
     isCreating,
 
-    openDetail,
-    setOpenDetail,
-    selectedPhieu,
-    handleOpenDetail,
-
-    openCapNhat,
-    setOpenCapNhat,
-    handleOpenCapNhat,
     handleSubmitCapNhat,
     isCapNhatting,
 
@@ -71,6 +64,10 @@ function StockAuditsContent() {
     reasonDiscrepancyOptions,
     isLoadingReasons,
   } = usePhieuKiemKe();
+
+  // Single-State Pattern cho chi tiết & cập nhật số đếm
+  const [detailPhieu, setDetailPhieu] = useState<KHO_PhieuKiemKe | null>(null);
+  const [capNhatPhieu, setCapNhatPhieu] = useState<KHO_PhieuKiemKe | null>(null);
 
   // Thống kê nhanh theo trạng thái động từ DM_DanhMucChiTiet
   const inProgressCount = useMemo(
@@ -205,8 +202,8 @@ function StockAuditsContent() {
         setPage={setPage}
         setPageSize={setPageSize}
         getAuditStatusBadge={getAuditStatusBadge}
-        onOpenDetail={handleOpenDetail}
-        onOpenCapNhat={handleOpenCapNhat}
+        onOpenDetail={setDetailPhieu}
+        onOpenCapNhat={setCapNhatPhieu}
         onOpenCreate={handleOpenCreate}
       />
 
@@ -225,24 +222,34 @@ function StockAuditsContent() {
 
       {/* 6. SlideOver Chi tiết biên bản kiểm kê & Đối soát */}
       <StockAuditDetailSlideOver
-        open={openDetail}
-        onClose={() => setOpenDetail(false)}
-        phieu={selectedPhieu}
+        open={Boolean(detailPhieu)}
+        onClose={() => setDetailPhieu(null)}
+        phieu={detailPhieu}
         getAuditStatusBadge={getAuditStatusBadge}
-        onOpenCapNhat={handleOpenCapNhat}
-        onCanBang={handleCanBang}
+        onOpenCapNhat={(phieu) => {
+          setDetailPhieu(null);
+          setCapNhatPhieu(phieu);
+        }}
+        onCanBang={async (id) => {
+          await handleCanBang(id);
+          setDetailPhieu(null);
+        }}
         isCanBang={isCanBang}
-        onHuyPhieu={handleHuyPhieu}
+        onHuyPhieu={async (id) => {
+          await handleHuyPhieu(id);
+          setDetailPhieu(null);
+        }}
         isHuyPhieu={isHuyPhieu}
       />
 
       {/* 7. SlideOver Cập nhật số đếm thực tế kiểm kê */}
       <UpdateStockAuditCountsSlideOver
-        open={openCapNhat}
-        onClose={() => setOpenCapNhat(false)}
-        phieu={selectedPhieu}
+        open={Boolean(capNhatPhieu)}
+        onClose={() => setCapNhatPhieu(null)}
+        phieu={capNhatPhieu}
         onSubmit={async (payload) => {
           await handleSubmitCapNhat(payload);
+          setCapNhatPhieu(null);
         }}
         isUpdating={isCapNhatting}
         reasonDiscrepancyOptions={reasonDiscrepancyOptions}

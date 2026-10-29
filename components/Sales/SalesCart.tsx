@@ -404,7 +404,7 @@ export const SalesCart: React.FC<SalesCartProps> = ({
             <SearchSelect
               placeholder="Chọn phương thức thanh toán..."
               options={paymentMethodOptions}
-              value={Number(paymentMethodId)}
+              value={String(paymentMethodId)}
               onChange={(val) => onPaymentMethodChange(String(val))}
               height={9.5}
             />

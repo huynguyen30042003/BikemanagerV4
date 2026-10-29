@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDanhMucChiTiet } from "@/hooks/DanhMucChiTiet/useDanhMucChiTiet";
 import { DM_DanhMucChiTiet } from "@/types/danhMucChiTiet";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { SelectOption } from "@/components/ui/selectSearch";
 import {
   DanhMucChiTietKpiGrid,
@@ -57,12 +56,7 @@ function DanhMucChiTietContent() {
     refetchKPI,
 
     // Delete state & actions
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
-    isDeleting,
+    handleDelete,
 
     // Sync
     handleSync,
@@ -188,7 +182,7 @@ function DanhMucChiTietContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -205,7 +199,7 @@ function DanhMucChiTietContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           parentCategoryMap={parentCategoryMap}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -230,31 +224,6 @@ function DanhMucChiTietContent() {
         onClose={() => setEditingItem(null)}
         data={editingItem}
         parentCategoryOptions={parentCategoryOptions}
-      />
-
-      {/* Modal Xác nhận Xóa */}
-      <ConfirmModal
-        open={openDelete}
-        onClose={() => setOpenDelete(false)}
-        onConfirm={handleSubmitDelete}
-        title="Xác nhận xóa danh mục chi tiết"
-        variant="danger"
-        isLoading={isDeleting}
-        confirmText="Xác nhận xóa"
-        description={
-          <div>
-            <p>
-              Bạn có chắc chắn muốn xóa mục chi tiết &quot;
-              <strong className="text-foreground">{selectItemName}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác. Nếu mục chi tiết đang được gắn
-              vào sản phẩm hoặc nghiệp vụ, hệ thống sẽ từ chối xóa để đảm bảo
-              toàn vẹn dữ liệu.
-            </span>
-          </div>
-        }
       />
     </div>
   );

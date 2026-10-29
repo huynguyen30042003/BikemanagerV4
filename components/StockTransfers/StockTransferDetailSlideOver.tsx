@@ -18,7 +18,7 @@ import { SlideOver } from "@/components/ui/SlideOver";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   KHO_PhieuChuyenKho,
   KHO_ChiTietChuyenKho,
@@ -77,10 +77,41 @@ export const StockTransferDetailSlideOver: React.FC<StockTransferDetailSlideOver
   onHuyPhieu,
   isHuyPhieu,
 }) => {
+  const { confirm } = useConfirm();
   const [filterText, setFilterText] = useState("");
-  const [showConfirmXuat, setShowConfirmXuat] = useState(false);
-  const [showConfirmNhan, setShowConfirmNhan] = useState(false);
-  const [showConfirmHuy, setShowConfirmHuy] = useState(false);
+
+  const handleXuatKhoClick = async () => {
+    const isConfirmed = await confirm({
+      title: "Duyệt xuất kho điều chuyển?",
+      description: `Xác nhận xuất hàng khỏi kho [${activePhieu?.tenKhoXuat}]. Hàng sẽ được trừ khỏi tồn khả dụng và chuyển sang trạng thái đang vận chuyển.`,
+      confirmText: "Xác nhận xuất kho",
+      variant: "info",
+    });
+    if (!isConfirmed || !activePhieu) return;
+    await onXuatKho(activePhieu.phieuChuyenKhoID);
+  };
+
+  const handleNhanHangClick = async () => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận nhận hàng tại kho đích?",
+      description: `Kho [${activePhieu?.tenKhoNhap}] xác nhận đã nhận đủ ${activePhieu?.tongSoLuong} kiện hàng. Tồn kho đích sẽ được cập nhật cộng tăng ngay lập tức.`,
+      confirmText: "Nhận hàng & Nhập kho",
+      variant: "info",
+    });
+    if (!isConfirmed || !activePhieu) return;
+    await onNhanHang(activePhieu);
+  };
+
+  const handleHuyPhieuClick = async () => {
+    const isConfirmed = await confirm({
+      title: "Hủy phiếu điều chuyển kho?",
+      description: `Bạn có chắc chắn muốn hủy phiếu ${activePhieu?.maPhieuChuyen}? Thao tác này không thể hoàn tác.`,
+      confirmText: "Hủy phiếu ngay",
+      variant: "danger",
+    });
+    if (!isConfirmed || !activePhieu) return;
+    await onHuyPhieu(activePhieu.phieuChuyenKhoID);
+  };
 
   // Fetch fresh transfer details when drawer is open
   const { data: detailData, isLoading: isLoadingDetail } = useGetPhieuChuyenKhoById(
@@ -412,7 +443,7 @@ export const StockTransferDetailSlideOver: React.FC<StockTransferDetailSlideOver
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowConfirmHuy(true)}
+                  onClick={handleHuyPhieuClick}
                   disabled={isHuyPhieu}
                   className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border-rose-200 cursor-pointer text-xs h-9 px-3.5"
                 >
@@ -423,7 +454,7 @@ export const StockTransferDetailSlideOver: React.FC<StockTransferDetailSlideOver
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => setShowConfirmXuat(true)}
+                  onClick={handleXuatKhoClick}
                   disabled={isXuatKho}
                   className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer text-xs font-semibold h-9 px-4 shadow-xs"
                 >
@@ -438,7 +469,7 @@ export const StockTransferDetailSlideOver: React.FC<StockTransferDetailSlideOver
               <Button
                 type="button"
                 size="sm"
-                onClick={() => setShowConfirmNhan(true)}
+                onClick={handleNhanHangClick}
                 disabled={isNhanHang}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs font-semibold h-9 px-4 shadow-xs"
               >
@@ -460,48 +491,7 @@ export const StockTransferDetailSlideOver: React.FC<StockTransferDetailSlideOver
         </div>
       </SlideOver>
 
-      {/* Confirmation Modals for High-Impact Operations */}
-      <ConfirmModal
-        open={showConfirmXuat}
-        onClose={() => setShowConfirmXuat(false)}
-        onConfirm={async () => {
-          await onXuatKho(activePhieu.phieuChuyenKhoID);
-          setShowConfirmXuat(false);
-        }}
-        title="Duyệt xuất kho điều chuyển?"
-        description={`Xác nhận xuất hàng khỏi kho [${activePhieu.tenKhoXuat}]. Hàng sẽ được trừ khỏi tồn khả dụng và chuyển sang trạng thái đang vận chuyển.`}
-        confirmText="Xác nhận xuất kho"
-        isLoading={isXuatKho}
-        variant="info"
-      />
 
-      <ConfirmModal
-        open={showConfirmNhan}
-        onClose={() => setShowConfirmNhan(false)}
-        onConfirm={async () => {
-          await onNhanHang(activePhieu);
-          setShowConfirmNhan(false);
-        }}
-        title="Xác nhận nhận hàng tại kho đích?"
-        description={`Kho [${activePhieu.tenKhoNhap}] xác nhận đã nhận đủ ${activePhieu.tongSoLuong} kiện hàng. Tồn kho đích sẽ được cập nhật cộng tăng ngay lập tức.`}
-        confirmText="Nhận hàng & Nhập kho"
-        isLoading={isNhanHang}
-        variant="info"
-      />
-
-      <ConfirmModal
-        open={showConfirmHuy}
-        onClose={() => setShowConfirmHuy(false)}
-        onConfirm={async () => {
-          await onHuyPhieu(activePhieu.phieuChuyenKhoID);
-          setShowConfirmHuy(false);
-        }}
-        title="Hủy phiếu điều chuyển kho?"
-        description={`Bạn có chắc chắn muốn hủy phiếu ${activePhieu.maPhieuChuyen}? Thao tác này không thể hoàn tác.`}
-        confirmText="Hủy phiếu ngay"
-        isLoading={isHuyPhieu}
-        variant="danger"
-      />
     </>
   );
 };

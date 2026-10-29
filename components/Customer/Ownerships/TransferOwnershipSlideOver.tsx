@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import { useChuyenQuyenSoHuu } from "@/hooks/LichSuSoHuuPhuongTien/useLichSuSoHuuPhuongTienApi";
 import { ChuyenQuyenSoHuuPayload } from "@/types/lichSuSoHuuPhuongTien";
 
@@ -53,6 +54,7 @@ export const TransferOwnershipSlideOver: React.FC<TransferOwnershipSlideOverProp
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { confirm } = useConfirm();
   const transferMutation = useChuyenQuyenSoHuu();
 
   // Reset/sync form state when modal opens
@@ -89,6 +91,22 @@ export const TransferOwnershipSlideOver: React.FC<TransferOwnershipSlideOverProp
       });
 
       setErrors({});
+
+      const selectedVehicle = vehicleOptions.find(
+        (v) => String(v.value) === String(formData.PhuongTienKhachHangID),
+      );
+      const selectedCustomer = customerOptions.find(
+        (c) => String(c.value) === String(formData.KhachHangMoiID),
+      );
+
+      const isConfirmed = await confirm({
+        title: "Xác nhận chuyển quyền sở hữu phương tiện",
+        variant: "warning",
+        confirmText: "Xác nhận sang tên",
+        description: `Xác nhận chuyển quyền sở hữu xe "${selectedVehicle?.label || formData.PhuongTienKhachHangID}" sang cho khách hàng "${selectedCustomer?.label || formData.KhachHangMoiID}"? Hệ thống sẽ cập nhật thời gian kết thúc sở hữu của chủ cũ và bàn giao phương tiện cho chủ mới.`,
+      });
+      if (!isConfirmed) return;
+
       await transferMutation.mutateAsync(formData);
       onClose();
       if (onSuccess) {

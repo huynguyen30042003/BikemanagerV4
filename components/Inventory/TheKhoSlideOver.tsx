@@ -6,13 +6,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Column, Table } from "@/components/ui/Table";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { KHO_TonKho, KHO_GiaoDichTonKho } from "@/types/tonKho";
+import { useGetGiaoDichTonKho } from "@/hooks/TonKho/useTonKhoApi";
 
 export interface TheKhoSlideOverProps {
   open: boolean;
   onClose: () => void;
   selectedItem: KHO_TonKho | null;
-  theKhoItems: KHO_GiaoDichTonKho[];
-  isLoadingTheKho: boolean;
+  theKhoItems?: KHO_GiaoDichTonKho[];
+  isLoadingTheKho?: boolean;
 }
 
 function formatCurrency(val: number | null | undefined): string {
@@ -44,9 +45,25 @@ export const TheKhoSlideOver: React.FC<TheKhoSlideOverProps> = ({
   open,
   onClose,
   selectedItem,
-  theKhoItems,
-  isLoadingTheKho,
+  theKhoItems: theKhoItemsProp,
+  isLoadingTheKho: isLoadingTheKhoProp,
 }) => {
+  // Lazy query: chỉ tải dữ liệu thẻ kho khi modal thực sự mở và đã chọn mặt hàng
+  const { data: dataGiaoDichs, isLoading: isLoadingQuery } =
+    useGetGiaoDichTonKho({
+      KhoID: open && selectedItem ? selectedItem.khoID : null,
+      BienTheSanPhamID:
+        open && selectedItem ? selectedItem.bienTheSanPhamID : null,
+      PageIndex: 1,
+      PageSize: 100,
+    });
+
+  const theKhoItems = useMemo(() => {
+    if (theKhoItemsProp) return theKhoItemsProp;
+    return dataGiaoDichs?.data ?? dataGiaoDichs?.items ?? [];
+  }, [theKhoItemsProp, dataGiaoDichs]);
+
+  const isLoading = isLoadingTheKhoProp ?? isLoadingQuery;
   const columns: Column<KHO_GiaoDichTonKho>[] = useMemo(
     () => [
       {
@@ -60,7 +77,8 @@ export const TheKhoSlideOver: React.FC<TheKhoSlideOverProps> = ({
       {
         key: "loaiGiaoDichID",
         title: "Loại giao dịch",
-        classNameHeader: "text-left text-xs font-semibold text-muted-foreground",
+        classNameHeader:
+          "text-left text-xs font-semibold text-muted-foreground",
         classNameItem: "text-left text-xs",
         render: (_v, row) => (
           <div className="flex flex-col gap-0.5">
@@ -116,7 +134,7 @@ export const TheKhoSlideOver: React.FC<TheKhoSlideOverProps> = ({
         render: (v) => formatCurrency(Number(v)),
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -144,7 +162,7 @@ export const TheKhoSlideOver: React.FC<TheKhoSlideOverProps> = ({
           </div>
         )}
 
-        {isLoadingTheKho ? (
+        {isLoading ? (
           <div className="space-y-2 py-4">
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-full" />
@@ -152,7 +170,8 @@ export const TheKhoSlideOver: React.FC<TheKhoSlideOverProps> = ({
           </div>
         ) : theKhoItems.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-xs">
-            Chưa có lịch sử giao dịch phát sinh cho mặt hàng này tại kho đã chọn.
+            Chưa có lịch sử giao dịch phát sinh cho mặt hàng này tại kho đã
+            chọn.
           </div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">

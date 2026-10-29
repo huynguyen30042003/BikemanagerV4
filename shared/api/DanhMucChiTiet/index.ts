@@ -128,48 +128,17 @@ export const syncDanhMucChiTietApi = async () => {
 
 /**
  * Lấy dữ liệu thống kê KPI danh mục chi tiết
- * GET /api/DanhMucChiTiet/GetKPI
+ * POST /api/DanhMucChiTiet/GetKPI
  */
 export const getDanhMucChiTietKPIApi = async (): Promise<DanhMucChiTietKPI> => {
-  const endpoints = [
+  const response = await api.post(
     `${APP_URL}/DanhMucChiTiet/GetKPI`,
-    `${APP_URL}/DanhMucChiTietApi/GetKPI`,
-    `/api/DanhMucChiTiet/GetKPI`,
-  ];
-
-  for (const url of endpoints) {
-    try {
-      const response = await api.get(url, {
-        headers: getAuthHeaders(),
-        withCredentials: true,
-      });
-      if (response?.data?.data) {
-        return response.data.data;
-      }
-      if (response?.data?.total_DanhMucChiTiet !== undefined) {
-        return response.data;
-      }
-    } catch {
-      try {
-        const response = await api.post(
-          url,
-          {},
-          {
-            headers: getAuthHeaders(),
-            withCredentials: true,
-          }
-        );
-        if (response?.data?.data) {
-          return response.data.data;
-        }
-        if (response?.data?.total_DanhMucChiTiet !== undefined) {
-          return response.data;
-        }
-      } catch {
-        // Tiếp tục thử URL tiếp theo
-      }
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
     }
-  }
+  );
 
-  throw new Error("Không thể tải dữ liệu KPI danh mục chi tiết");
+  return response.data?.data ?? response.data;
 };

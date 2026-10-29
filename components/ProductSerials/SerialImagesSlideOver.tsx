@@ -28,7 +28,7 @@ import {
   useDeleteSoSerialHinhAnh,
 } from "@/hooks/SoSerial/useSoSerialApi";
 import { useDanhMucChiTietLookup } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
-import { ConfirmModal } from "../ui/ConfirmModal";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import { takeImage } from "@/utils";
 
 interface SerialImagesSlideOverProps {
@@ -44,6 +44,7 @@ export function SerialImagesSlideOver({
   onClose,
   serial,
 }: SerialImagesSlideOverProps) {
+  const { confirm } = useConfirm();
   const serialId = open ? serial?.soSerialID || "" : "";
   const {
     data: images = [],
@@ -95,8 +96,6 @@ export function SerialImagesSlideOver({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [previewModalImg, setPreviewModalImg] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
-  const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const [selectDelete, setSelectDelete] = useState<SP_SoSerial_HinhAnh>();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -172,15 +171,22 @@ export function SerialImagesSlideOver({
   };
 
   const handleDeleteImage = async (img: SP_SoSerial_HinhAnh) => {
-    setSelectDelete(img);
-    console.log("img", img);
-    setOpenDelete(true);
-  };
-  const handleSubmitDelete = async () => {
-    if (!!selectDelete?.id) {
-      await deleteMutation.mutateAsync(selectDelete?.id);
-      setOpenDelete(false);
-      setSelectDelete(undefined);
+    if (!img.id) return;
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa hình ảnh",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: img.tieuDe
+        ? `Bạn có chắc chắn muốn xóa hình ảnh "${img.tieuDe}" không? Thao tác này sẽ xóa tệp đính kèm vĩnh viễn và không thể hoàn tác.`
+        : "Bạn có chắc chắn muốn xóa hình ảnh này không? Thao tác này sẽ xóa tệp đính kèm vĩnh viễn và không thể hoàn tác.",
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await deleteMutation.mutateAsync(img.id);
+    } catch {
+      // Error handled by mutation
     }
   };
   const handleCopyLink = (url: string, id: string) => {
@@ -429,7 +435,9 @@ export function SerialImagesSlideOver({
                     {/* Thumbnail Image */}
                     <div
                       className="relative aspect-video bg-muted/30 cursor-pointer overflow-hidden"
-                      onClick={() => setPreviewModalImg(takeImage(img.duongDanAnh))}
+                      onClick={() =>
+                        setPreviewModalImg(takeImage(img.duongDanAnh))
+                      }
                     >
                       <Image
                         src={imgUrl}
@@ -537,31 +545,6 @@ export function SerialImagesSlideOver({
             </div>
           </div>
         </div>
-      )}
-      {openDelete && (
-        <ConfirmModal
-          open={openDelete}
-          onClose={() => setOpenDelete(false)}
-          onConfirm={handleSubmitDelete}
-          title="Xác nhận xóa hình ảnh"
-          variant="danger"
-          isLoading={deleteMutation.isPending}
-          confirmText="Xác nhận xóa"
-          description={
-            <div>
-              <p>
-                Bạn có chắc chắn muốn xóa hình ảnh &quot;
-                <strong className="text-foreground">
-                  {selectDelete?.tieuDe}
-                </strong>
-                &quot; không?
-              </p>
-              <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-                Hành động này không thể hoàn tác.
-              </span>
-            </div>
-          }
-        />
       )}
     </>
   );

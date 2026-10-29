@@ -18,7 +18,7 @@ import {
 } from "./useNhaCungCapApi";
 import { useGetQuocGia } from "../QuocGia/useQuocGiaApi";
 import { useGetDiaPhuongCapTinh } from "../DiaPhuongCapTinh/useDiaPhuongCapTinhApi";
-import { useGetDiaPhuongCapXa } from "../DiaPhuongCapXa/useDiaPhuongCapXaApi";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 
 export * from "./useNhaCungCapApi";
 
@@ -118,40 +118,6 @@ export function useNhaCungCap() {
     TrangThai: true,
   });
 
-  // Query Xã theo Tỉnh đã chọn trong Form Add
-  const { data: dataCommunesAdd } = useGetDiaPhuongCapXa({
-    TinhID: dataAdd.TinhID ?? 0,
-    PageIndex: 1,
-    PageSize: 200,
-    TrangThai: true,
-  });
-
-  const communeOptionsAdd = useMemo(() => {
-    if (!dataAdd.TinhID) return [];
-    const list = dataCommunesAdd?.data ?? dataCommunesAdd?.items ?? [];
-    return list.map((c: { xaID: number; ten: string }) => ({
-      value: c.xaID,
-      label: c.ten,
-    }));
-  }, [dataCommunesAdd, dataAdd.TinhID]);
-
-  // Query Xã theo Tỉnh đã chọn trong Form Update
-  const { data: dataCommunesUpdate } = useGetDiaPhuongCapXa({
-    TinhID: dataUpdate.TinhID ?? 0,
-    PageIndex: 1,
-    PageSize: 200,
-    TrangThai: true,
-  });
-
-  const communeOptionsUpdate = useMemo(() => {
-    if (!dataUpdate.TinhID) return [];
-    const list = dataCommunesUpdate?.data ?? dataCommunesUpdate?.items ?? [];
-    return list.map((c: { xaID: number; ten: string }) => ({
-      value: c.xaID,
-      label: c.ten,
-    }));
-  }, [dataCommunesUpdate, dataUpdate.TinhID]);
-
   const queryParams = useMemo(() => {
     return {
       TuKhoa: searchTerm,
@@ -216,8 +182,6 @@ export function useNhaCungCap() {
   };
 
   const handleOpenEdit = (item: NH_NhaCungCap) => {
-    console.log(item);
-
     setSelectSupplierId(item.nhaCungCapID);
     setDataUpdate({
       MaNhaCungCap: item.maNhaCungCap,
@@ -281,7 +245,6 @@ export function useNhaCungCap() {
       tenNhaCungCap: dataUpdate.TenNhaCungCap,
       dienThoai: dataUpdate.DienThoai,
     });
-    console.log(validation);
 
     if (!validation.success) {
       const fieldErrors: Record<string, string> = {};
@@ -298,6 +261,31 @@ export function useNhaCungCap() {
       setOpenUpdate(false);
     } catch {
       toast.error("Không thể cập nhật nhà cung cấp. Vui lòng kiểm tra lại!");
+    }
+  };
+
+  const { confirm } = useConfirm();
+
+  const handleDelete = async (
+    item: NH_NhaCungCap | { nhaCungCapID: string; tenNhaCungCap?: string },
+  ) => {
+    const isConfirmed = await confirm({
+      title: "Xóa Nhà Cung Cấp",
+      description: `Bạn có chắc chắn muốn xóa đối tác "${
+        item.tenNhaCungCap || ""
+      }"? Hành động này sẽ không thể khôi phục.`,
+      confirmText: "Xác nhận xóa",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
+    try {
+      await deleteMutation.mutateAsync(item.nhaCungCapID);
+      toast.success("Xóa nhà cung cấp thành công!");
+      refetchKPI();
+    } catch {
+      toast.error(
+        "Không thể xóa nhà cung cấp. Có thể đối tác này đã phát sinh đơn nhập hàng hoặc công nợ!",
+      );
     }
   };
 
@@ -337,8 +325,6 @@ export function useNhaCungCap() {
     isLoadingCountries,
     provinceOptions,
     isLoadingProvinces,
-    communeOptionsAdd,
-    communeOptionsUpdate,
 
     items,
     totalCount,
@@ -371,6 +357,7 @@ export function useNhaCungCap() {
     selectItemName,
     handleOpenDelete,
     handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     errors,

@@ -3,7 +3,6 @@
 import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { usePhuongTienKhachHang } from "@/hooks/PhuongTienKhachHang/usePhuongTienKhachHang";
 import {
   KH_PhuongTienKhachHang,
@@ -57,12 +56,7 @@ function VehiclesContent() {
     isLoadingKPI,
     refetchKPI,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
-    isDeleting,
+    handleDelete,
   } = usePhuongTienKhachHang(initialKhachHangId);
 
   // Fallback metrics
@@ -166,7 +160,7 @@ function VehiclesContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -181,7 +175,7 @@ function VehiclesContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -206,30 +200,6 @@ function VehiclesContent() {
         customerOptions={customerOptions}
         isLoadingCustomers={isLoadingCustomers}
         onSuccess={handleReload}
-      />
-
-      {/* 6. Modal Xác nhận Xóa phương tiện */}
-      <ConfirmModal
-        open={openDelete}
-        onClose={() => setOpenDelete(false)}
-        onConfirm={handleSubmitDelete}
-        title="Xác nhận xóa phương tiện"
-        description={
-          <div>
-            <p>
-              Bạn có chắc chắn muốn xóa phương tiện &quot;
-              <strong className="text-foreground">{selectItemName}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này sẽ xóa toàn bộ lịch sử sở hữu và thông số của xe
-              trong hệ thống.
-            </span>
-          </div>
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

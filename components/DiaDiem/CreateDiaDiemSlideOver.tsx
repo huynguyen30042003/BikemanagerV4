@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Store, RefreshCw, AlertCircle, Upload, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +14,7 @@ import { SlideOver } from "@/components/ui/SlideOver";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { CreateDiaDiemPayload } from "@/types/diaDiem";
 import { useCreateDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
-import { diaDiemSchema } from "@/hooks/DiaDiem/useDiaDiem";
+import { diaDiemSchema, DiaDiemFormData } from "@/hooks/DiaDiem/useDiaDiem";
 import { useGetDiaPhuongCapXa } from "@/hooks/DiaPhuongCapXa/useDiaPhuongCapXaApi";
 import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
 
@@ -40,40 +42,51 @@ export function CreateDiaDiemSlideOver({
   const createMutation = useCreateDiaDiem();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState<CreateDiaDiemPayload>({
-    DiaDiemCapChaID: null,
-    LoaiDiaDiemID: 1,
-    TenDiaDiem: "",
-    MoTa: "",
-    TinhID: defaultTinhId,
-    XaID: 0,
-    KinhDo: null,
-    ViDo: null,
-    DiaChiSo: "",
-    TrangThai: true,
-    file: null,
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<DiaDiemFormData>({
+    resolver: zodResolver(diaDiemSchema),
+    defaultValues: {
+      diaDiemCapChaID: null,
+      loaiDiaDiemID: 1,
+      tenDiaDiem: "",
+      moTa: "",
+      tinhID: defaultTinhId || 0,
+      xaID: 0,
+      kinhDo: null,
+      viDo: null,
+      diaChiSo: "",
+      trangThai: true,
+    },
   });
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const watchedTinhID = watch("tinhID");
 
   // Reset form khi modal đóng/mở
   useEffect(() => {
     if (open) {
-      setFormData({
-        DiaDiemCapChaID: null,
-        LoaiDiaDiemID: 1,
-        TenDiaDiem: "",
-        MoTa: "",
-        TinhID: defaultTinhId,
-        XaID: 0,
-        KinhDo: null,
-        ViDo: null,
-        DiaChiSo: "",
-        TrangThai: true,
-        file: null,
+      reset({
+        diaDiemCapChaID: null,
+        loaiDiaDiemID: 1,
+        tenDiaDiem: "",
+        moTa: "",
+        tinhID: defaultTinhId || 0,
+        xaID: 0,
+        kinhDo: null,
+        viDo: null,
+        diaChiSo: "",
+        trangThai: true,
       });
-      setErrors({});
+      setSelectedFile(null);
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
@@ -87,7 +100,7 @@ export function CreateDiaDiemSlideOver({
         setPreviewUrl(null);
       }
     }
-  }, [open, defaultTinhId]);
+  }, [open, defaultTinhId, reset]);
 
   // Thu hồi bộ nhớ blob URL khi unmount
   useEffect(() => {
@@ -105,10 +118,10 @@ export function CreateDiaDiemSlideOver({
     }
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
-      setFormData((prev) => ({ ...prev, file }));
+      setSelectedFile(file);
     } else {
       setPreviewUrl(null);
-      setFormData((prev) => ({ ...prev, file: null }));
+      setSelectedFile(null);
     }
   };
 
@@ -118,18 +131,21 @@ export function CreateDiaDiemSlideOver({
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
-    setFormData((prev) => ({ ...prev, file: null }));
+    setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   // Lấy danh sách xã/phường phụ thuộc theo TỉnhID đã chọn trong form
-  const { data: dataXa, isLoading: isLoadingXa } = useGetDiaPhuongCapXa({
-    TinhID: formData.TinhID > 0 ? formData.TinhID : null,
-    PageIndex: 1,
-    PageSize: 200,
-  });
+  const { data: dataXa, isLoading: isLoadingXa } = useGetDiaPhuongCapXa(
+    {
+      TinhID: watchedTinhID > 0 ? watchedTinhID : null,
+      PageIndex: 1,
+      PageSize: 200,
+    },
+    Boolean(open && watchedTinhID > 0),
+  );
 
   const communeOptions = useMemo(() => {
     const communes: DM_DiaPhuongCapXa[] = dataXa?.data ?? [];
@@ -139,30 +155,23 @@ export function CreateDiaDiemSlideOver({
     }));
   }, [dataXa]);
 
-  const handleSubmit = async () => {
-    const result = diaDiemSchema.safeParse({
-      tenDiaDiem: formData.TenDiaDiem,
-      loaiDiaDiemID: formData.LoaiDiaDiemID,
-      tinhID: formData.TinhID,
-      xaID: formData.XaID,
-      diaChiSo: formData.DiaChiSo,
-    });
-
-    if (!result.success) {
-      const newErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const field = issue.path[0];
-        if (field) {
-          newErrors[String(field)] = issue.message;
-        }
-      });
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({});
+  const onSubmit = async (values: DiaDiemFormData) => {
     try {
-      await createMutation.mutateAsync(formData);
+      const payload: CreateDiaDiemPayload = {
+        DiaDiemCapChaID: values.diaDiemCapChaID || null,
+        LoaiDiaDiemID: values.loaiDiaDiemID,
+        TenDiaDiem: values.tenDiaDiem,
+        MoTa: values.moTa || "",
+        TinhID: values.tinhID,
+        XaID: values.xaID,
+        KinhDo: values.kinhDo ?? null,
+        ViDo: values.viDo ?? null,
+        DiaChiSo: values.diaChiSo,
+        TrangThai: values.trangThai,
+        file: selectedFile,
+      };
+
+      await createMutation.mutateAsync(payload);
       toast.success("Thêm mới cơ sở / showroom thành công");
       onSuccess?.();
       onClose();
@@ -187,16 +196,16 @@ export function CreateDiaDiemSlideOver({
             variant="outline"
             className="flex-1 cursor-pointer"
             onClick={onClose}
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || isSubmitting}
           >
             Hủy
           </Button>
           <Button
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-            onClick={handleSubmit}
-            disabled={createMutation.isPending}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer font-medium"
+            onClick={handleSubmit(onSubmit)}
+            disabled={createMutation.isPending || isSubmitting}
           >
-            {createMutation.isPending ? (
+            {createMutation.isPending || isSubmitting ? (
               <RefreshCw className="w-4 h-4 animate-spin mr-1.5" />
             ) : null}
             Lưu cơ sở
@@ -204,23 +213,20 @@ export function CreateDiaDiemSlideOver({
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
         <div className="col-span-2 flex flex-col gap-1.5">
           <label className="text-sm font-medium text-foreground">
             Tên địa điểm / Showroom <span className="text-red-500">*</span>
           </label>
           <Input
-            value={formData.TenDiaDiem}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, TenDiaDiem: e.target.value }))
-            }
+            {...register("tenDiaDiem")}
             placeholder="Ví dụ: Showroom BikeManager Cầu Giấy..."
-            className={`rounded-lg ${errors.tenDiaDiem ? "border-red-500" : ""}`}
+            className={`rounded-lg ${errors.tenDiaDiem ? "border-red-500 ring-1 ring-red-500/20" : ""}`}
           />
           {errors.tenDiaDiem && (
             <p className="text-xs text-red-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              {errors.tenDiaDiem}
+              {errors.tenDiaDiem.message}
             </p>
           )}
         </div>
@@ -229,39 +235,48 @@ export function CreateDiaDiemSlideOver({
           <label className="text-sm font-medium text-foreground">
             Loại hình cơ sở <span className="text-red-500">*</span>
           </label>
-          <SearchSelect
-            options={loaiDiaDiemOptions}
-            value={formData.LoaiDiaDiemID}
-            onChange={(val) =>
-              setFormData((prev) => ({
-                ...prev,
-                LoaiDiaDiemID: Number(val) || 1,
-              }))
-            }
-            placeholder="Chọn loại cơ sở..."
-            isLoading={isLoadingLoaiDiaDiem}
-            height={10}
+          <Controller
+            name="loaiDiaDiemID"
+            control={control}
+            render={({ field }) => (
+              <SearchSelect
+                options={loaiDiaDiemOptions}
+                value={field.value}
+                onChange={(val) => field.onChange(Number(val) || 1)}
+                placeholder="Chọn loại cơ sở..."
+                isLoading={isLoadingLoaiDiaDiem}
+                height={10}
+                className={errors.loaiDiaDiemID ? "border-red-500 ring-1 ring-red-500/20" : ""}
+              />
+            )}
           />
+          {errors.loaiDiaDiemID && (
+            <p className="text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5" />
+              {errors.loaiDiaDiemID.message}
+            </p>
+          )}
         </div>
 
         <div className="col-span-1 flex flex-col gap-1.5">
           <label className="text-sm font-medium text-foreground">
             Trực thuộc cơ sở cha (nếu có)
           </label>
-          <SearchSelect
-            options={[
-              { value: "", label: "-- Không có (Độc lập) --" },
-              ...parentLocationOptions,
-            ]}
-            value={formData.DiaDiemCapChaID || ""}
-            onChange={(val) =>
-              setFormData((prev) => ({
-                ...prev,
-                DiaDiemCapChaID: val ? String(val) : null,
-              }))
-            }
-            placeholder="Chọn cơ sở cha..."
-            height={10}
+          <Controller
+            name="diaDiemCapChaID"
+            control={control}
+            render={({ field }) => (
+              <SearchSelect
+                options={[
+                  { value: "", label: "-- Không có (Độc lập) --" },
+                  ...parentLocationOptions,
+                ]}
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val ? String(val) : null)}
+                placeholder="Chọn cơ sở cha..."
+                height={10}
+              />
+            )}
           />
         </div>
 
@@ -269,23 +284,27 @@ export function CreateDiaDiemSlideOver({
           <label className="text-sm font-medium text-foreground">
             Tỉnh / Thành phố <span className="text-red-500">*</span>
           </label>
-          <SearchSelect
-            options={provinceOptions}
-            value={formData.TinhID || ""}
-            onChange={(val) =>
-              setFormData((prev) => ({
-                ...prev,
-                TinhID: Number(val) || 0,
-                XaID: 0,
-              }))
-            }
-            placeholder="-- Chọn Tỉnh / TP --"
-            height={10}
+          <Controller
+            name="tinhID"
+            control={control}
+            render={({ field }) => (
+              <SearchSelect
+                options={provinceOptions}
+                value={field.value || ""}
+                onChange={(val) => {
+                  field.onChange(Number(val) || 0);
+                  setValue("xaID", 0);
+                }}
+                placeholder="-- Chọn Tỉnh / TP --"
+                height={10}
+                className={errors.tinhID ? "border-red-500 ring-1 ring-red-500/20" : ""}
+              />
+            )}
           />
           {errors.tinhID && (
             <p className="text-xs text-red-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              {errors.tinhID}
+              {errors.tinhID.message}
             </p>
           )}
         </div>
@@ -294,22 +313,27 @@ export function CreateDiaDiemSlideOver({
           <label className="text-sm font-medium text-foreground">
             Phường / Xã <span className="text-red-500">*</span>
           </label>
-          <SearchSelect
-            options={communeOptions}
-            value={formData.XaID || ""}
-            onChange={(val) =>
-              setFormData((prev) => ({ ...prev, XaID: Number(val) || 0 }))
-            }
-            placeholder={
-              formData.TinhID ? "-- Chọn Phường / Xã --" : "Vui lòng chọn Tỉnh trước"
-            }
-            isLoading={isLoadingXa}
-            height={10}
+          <Controller
+            name="xaID"
+            control={control}
+            render={({ field }) => (
+              <SearchSelect
+                options={communeOptions}
+                value={field.value || ""}
+                onChange={(val) => field.onChange(Number(val) || 0)}
+                placeholder={
+                  watchedTinhID ? "-- Chọn Phường / Xã --" : "Vui lòng chọn Tỉnh trước"
+                }
+                isLoading={isLoadingXa}
+                height={10}
+                className={errors.xaID ? "border-red-500 ring-1 ring-red-500/20" : ""}
+              />
+            )}
           />
           {errors.xaID && (
             <p className="text-xs text-red-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              {errors.xaID}
+              {errors.xaID.message}
             </p>
           )}
         </div>
@@ -319,17 +343,14 @@ export function CreateDiaDiemSlideOver({
             Địa chỉ số (Số nhà, Tên đường, Tòa nhà) <span className="text-red-500">*</span>
           </label>
           <Input
-            value={formData.DiaChiSo}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, DiaChiSo: e.target.value }))
-            }
+            {...register("diaChiSo")}
             placeholder="Ví dụ: 123 Đường Cầu Giấy, Tòa nhà Indochina..."
-            className={`rounded-lg ${errors.diaChiSo ? "border-red-500" : ""}`}
+            className={`rounded-lg ${errors.diaChiSo ? "border-red-500 ring-1 ring-red-500/20" : ""}`}
           />
           {errors.diaChiSo && (
             <p className="text-xs text-red-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              {errors.diaChiSo}
+              {errors.diaChiSo.message}
             </p>
           )}
         </div>
@@ -341,13 +362,10 @@ export function CreateDiaDiemSlideOver({
           <Input
             type="number"
             step="any"
-            value={formData.KinhDo ?? ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                KinhDo: e.target.value ? parseFloat(e.target.value) : null,
-              }))
-            }
+            {...register("kinhDo", {
+              setValueAs: (v) =>
+                v === "" || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v),
+            })}
             placeholder="Ví dụ: 105.7832"
             className="rounded-lg font-mono text-sm"
           />
@@ -360,13 +378,10 @@ export function CreateDiaDiemSlideOver({
           <Input
             type="number"
             step="any"
-            value={formData.ViDo ?? ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                ViDo: e.target.value ? parseFloat(e.target.value) : null,
-              }))
-            }
+            {...register("viDo", {
+              setValueAs: (v) =>
+                v === "" || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v),
+            })}
             placeholder="Ví dụ: 21.0333"
             className="rounded-lg font-mono text-sm"
           />
@@ -418,10 +433,10 @@ export function CreateDiaDiemSlideOver({
               {/* Tag thông tin file ở góc dưới */}
               <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
                 <div className="px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-xs text-[11px] text-white flex items-center gap-1.5 max-w-[80%]">
-                  <span className="truncate">{formData.file?.name}</span>
-                  {formData.file && (
+                  <span className="truncate">{selectedFile?.name}</span>
+                  {selectedFile && (
                     <span className="text-zinc-300 shrink-0">
-                      ({(formData.file.size / (1024 * 1024)).toFixed(2)} MB)
+                      ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
                     </span>
                   )}
                 </div>
@@ -458,10 +473,7 @@ export function CreateDiaDiemSlideOver({
         <div className="col-span-2 flex flex-col gap-1.5">
           <label className="text-sm font-medium text-foreground">Mô tả chi tiết</label>
           <Textarea
-            value={formData.MoTa || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, MoTa: e.target.value }))
-            }
+            {...register("moTa")}
             placeholder="Ghi chú về dịch vụ, giờ mở cửa, năng lực trạm sửa chữa..."
             className="h-24 resize-none rounded-lg text-sm"
           />
@@ -474,15 +486,19 @@ export function CreateDiaDiemSlideOver({
               Cho phép giao dịch và hiển thị trên bản đồ dịch vụ
             </p>
           </div>
-          <Switch
-            id="isActiveDiaDiemAdd"
-            checked={formData.TrangThai}
-            onCheckedChange={(checked) =>
-              setFormData((prev) => ({ ...prev, TrangThai: checked }))
-            }
+          <Controller
+            name="trangThai"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                id="isActiveDiaDiemAdd"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
           />
         </div>
-      </div>
+      </form>
     </SlideOver>
   );
 }

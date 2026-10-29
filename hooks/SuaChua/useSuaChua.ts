@@ -29,6 +29,7 @@ import { useGetPhuongTienKhachHang } from "@/hooks/PhuongTienKhachHang/usePhuong
 import { useGetDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
 import { useGetKho } from "@/hooks/Kho/useKhoApi";
 import { useGetPhuTungs } from "@/hooks/BienTheSanPham/useBienTheSanPhamApi";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 
 export const useDichVuHook = () => {
   const [page, setPage] = useState(1);
@@ -167,7 +168,16 @@ export const useDichVuHook = () => {
     }
   };
 
+  const { confirm } = useConfirm();
+
   const handleDelete = async (item: SC_DichVu) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa dịch vụ",
+      description: `Bạn có chắc chắn muốn xóa dịch vụ "${item.tenDichVu}" (mã: ${item.maDichVu})? Thao tác này sẽ xóa vĩnh viễn dịch vụ khỏi bảng giá hệ thống.`,
+      confirmText: "Xóa vĩnh viễn",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(item.dichVuID);
       toast.success("Đã xóa dịch vụ thành công!");
@@ -618,7 +628,16 @@ export const usePhieuSuaChuaHook = () => {
     }
   };
 
+  const { confirm } = useConfirm();
+
   const handleDelete = async (ticket: SC_PhieuSuaChua) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận hủy phiếu sửa chữa",
+      description: `Bạn có chắc chắn muốn hủy phiếu tiếp nhận "${ticket.maPhieuSuaChua}" của khách hàng "${ticket.tenKhachHang || 'Khách lẻ'}"? Thao tác này sẽ hủy phiếu và hoàn kho các linh kiện phụ tùng liên quan.`,
+      confirmText: "Hủy phiếu ngay",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(ticket.phieuSuaChuaID);
       toast.success("Đã hủy phiếu sửa chữa thành công!");

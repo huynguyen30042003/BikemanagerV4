@@ -14,6 +14,7 @@ import {
 import { useGetDiaDiem } from "../DiaDiem/useDiaDiemApi";
 import { DANH_MUC_CHUNG } from "@/constants/danhMuc";
 import { useDanhMucChiTietLookup } from "../DanhMucChiTiet/useDanhMucChiTietLookup";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 
 export * from "./useKhoApi";
 
@@ -230,6 +231,27 @@ export function useKho() {
     }
   };
 
+  const { confirm } = useConfirm();
+
+  const handleDelete = async (
+    item: KHO_Kho | { khoID: string; tenKho?: string },
+  ) => {
+    const isConfirmed = await confirm({
+      title: "Xóa Kho Hàng",
+      description: `Bạn có chắc chắn muốn xóa kho "${
+        item.tenKho || ""
+      }"? Dữ liệu tồn kho liên kết có thể bị ảnh hưởng.`,
+      confirmText: "Xác nhận xóa",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
+    try {
+      await deleteMutation.mutateAsync(item.khoID);
+    } catch {
+      // Toast được xử lý tự động trong hook useDeleteKho
+    }
+  };
+
   const handleSearch = (val: string) => {
     setSearchInput(val);
     setPage(1);
@@ -281,6 +303,7 @@ export function useKho() {
     selectItemName,
     handleOpenDelete,
     handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     errors,

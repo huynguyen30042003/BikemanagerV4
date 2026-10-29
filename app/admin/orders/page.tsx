@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useDonHang } from "@/hooks/DonHang/useDonHang";
+import { DH_DonHang } from "@/types/donHang";
 import {
   OrdersKpiGrid,
   OrdersFilterBar,
@@ -40,13 +41,8 @@ function OrdersContent() {
     paymentMethodOptions,
     isLoadingPaymentMethods,
 
-    customerOptions,
-    isLoadingCustomers,
-    diaDiemOptions,
     khoOptions,
     isLoadingKhos,
-    variantOptions,
-    isLoadingVariants,
 
     items,
     totalCount,
@@ -58,33 +54,21 @@ function OrdersContent() {
     isLoadingKPI,
     refetchKPI,
 
-    openCreate,
-    setOpenCreate,
-    handleSubmitCreate,
-    isCreating,
-
-    openDetail,
-    setOpenDetail,
-    selectedOrder,
-    handleOpenDetail,
-
-    openStatusModal,
-    setOpenStatusModal,
-    handleOpenStatusChange,
     handleSubmitStatusChange,
     isChangingStatus,
 
-    openPaymentModal,
-    setOpenPaymentModal,
-    handleOpenPayment,
     handleSubmitPayment,
     isPaying,
-    paymentHistoryItems,
-    isLoadingPaymentHistory,
 
     handleHoanThanhVaGiaoXe,
     handleDelete,
   } = useDonHang();
+
+  // Single-state pattern cho các Modal / SlideOver (AGENTS.md Section 11.2)
+  const [viewingOrder, setViewingOrder] = useState<DH_DonHang | null>(null);
+  const [statusChangeOrder, setStatusChangeOrder] =
+    useState<DH_DonHang | null>(null);
+  const [paymentOrder, setPaymentOrder] = useState<DH_DonHang | null>(null);
 
   // 1. Thống kê KPI ưu tiên từ Backend API GetKPI
   const totalOrders = kpiData?.total_DonHang ?? totalCount;
@@ -199,42 +183,46 @@ function OrdersContent() {
         setPageSize={setPageSize}
         getOrderStatusBadge={getOrderStatusBadge}
         getPaymentStatusBadge={getPaymentStatusBadge}
-        onOpenDetail={handleOpenDetail}
-        onOpenStatusChange={handleOpenStatusChange}
-        onOpenPayment={handleOpenPayment}
+        onOpenDetail={setViewingOrder}
+        onOpenStatusChange={setStatusChangeOrder}
+        onOpenPayment={setPaymentOrder}
         onHoanThanhVaGiaoXe={handleHoanThanhVaGiaoXe}
         onDelete={handleDelete}
       />
 
       {/* 5. Drawer Chuyển trạng thái đơn hàng */}
       <OrderStatusChangeModal
-        open={openStatusModal}
-        onClose={() => setOpenStatusModal(false)}
-        selectedOrder={selectedOrder}
+        open={Boolean(statusChangeOrder)}
+        onClose={() => setStatusChangeOrder(null)}
+        selectedOrder={statusChangeOrder}
         orderStatusOptions={orderStatusOptions}
         isLoadingOrderStatuses={isLoadingOrderStatuses}
-        onSubmit={handleSubmitStatusChange}
+        onSubmit={async (data) => {
+          await handleSubmitStatusChange(data);
+          setStatusChangeOrder(null);
+        }}
         isChangingStatus={isChangingStatus}
       />
 
       {/* 6. Drawer Ghi nhận thanh toán */}
       <OrderPaymentModal
-        open={openPaymentModal}
-        onClose={() => setOpenPaymentModal(false)}
-        selectedOrder={selectedOrder}
+        open={Boolean(paymentOrder)}
+        onClose={() => setPaymentOrder(null)}
+        selectedOrder={paymentOrder}
         paymentMethodOptions={paymentMethodOptions}
         isLoadingPaymentMethods={isLoadingPaymentMethods}
-        onSubmit={handleSubmitPayment}
+        onSubmit={async (data) => {
+          await handleSubmitPayment(data);
+          setPaymentOrder(null);
+        }}
         isPaying={isPaying}
       />
 
       {/* 7. Drawer Xem chi tiết đơn hàng & Lịch sử thanh toán */}
       <OrderDetailSlideOver
-        open={openDetail}
-        onClose={() => setOpenDetail(false)}
-        selectedOrder={selectedOrder}
-        paymentHistoryItems={paymentHistoryItems}
-        isLoadingPaymentHistory={isLoadingPaymentHistory}
+        open={Boolean(viewingOrder)}
+        onClose={() => setViewingOrder(null)}
+        selectedOrder={viewingOrder}
       />
     </div>
   );

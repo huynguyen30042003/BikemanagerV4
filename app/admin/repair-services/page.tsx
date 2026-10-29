@@ -3,7 +3,6 @@
 import React, { Suspense, useState } from "react";
 import { useDichVuHook } from "@/hooks/SuaChua/useSuaChua";
 import { useGetDichVuKPI } from "@/hooks/SuaChua/useSuaChuaApi";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { SC_DichVu, CreateDichVuPayload, UpdateDichVuPayload } from "@/types/suaChua";
 import {
   RepairServicesKpiGrid,
@@ -37,10 +36,7 @@ function RepairServicesContent() {
     refetch,
     openAdd,
     setOpenAdd,
-    openEdit,
-    setOpenEdit,
     handleOpenAdd,
-    handleOpenEdit,
     handleSubmitAdd,
     handleSubmitEdit,
     handleDelete,
@@ -51,26 +47,6 @@ function RepairServicesContent() {
 
   // Selected item for update
   const [editingItem, setEditingItem] = useState<SC_DichVu | null>(null);
-
-  // State for delete modal
-  const [itemToDelete, setItemToDelete] = useState<SC_DichVu | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleStartEdit = (item: SC_DichVu) => {
-    setEditingItem(item);
-    handleOpenEdit(item);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!itemToDelete) return;
-    try {
-      setIsDeleting(true);
-      await handleDelete(itemToDelete);
-      setItemToDelete(null);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen">
@@ -129,8 +105,8 @@ function RepairServicesContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           getServiceTypeLabel={getServiceTypeLabel}
-          onEdit={handleStartEdit}
-          onDelete={setItemToDelete}
+          onEdit={(item) => setEditingItem(item)}
+          onDelete={handleDelete}
           onOpenCreate={handleOpenAdd}
         />
       )}
@@ -149,11 +125,8 @@ function RepairServicesContent() {
 
       {/* Update SlideOver (Form State Isolated) */}
       <UpdateRepairServiceSlideOver
-        open={openEdit}
-        onClose={() => {
-          setOpenEdit(false);
-          setEditingItem(null);
-        }}
+        open={Boolean(editingItem)}
+        onClose={() => setEditingItem(null)}
         item={editingItem}
         serviceTypeOptions={serviceTypeOptions}
         isLoadingServiceTypes={isLoadingServiceTypes}
@@ -161,28 +134,6 @@ function RepairServicesContent() {
           await handleSubmitEdit(undefined, payload);
         }}
         isSubmitting={isSubmitting}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        open={Boolean(itemToDelete)}
-        onClose={() => setItemToDelete(null)}
-        onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa dịch vụ"
-        description={
-          <span>
-            Bạn có chắc chắn muốn xóa dịch vụ{" "}
-            <strong className="text-foreground">
-              &quot;{itemToDelete?.tenDichVu}&quot;
-            </strong>{" "}
-            (mã: <span className="font-mono text-blue-600">{itemToDelete?.maDichVu}</span>)?
-            Thao tác này sẽ xóa vĩnh viễn dịch vụ khỏi bảng giá hệ thống.
-          </span>
-        }
-        confirmText="Xóa vĩnh viễn"
-        cancelText="Hủy"
-        variant="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

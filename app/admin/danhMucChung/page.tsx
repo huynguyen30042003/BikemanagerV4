@@ -4,7 +4,6 @@ import React, { useMemo, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDanhMucChung } from "@/hooks/DanhMucChung/useDanhMucChung";
 import { DM_DanhMucChung } from "@/types/danhMucChung";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   DanhMucChungKpiGrid,
   DanhMucChungFilterBar,
@@ -44,12 +43,7 @@ function DanhMucChungContent() {
     refetchKPI,
 
     // Delete state & actions
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
-    isDeleting,
+    handleDelete,
 
     // Sync
     handleSync,
@@ -161,7 +155,7 @@ function DanhMucChungContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -177,7 +171,7 @@ function DanhMucChungContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
           onOpenCreate={() => setOpenCreate(true)}
@@ -196,31 +190,6 @@ function DanhMucChungContent() {
         open={Boolean(editingItem)}
         onClose={() => setEditingItem(null)}
         data={editingItem}
-      />
-
-      {/* Modal Xác nhận Xóa */}
-      <ConfirmModal
-        open={openDelete}
-        onClose={() => setOpenDelete(false)}
-        onConfirm={handleSubmitDelete}
-        title="Xác nhận xóa danh mục"
-        variant="danger"
-        isLoading={isDeleting}
-        confirmText="Xác nhận xóa"
-        description={
-          <div>
-            <p>
-              Bạn có chắc chắn muốn xóa danh mục &quot;
-              <strong className="text-foreground">{selectItemName}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác. Nếu danh mục đang có mục con
-              hoặc dữ liệu phụ thuộc, hệ thống sẽ từ chối xóa để đảm bảo toàn
-              vẹn dữ liệu.
-            </span>
-          </div>
-        }
       />
     </div>
   );

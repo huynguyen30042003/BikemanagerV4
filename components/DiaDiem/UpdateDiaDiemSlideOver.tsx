@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
   SquarePen,
@@ -19,7 +21,7 @@ import { SlideOver } from "@/components/ui/SlideOver";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { DM_DiaDiem, UpdateDiaDiemPayload } from "@/types/diaDiem";
 import { useUpdateDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
-import { diaDiemSchema } from "@/hooks/DiaDiem/useDiaDiem";
+import { diaDiemSchema, DiaDiemFormData } from "@/hooks/DiaDiem/useDiaDiem";
 import { useGetDiaPhuongCapXa } from "@/hooks/DiaPhuongCapXa/useDiaPhuongCapXaApi";
 import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
 import { getImageUrl } from "@/shared/constants/apiConstants";
@@ -48,46 +50,53 @@ export function UpdateDiaDiemSlideOver({
   const updateMutation = useUpdateDiaDiem();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState<UpdateDiaDiemPayload>({
-    DiaDiemID: "",
-    DiaDiemCapChaID: null,
-    LoaiDiaDiemID: 1,
-    TenDiaDiem: "",
-    MoTa: "",
-    TinhID: 0,
-    XaID: 0,
-    KinhDo: null,
-    ViDo: null,
-    DiaChiSo: "",
-    TrangThai: true,
-    XoaFile: false,
-    file: null,
-    AnhDaiDien: "",
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [xoaFile, setXoaFile] = useState<boolean>(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<DiaDiemFormData>({
+    resolver: zodResolver(diaDiemSchema),
+    defaultValues: {
+      diaDiemCapChaID: null,
+      loaiDiaDiemID: 1,
+      tenDiaDiem: "",
+      moTa: "",
+      tinhID: 0,
+      xaID: 0,
+      kinhDo: null,
+      viDo: null,
+      diaChiSo: "",
+      trangThai: true,
+    },
   });
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const watchedTinhID = watch("tinhID");
 
   // Cập nhật dữ liệu vào form khi data thay đổi hoặc mở modal
   useEffect(() => {
     if (open && data) {
-      setFormData({
-        DiaDiemID: data.diaDiemID,
-        DiaDiemCapChaID: data.diaDiemCapChaID || null,
-        LoaiDiaDiemID: data.loaiDiaDiemID || 1,
-        TenDiaDiem: data.tenDiaDiem || "",
-        MoTa: data.moTa || "",
-        TinhID: data.tinhID || 0,
-        XaID: data.xaID || 0,
-        KinhDo: data.kinhDo ?? null,
-        ViDo: data.viDo ?? null,
-        DiaChiSo: data.diaChiSo || "",
-        TrangThai: data.trangThai ?? true,
-        XoaFile: false,
-        file: null,
-        AnhDaiDien: data?.anhDaiDien,
+      reset({
+        diaDiemCapChaID: data.diaDiemCapChaID || null,
+        loaiDiaDiemID: data.loaiDiaDiemID || 1,
+        tenDiaDiem: data.tenDiaDiem || "",
+        moTa: data.moTa || "",
+        tinhID: data.tinhID || 0,
+        xaID: data.xaID || 0,
+        kinhDo: data.kinhDo ?? null,
+        viDo: data.viDo ?? null,
+        diaChiSo: data.diaChiSo || "",
+        trangThai: data.trangThai ?? true,
       });
-      setErrors({});
+      setSelectedFile(null);
+      setXoaFile(false);
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
@@ -101,7 +110,7 @@ export function UpdateDiaDiemSlideOver({
         setPreviewUrl(null);
       }
     }
-  }, [open, data]);
+  }, [open, data, reset]);
 
   // Thu hồi bộ nhớ blob URL khi unmount
   useEffect(() => {
@@ -119,10 +128,11 @@ export function UpdateDiaDiemSlideOver({
     }
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
-      setFormData((prev) => ({ ...prev, file, XoaFile: false }));
+      setSelectedFile(file);
+      setXoaFile(false);
     } else {
       setPreviewUrl(null);
-      setFormData((prev) => ({ ...prev, file: null }));
+      setSelectedFile(null);
     }
   };
 
@@ -132,7 +142,7 @@ export function UpdateDiaDiemSlideOver({
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
-    setFormData((prev) => ({ ...prev, file: null }));
+    setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -144,11 +154,8 @@ export function UpdateDiaDiemSlideOver({
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
-    setFormData((prev) => ({
-      ...prev,
-      XoaFile: true,
-      file: null,
-    }));
+    setXoaFile(true);
+    setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -160,22 +167,22 @@ export function UpdateDiaDiemSlideOver({
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
-    setFormData((prev) => ({
-      ...prev,
-      XoaFile: false,
-      file: null,
-    }));
+    setXoaFile(false);
+    setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   // Lấy danh sách xã/phường phụ thuộc theo TỉnhID đã chọn
-  const { data: dataXa, isLoading: isLoadingXa } = useGetDiaPhuongCapXa({
-    TinhID: formData.TinhID > 0 ? formData.TinhID : null,
-    PageIndex: 1,
-    PageSize: 200,
-  });
+  const { data: dataXa, isLoading: isLoadingXa } = useGetDiaPhuongCapXa(
+    {
+      TinhID: watchedTinhID > 0 ? watchedTinhID : null,
+      PageIndex: 1,
+      PageSize: 200,
+    },
+    Boolean(open && watchedTinhID > 0),
+  );
 
   const communeOptions = useMemo(() => {
     const communes: DM_DiaPhuongCapXa[] = dataXa?.data ?? [];
@@ -190,30 +197,27 @@ export function UpdateDiaDiemSlideOver({
     return parentLocationOptions.filter((opt) => opt.value !== data?.diaDiemID);
   }, [parentLocationOptions, data?.diaDiemID]);
 
-  const handleSubmit = async () => {
-    const result = diaDiemSchema.safeParse({
-      tenDiaDiem: formData.TenDiaDiem,
-      loaiDiaDiemID: formData.LoaiDiaDiemID,
-      tinhID: formData.TinhID,
-      xaID: formData.XaID,
-      diaChiSo: formData.DiaChiSo,
-    });
-
-    if (!result.success) {
-      const newErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const field = issue.path[0];
-        if (field) {
-          newErrors[String(field)] = issue.message;
-        }
-      });
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({});
+  const onSubmit = async (values: DiaDiemFormData) => {
+    if (!data?.diaDiemID) return;
     try {
-      await updateMutation.mutateAsync(formData);
+      const payload: UpdateDiaDiemPayload = {
+        DiaDiemID: data.diaDiemID,
+        DiaDiemCapChaID: values.diaDiemCapChaID || null,
+        LoaiDiaDiemID: values.loaiDiaDiemID,
+        TenDiaDiem: values.tenDiaDiem,
+        MoTa: values.moTa || "",
+        TinhID: values.tinhID,
+        XaID: values.xaID,
+        KinhDo: values.kinhDo ?? null,
+        ViDo: values.viDo ?? null,
+        DiaChiSo: values.diaChiSo,
+        TrangThai: values.trangThai,
+        XoaFile: xoaFile,
+        file: selectedFile,
+        AnhDaiDien: data.anhDaiDien,
+      };
+
+      await updateMutation.mutateAsync(payload);
       toast.success("Cập nhật thông tin cơ sở thành công");
       onSuccess?.();
       onClose();
@@ -230,7 +234,7 @@ export function UpdateDiaDiemSlideOver({
       open={open}
       onClose={onClose}
       title="Cập nhật Cơ sở / Showroom"
-      description="Chỉnh sửa thông tin cơ sở chi nhánh"
+      description={`Chỉnh sửa thông số hoạt động và địa chỉ của "${data?.tenDiaDiem || ""}"`}
       icon={SquarePen}
       footer={
         <>
@@ -238,40 +242,37 @@ export function UpdateDiaDiemSlideOver({
             variant="outline"
             className="flex-1 cursor-pointer"
             onClick={onClose}
-            disabled={updateMutation.isPending}
+            disabled={updateMutation.isPending || isSubmitting}
           >
             Hủy
           </Button>
           <Button
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-            onClick={handleSubmit}
-            disabled={updateMutation.isPending}
+            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white cursor-pointer font-medium"
+            onClick={handleSubmit(onSubmit)}
+            disabled={updateMutation.isPending || isSubmitting}
           >
-            {updateMutation.isPending ? (
+            {updateMutation.isPending || isSubmitting ? (
               <RefreshCw className="w-4 h-4 animate-spin mr-1.5" />
             ) : null}
-            Lưu thay đổi
+            Cập nhật cơ sở
           </Button>
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
         <div className="col-span-2 flex flex-col gap-1.5">
           <label className="text-sm font-medium text-foreground">
             Tên địa điểm / Showroom <span className="text-red-500">*</span>
           </label>
           <Input
-            value={formData.TenDiaDiem}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, TenDiaDiem: e.target.value }))
-            }
-            placeholder="Nhập tên cơ sở..."
-            className={`rounded-lg ${errors.tenDiaDiem ? "border-red-500" : ""}`}
+            {...register("tenDiaDiem")}
+            placeholder="Ví dụ: Showroom BikeManager Cầu Giấy..."
+            className={`rounded-lg ${errors.tenDiaDiem ? "border-red-500 ring-1 ring-red-500/20" : ""}`}
           />
           {errors.tenDiaDiem && (
             <p className="text-xs text-red-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              {errors.tenDiaDiem}
+              {errors.tenDiaDiem.message}
             </p>
           )}
         </div>
@@ -280,39 +281,48 @@ export function UpdateDiaDiemSlideOver({
           <label className="text-sm font-medium text-foreground">
             Loại hình cơ sở <span className="text-red-500">*</span>
           </label>
-          <SearchSelect
-            options={loaiDiaDiemOptions}
-            value={formData.LoaiDiaDiemID}
-            onChange={(val) =>
-              setFormData((prev) => ({
-                ...prev,
-                LoaiDiaDiemID: Number(val) || 1,
-              }))
-            }
-            placeholder="Chọn loại cơ sở..."
-            isLoading={isLoadingLoaiDiaDiem}
-            height={10}
+          <Controller
+            name="loaiDiaDiemID"
+            control={control}
+            render={({ field }) => (
+              <SearchSelect
+                options={loaiDiaDiemOptions}
+                value={field.value}
+                onChange={(val) => field.onChange(Number(val) || 1)}
+                placeholder="Chọn loại cơ sở..."
+                isLoading={isLoadingLoaiDiaDiem}
+                height={10}
+                className={errors.loaiDiaDiemID ? "border-red-500 ring-1 ring-red-500/20" : ""}
+              />
+            )}
           />
+          {errors.loaiDiaDiemID && (
+            <p className="text-xs text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5" />
+              {errors.loaiDiaDiemID.message}
+            </p>
+          )}
         </div>
 
         <div className="col-span-1 flex flex-col gap-1.5">
           <label className="text-sm font-medium text-foreground">
-            Trực thuộc cơ sở cha
+            Trực thuộc cơ sở cha (nếu có)
           </label>
-          <SearchSelect
-            options={[
-              { value: "", label: "-- Không có (Độc lập) --" },
-              ...filteredParentOptions,
-            ]}
-            value={formData.DiaDiemCapChaID || ""}
-            onChange={(val) =>
-              setFormData((prev) => ({
-                ...prev,
-                DiaDiemCapChaID: val ? String(val) : null,
-              }))
-            }
-            placeholder="Chọn cơ sở cha..."
-            height={10}
+          <Controller
+            name="diaDiemCapChaID"
+            control={control}
+            render={({ field }) => (
+              <SearchSelect
+                options={[
+                  { value: "", label: "-- Không có (Độc lập) --" },
+                  ...filteredParentOptions,
+                ]}
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val ? String(val) : null)}
+                placeholder="Chọn cơ sở cha..."
+                height={10}
+              />
+            )}
           />
         </div>
 
@@ -320,23 +330,27 @@ export function UpdateDiaDiemSlideOver({
           <label className="text-sm font-medium text-foreground">
             Tỉnh / Thành phố <span className="text-red-500">*</span>
           </label>
-          <SearchSelect
-            options={provinceOptions}
-            value={formData.TinhID || ""}
-            onChange={(val) =>
-              setFormData((prev) => ({
-                ...prev,
-                TinhID: Number(val) || 0,
-                XaID: 0,
-              }))
-            }
-            placeholder="-- Chọn Tỉnh / TP --"
-            height={10}
+          <Controller
+            name="tinhID"
+            control={control}
+            render={({ field }) => (
+              <SearchSelect
+                options={provinceOptions}
+                value={field.value || ""}
+                onChange={(val) => {
+                  field.onChange(Number(val) || 0);
+                  setValue("xaID", 0);
+                }}
+                placeholder="-- Chọn Tỉnh / TP --"
+                height={10}
+                className={errors.tinhID ? "border-red-500 ring-1 ring-red-500/20" : ""}
+              />
+            )}
           />
           {errors.tinhID && (
             <p className="text-xs text-red-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              {errors.tinhID}
+              {errors.tinhID.message}
             </p>
           )}
         </div>
@@ -345,44 +359,44 @@ export function UpdateDiaDiemSlideOver({
           <label className="text-sm font-medium text-foreground">
             Phường / Xã <span className="text-red-500">*</span>
           </label>
-          <SearchSelect
-            options={communeOptions}
-            value={formData.XaID || ""}
-            onChange={(val) =>
-              setFormData((prev) => ({ ...prev, XaID: Number(val) || 0 }))
-            }
-            placeholder={
-              formData.TinhID
-                ? "-- Chọn Phường / Xã --"
-                : "Vui lòng chọn Tỉnh trước"
-            }
-            isLoading={isLoadingXa}
-            height={10}
+          <Controller
+            name="xaID"
+            control={control}
+            render={({ field }) => (
+              <SearchSelect
+                options={communeOptions}
+                value={field.value || ""}
+                onChange={(val) => field.onChange(Number(val) || 0)}
+                placeholder={
+                  watchedTinhID ? "-- Chọn Phường / Xã --" : "Vui lòng chọn Tỉnh trước"
+                }
+                isLoading={isLoadingXa}
+                height={10}
+                className={errors.xaID ? "border-red-500 ring-1 ring-red-500/20" : ""}
+              />
+            )}
           />
           {errors.xaID && (
             <p className="text-xs text-red-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              {errors.xaID}
+              {errors.xaID.message}
             </p>
           )}
         </div>
 
         <div className="col-span-2 flex flex-col gap-1.5">
           <label className="text-sm font-medium text-foreground">
-            Địa chỉ số <span className="text-red-500">*</span>
+            Địa chỉ số (Số nhà, Tên đường, Tòa nhà) <span className="text-red-500">*</span>
           </label>
           <Input
-            value={formData.DiaChiSo}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, DiaChiSo: e.target.value }))
-            }
-            placeholder="Nhập địa chỉ..."
-            className={`rounded-lg ${errors.diaChiSo ? "border-red-500" : ""}`}
+            {...register("diaChiSo")}
+            placeholder="Ví dụ: 123 Đường Cầu Giấy, Tòa nhà Indochina..."
+            className={`rounded-lg ${errors.diaChiSo ? "border-red-500 ring-1 ring-red-500/20" : ""}`}
           />
           {errors.diaChiSo && (
             <p className="text-xs text-red-600 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
-              {errors.diaChiSo}
+              {errors.diaChiSo.message}
             </p>
           )}
         </div>
@@ -394,13 +408,10 @@ export function UpdateDiaDiemSlideOver({
           <Input
             type="number"
             step="any"
-            value={formData.KinhDo ?? ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                KinhDo: e.target.value ? parseFloat(e.target.value) : null,
-              }))
-            }
+            {...register("kinhDo", {
+              setValueAs: (v) =>
+                v === "" || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v),
+            })}
             placeholder="Ví dụ: 105.7832"
             className="rounded-lg font-mono text-sm"
           />
@@ -413,13 +424,10 @@ export function UpdateDiaDiemSlideOver({
           <Input
             type="number"
             step="any"
-            value={formData.ViDo ?? ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                ViDo: e.target.value ? parseFloat(e.target.value) : null,
-              }))
-            }
+            {...register("viDo", {
+              setValueAs: (v) =>
+                v === "" || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v),
+            })}
             placeholder="Ví dụ: 21.0333"
             className="rounded-lg font-mono text-sm"
           />
@@ -473,10 +481,10 @@ export function UpdateDiaDiemSlideOver({
               <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
                 <div className="px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-xs text-[11px] text-white flex items-center gap-1.5 max-w-[80%]">
                   <span className="font-semibold text-emerald-400">Ảnh mới:</span>
-                  <span className="truncate">{formData.file?.name}</span>
-                  {formData.file && (
+                  <span className="truncate">{selectedFile?.name}</span>
+                  {selectedFile && (
                     <span className="text-zinc-300 shrink-0">
-                      ({(formData.file.size / (1024 * 1024)).toFixed(2)} MB)
+                      ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
                     </span>
                   )}
                 </div>
@@ -490,7 +498,7 @@ export function UpdateDiaDiemSlideOver({
                 </button>
               </div>
             </div>
-          ) : data?.anhDaiDien && !formData.XoaFile ? (
+          ) : data?.anhDaiDien && !xoaFile ? (
             /* Trường hợp 2: Có ảnh hiện tại từ hệ thống và chưa đánh dấu xóa */
             <div className="relative w-full h-44 rounded-xl overflow-hidden border border-border/80 bg-muted/40 group shadow-2xs">
               <Image
@@ -527,7 +535,7 @@ export function UpdateDiaDiemSlideOver({
                 <span>Ảnh hiện tại trên hệ thống</span>
               </div>
             </div>
-          ) : formData.XoaFile ? (
+          ) : xoaFile ? (
             /* Trường hợp 3: Đã chọn xóa ảnh hiện tại */
             <div className="rounded-xl border border-dashed border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20 p-4 text-center flex flex-col items-center justify-center gap-2">
               <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center">
@@ -588,10 +596,7 @@ export function UpdateDiaDiemSlideOver({
             Mô tả chi tiết
           </label>
           <Textarea
-            value={formData.MoTa || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, MoTa: e.target.value }))
-            }
+            {...register("moTa")}
             placeholder="Nhập mô tả..."
             className="h-24 resize-none rounded-lg text-sm"
           />
@@ -606,15 +611,19 @@ export function UpdateDiaDiemSlideOver({
               Kích hoạt tiếp nhận đơn hàng & dịch vụ
             </p>
           </div>
-          <Switch
-            id="isActiveDiaDiemUpdate"
-            checked={formData.TrangThai}
-            onCheckedChange={(checked) =>
-              setFormData((prev) => ({ ...prev, TrangThai: checked }))
-            }
+          <Controller
+            name="trangThai"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                id="isActiveDiaDiemUpdate"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
           />
         </div>
-      </div>
+      </form>
     </SlideOver>
   );
 }

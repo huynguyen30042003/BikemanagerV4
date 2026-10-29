@@ -31,7 +31,7 @@ const soSerialSchema = z.object({
 interface EditProductSerialSlideOverProps {
   open: boolean;
   onClose: () => void;
-  selectSerial: SP_SoSerial;
+  selectSerial?: SP_SoSerial | null;
   variantOptions: SelectOption[];
   isLoadingVariants?: boolean;
   defaultBienTheId?: string;

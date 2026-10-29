@@ -4,7 +4,6 @@ import React, { Suspense, useMemo, useState } from "react";
 import { FolderOpen, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useQuocGia } from "@/hooks/QuocGia/useQuocGia";
 import { DM_QuocGia, QuocGiaKPI } from "@/types/quocGia";
 import {
@@ -45,12 +44,7 @@ function QuocGiaContent() {
     isLoadingKPI,
     refetchKPI,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
-    isDeleting,
+    handleDelete,
 
     handleSync,
     isSyncing,
@@ -186,7 +180,7 @@ function QuocGiaContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           copiedId={copiedId}
           onCopyCode={handleCopyCode}
         />
@@ -200,7 +194,7 @@ function QuocGiaContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           copiedId={copiedId}
           onCopyCode={handleCopyCode}
         />
@@ -222,30 +216,6 @@ function QuocGiaContent() {
         onClose={() => setEditingItem(null)}
         data={editingItem}
         onSuccess={handleReload}
-      />
-
-      {/* 6. Modal Xác nhận xóa */}
-      <ConfirmModal
-        open={openDelete}
-        onClose={() => setOpenDelete(false)}
-        onConfirm={handleSubmitDelete}
-        title="Xác nhận xóa quốc gia"
-        description={
-          <div>
-            <p>
-              Bạn có chắc chắn muốn xóa quốc gia &quot;
-              <strong className="text-foreground">{selectItemName}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác nếu quốc gia này đang được liên
-              kết với sản phẩm xe, xuất xứ hoặc nhà cung cấp.
-            </span>
-          </div>
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

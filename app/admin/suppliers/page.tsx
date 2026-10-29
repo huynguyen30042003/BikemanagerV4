@@ -14,7 +14,6 @@ import {
   SuppliersTable,
   CreateSupplierSlideOver,
   UpdateSupplierSlideOver,
-  DeleteSupplierModal,
 } from "@/components/Suppliers";
 
 function SuppliersContent() {
@@ -46,13 +45,12 @@ function SuppliersContent() {
     kpiData,
     isLoadingKPI,
     refetchKPI,
+    handleDelete,
   } = useNhaCungCap();
 
-  // Quản lý trạng thái mở modal/drawer độc lập (cô lập state chống re-render toàn trang)
+  // Quản lý trạng thái mở modal/drawer độc lập (Single-State Pattern)
   const [openCreate, setOpenCreate] = useState<boolean>(false);
   const [selectedSupplierForEdit, setSelectedSupplierForEdit] =
-    useState<NH_NhaCungCap | null>(null);
-  const [selectedSupplierForDelete, setSelectedSupplierForDelete] =
     useState<NH_NhaCungCap | null>(null);
 
   const hasActiveFilters =
@@ -184,7 +182,7 @@ function SuppliersContent() {
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
         onEdit={(item) => setSelectedSupplierForEdit(item)}
-        onDelete={(item) => setSelectedSupplierForDelete(item)}
+        onDelete={handleDelete}
         onAddNew={() => setOpenCreate(true)}
       />
 
@@ -207,13 +205,6 @@ function SuppliersContent() {
         provinceOptions={provinceOptions}
         isLoadingCountries={isLoadingCountries}
         isLoadingProvinces={isLoadingProvinces}
-      />
-
-      {/* 7. Modal Xác nhận xóa */}
-      <DeleteSupplierModal
-        open={Boolean(selectedSupplierForDelete)}
-        onClose={() => setSelectedSupplierForDelete(null)}
-        supplier={selectedSupplierForDelete}
       />
     </div>
   );

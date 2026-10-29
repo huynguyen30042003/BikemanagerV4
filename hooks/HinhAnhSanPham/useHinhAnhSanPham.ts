@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import { SP_HinhAnhSanPham } from "@/types/hinhAnhSanPham";
 import {
   useGetHinhAnhs,
@@ -15,6 +16,7 @@ import { useGetBienTheSanPham } from "../BienTheSanPham/useBienTheSanPhamApi";
 export * from "./useHinhAnhSanPhamApi";
 
 export function useHinhAnhSanPham(initialSanPhamId?: string) {
+  const { confirm } = useConfirm();
   const [selectedSanPhamId, setSelectedSanPhamId] = useState<string>(
     initialSanPhamId ?? ""
   );
@@ -171,6 +173,30 @@ export function useHinhAnhSanPham(initialSanPhamId?: string) {
     }
   };
 
+  const handleDelete = async (img: SP_HinhAnhSanPham) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa hình ảnh",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: img.tieuDe
+        ? `Bạn có chắc chắn muốn xóa hình ảnh "${img.tieuDe}" khỏi bộ sưu tập gallery không? Thao tác này không thể hoàn tác.`
+        : "Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập gallery không? Thao tác này không thể hoàn tác.",
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await deleteMutation.mutateAsync({
+        hinhAnhId: img.hinhAnhID,
+        duongDanAnh: img.duongDanAnh,
+      });
+      refetch();
+      refetchKPI();
+    } catch {
+      // Toast handled
+    }
+  };
+
   return {
     selectedSanPhamId: activeSanPhamId,
     setSelectedSanPhamId,
@@ -204,6 +230,7 @@ export function useHinhAnhSanPham(initialSanPhamId?: string) {
     selectHinhAnhId: deletingImage?.hinhAnhId ?? "",
     deletingImage,
     setDeletingImage,
+    handleDelete,
     handleOpenDelete,
     handleSubmitDelete,
     isDeleting: deleteMutation.isPending,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import { useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ export const danhMucChungSchema = z.object({
  * Hook quản lý toàn bộ State & UI của trang Danh mục dùng chung
  */
 export function useDanhMucChung() {
+  const { confirm } = useConfirm();
   // Pagination & Filter state
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
@@ -50,9 +52,6 @@ export function useDanhMucChung() {
   // Modal / Drawer state
   const [open, setOpen] = useState<boolean>(false);
   const [openUpdate, setOpenUpdate] = useState<boolean>(false);
-  const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const [selectDanhMuc, setSelectDanhMuc] = useState<number>(0);
-  const [selectItemName, setSelectItemName] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Form Add State
@@ -152,12 +151,6 @@ export function useDanhMucChung() {
     setOpenUpdate(true);
   };
 
-  const handleOpenDelete = (row: DM_DanhMucChung) => {
-    setSelectDanhMuc(row.danhMucID);
-    setSelectItemName(row.ten);
-    setOpenDelete(true);
-  };
-
   const handleSubmit = async () => {
     const result = danhMucChungSchema.safeParse({
       ten: dataAdd.Ten,
@@ -183,8 +176,8 @@ export function useDanhMucChung() {
       setOpen(false);
     } catch (error: unknown) {
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Đã có lỗi xảy ra khi thêm danh mục";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Đã có lỗi xảy ra khi thêm danh mục";
       toast.error(msg);
     }
   };
@@ -214,22 +207,30 @@ export function useDanhMucChung() {
       setOpenUpdate(false);
     } catch (error: unknown) {
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Đã có lỗi xảy ra khi cập nhật danh mục";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Đã có lỗi xảy ra khi cập nhật danh mục";
       toast.error(msg);
     }
   };
 
-  const handleSubmitDelete = async () => {
-    if (!selectDanhMuc) return;
+  const handleDelete = async (row: DM_DanhMucChung) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa danh mục dùng chung",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: `Bạn có chắc chắn muốn xóa danh mục "${row.ten}" không? Toàn bộ danh mục con chi tiết có thể bị ảnh hưởng.`,
+    });
+    if (!isConfirmed) return;
     try {
-      await deleteCategory.mutateAsync(selectDanhMuc);
+      await deleteCategory.mutateAsync(row.danhMucID);
       toast.success("Xóa danh mục thành công");
-      setOpenDelete(false);
+      refetch();
+      refetchKPI();
     } catch (error: unknown) {
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Không thể xóa danh mục (Có thể do có danh mục con hoặc dữ liệu ràng buộc)";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ||
+        "Không thể xóa danh mục (Có thể do có danh mục con hoặc dữ liệu ràng buộc)";
       toast.error(msg);
     }
   };
@@ -240,8 +241,8 @@ export function useDanhMucChung() {
       toast.success("Đồng bộ danh mục thành công");
     } catch (error: unknown) {
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Đồng bộ thất bại";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Đồng bộ thất bại";
       toast.error(msg);
     }
   };
@@ -290,12 +291,7 @@ export function useDanhMucChung() {
     isUpdating: updateCategory.isPending,
 
     // Delete state & actions
-    openDelete,
-    setOpenDelete,
-    selectDanhMuc,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteCategory.isPending,
 
     // Sync

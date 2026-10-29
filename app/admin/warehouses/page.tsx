@@ -15,7 +15,6 @@ import {
   WarehousesTable,
   CreateWarehouseSlideOver,
   UpdateWarehouseSlideOver,
-  DeleteWarehouseModal,
 } from "@/components/Warehouses";
 
 function WarehousesContent() {
@@ -42,15 +41,14 @@ function WarehousesContent() {
     isLoading,
     isFetching,
     refetch,
+    handleDelete,
   } = useKho();
 
   const { data: kpiData, isLoading: isLoadingKPI } = useGetKhoKPI();
 
-  // Quản lý trạng thái mở modal/drawer độc lập (cô lập state chống re-render toàn trang)
+  // Quản lý trạng thái mở modal/drawer độc lập (Single-State Pattern)
   const [openCreate, setOpenCreate] = useState<boolean>(false);
   const [selectedWarehouseForEdit, setSelectedWarehouseForEdit] =
-    useState<KHO_Kho | null>(null);
-  const [selectedWarehouseForDelete, setSelectedWarehouseForDelete] =
     useState<KHO_Kho | null>(null);
 
   const activeCount = useMemo(
@@ -178,7 +176,7 @@ function WarehousesContent() {
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
         onEdit={(item) => setSelectedWarehouseForEdit(item)}
-        onDelete={(item) => setSelectedWarehouseForDelete(item)}
+        onDelete={handleDelete}
         onAddNew={() => setOpenCreate(true)}
         getLoaiKhoLabel={getLoaiKhoLabel}
       />
@@ -202,13 +200,6 @@ function WarehousesContent() {
         loaiKhoOptions={loaiKhoOptions}
         isLoadingLocations={isLoadingLocations}
         isLoadingLoaiKho={isLoadingLoaiKho}
-      />
-
-      {/* 7. Modal Xác nhận xóa */}
-      <DeleteWarehouseModal
-        open={Boolean(selectedWarehouseForDelete)}
-        onClose={() => setSelectedWarehouseForDelete(null)}
-        warehouse={selectedWarehouseForDelete}
       />
     </div>
   );

@@ -401,12 +401,12 @@ export const DanhMucChiTietFilterBar: React.FC<
             {/* Parent Category SearchSelect */}
             <div className="w-[220px] shrink-0">
               <SearchSelect
-                value={parentCategoryFilter ? String(parentCategoryFilter) : ""}
+                value={parentCategoryFilter ? Number(parentCategoryFilter) : ""}
                 options={filterParentOptions}
                 placeholder="📁 Lọc danh mục cha..."
                 isLoading={isLoadingParent}
                 onChange={(val) =>
-                  onParentCategoryChange(val ? String(val) : "")
+                  onParentCategoryChange(val ? Number(val) : "")
                 }
                 height={9}
               />

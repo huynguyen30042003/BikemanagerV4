@@ -2,11 +2,7 @@
 
 import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import {
-  useHinhAnhSanPham,
-  useDeleteHinhAnh,
-} from "@/hooks/HinhAnhSanPham/useHinhAnhSanPham";
+import { useHinhAnhSanPham } from "@/hooks/HinhAnhSanPham/useHinhAnhSanPham";
 import { SP_HinhAnhSanPham } from "@/types/hinhAnhSanPham";
 import {
   ProductImagesKpiGrid,
@@ -43,14 +39,10 @@ function ImagesContent() {
 
     openAdd,
     setOpenAdd,
+    handleDelete,
   } = useHinhAnhSanPham(initialSanPhamId);
 
   const [zoomImage, setZoomImage] = useState<SP_HinhAnhSanPham | null>(null);
-  const [deletingImage, setDeletingImage] = useState<SP_HinhAnhSanPham | null>(
-    null,
-  );
-
-  const deleteMutation = useDeleteHinhAnh();
 
   const selectedProductTitle = useMemo(() => {
     const found = productOptions.find(
@@ -84,20 +76,6 @@ function ImagesContent() {
       kpiData?.total_AnhChung ?? items.filter((i) => !i.bienTheSanPhamID).length
     );
   }, [kpiData?.total_AnhChung, items]);
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingImage) return;
-    try {
-      await deleteMutation.mutateAsync({
-        hinhAnhId: deletingImage.hinhAnhID,
-        duongDanAnh: deletingImage.duongDanAnh,
-      });
-      setDeletingImage(null);
-      refetchKPI();
-    } catch {
-      // Toast notification is handled in mutation
-    }
-  };
 
   return (
     <div className="p-3 sm:p-5 lg:p-7 min-h-screen space-y-3 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
@@ -140,7 +118,7 @@ function ImagesContent() {
         isLoading={isLoading}
         onOpenAdd={() => setOpenAdd(true)}
         onZoom={(img) => setZoomImage(img)}
-        onDelete={(img) => setDeletingImage(img)}
+        onDelete={handleDelete}
       />
 
       {/* 4. SlideOver: Tải lên hình ảnh mới (State Form cô lập hoàn toàn) */}
@@ -163,26 +141,10 @@ function ImagesContent() {
         images={items}
         onClose={() => setZoomImage(null)}
         onNavigate={(nextImg) => setZoomImage(nextImg)}
-        onDelete={(img) => {
+        onDelete={async (img) => {
           setZoomImage(null);
-          setDeletingImage(img);
+          await handleDelete(img);
         }}
-      />
-
-      {/* 6. Modal xác nhận xóa ảnh an toàn */}
-      <ConfirmModal
-        open={Boolean(deletingImage)}
-        onClose={() => setDeletingImage(null)}
-        onConfirm={handleDeleteConfirm}
-        title="Xác nhận xóa hình ảnh"
-        description={
-          deletingImage?.tieuDe
-            ? `Bạn có chắc chắn muốn xóa hình ảnh "${deletingImage.tieuDe}" khỏi bộ sưu tập gallery không? Thao tác này không thể hoàn tác.`
-            : "Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập gallery không? Thao tác này không thể hoàn tác."
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
-        isLoading={deleteMutation.isPending}
       />
     </div>
   );

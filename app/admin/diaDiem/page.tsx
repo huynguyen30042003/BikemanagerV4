@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Store } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SelectOption } from "@/components/ui/selectSearch";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useDiaDiem } from "@/hooks/DiaDiem/useDiaDiem";
 import { DM_DiaDiem, DiaDiemKPI } from "@/types/diaDiem";
 import {
@@ -60,12 +59,7 @@ function DiaDiemContent() {
     isLoadingKPI,
     refetchKPI,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
-    isDeleting,
+    handleDelete,
   } = useDiaDiem(tinhIdFromUrl ? Number(tinhIdFromUrl) : "");
 
   // Metrics (Derived KPI metrics - Ưu tiên lấy từ API GetKPI hoặc fallback tính cục bộ)
@@ -193,7 +187,7 @@ function DiaDiemContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -211,7 +205,7 @@ function DiaDiemContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           provinceMap={provinceMap}
           getLoaiBadge={getLoaiBadge}
           onResetFilters={handleResetFilters}
@@ -243,30 +237,6 @@ function DiaDiemContent() {
         loaiDiaDiemOptions={loaiDiaDiemOptions}
         isLoadingLoaiDiaDiem={isLoadingLoaiDiaDiem}
         onSuccess={handleReload}
-      />
-
-      {/* Modal Xác nhận Xóa */}
-      <ConfirmModal
-        open={openDelete}
-        onClose={() => setOpenDelete(false)}
-        onConfirm={handleSubmitDelete}
-        title="Xác nhận xóa cơ sở / showroom"
-        description={
-          <div>
-            <p>
-              Bạn có chắc chắn muốn xóa cơ sở &quot;
-              <strong className="text-foreground">{selectItemName}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác nếu cơ sở đang có giao dịch đơn
-              hàng hoặc kho hàng liên kết.
-            </span>
-          </div>
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

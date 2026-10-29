@@ -13,7 +13,6 @@ import {
   WarrantiesFilterBar,
   WarrantiesTable,
   CreateWarrantySlideOver,
-  DeleteWarrantyModal,
 } from "@/components/Warranties";
 import { SerialImagesSlideOver } from "@/components/ProductSerials";
 import { ShieldCheck, Plus, RefreshCw } from "lucide-react";
@@ -39,13 +38,13 @@ function WarrantiesContent() {
     isLoading,
     isFetching,
     refetch,
+    handleDelete,
   } = useBaoHanhHook();
 
   const { data: kpi } = useGetBaoHanhKPI();
 
   // Dialog states (Isolated from page re-renders)
   const [openCreate, setOpenCreate] = useState(false);
-  const [deleteItem, setDeleteItem] = useState<BH_BaoHanh | null>(null);
   const [imageSerial, setImageSerial] = useState<{
     soSerialID: string;
     maSerial?: string;
@@ -137,7 +136,7 @@ function WarrantiesContent() {
         totalCount={totalCount}
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
-        onDelete={(item) => setDeleteItem(item)}
+        onDelete={handleDelete}
         onAddNew={() => setOpenCreate(true)}
         onOpenImages={(item) =>
           setImageSerial({
@@ -165,14 +164,6 @@ function WarrantiesContent() {
         customerOptions={customerOptions}
         warrantyStatusOptions={warrantyStatusOptions}
         isLoadingStatuses={isLoadingStatuses}
-        onSuccess={() => refetch()}
-      />
-
-      {/* Modal xác nhận hủy sổ bảo hành */}
-      <DeleteWarrantyModal
-        open={Boolean(deleteItem)}
-        item={deleteItem}
-        onClose={() => setDeleteItem(null)}
         onSuccess={() => refetch()}
       />
     </div>

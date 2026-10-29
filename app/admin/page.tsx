@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useGetDashboardOverview } from "@/hooks/Dashboard/useDashboardApi";
 import { useGetKho } from "@/hooks/Kho/useKhoApi";
@@ -20,7 +21,7 @@ import {
   DashboardStockWarning,
 } from "@/components/Dashboard";
 
-export default function AdminDashboardPage() {
+function AdminDashboardContent() {
   const { user } = useAuthStore();
   const [timeRange, setTimeRange] = useState<TimeRangeType>("hom_nay");
   const [selectedKhoId, setSelectedKhoId] = useState<string>("");
@@ -168,5 +169,30 @@ export default function AdminDashboardPage() {
       {/* 5. Cảnh báo tồn kho an toàn & Phụ tùng sắp hết */}
       <DashboardStockWarning dashboard={dashboard} />
     </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="p-3 sm:p-5 lg:p-7 space-y-5 sm:space-y-6 max-w-[1600px] mx-auto min-w-0">
+      <Skeleton className="h-20 w-full rounded-2xl" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 w-full rounded-xl" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Skeleton className="h-80 lg:col-span-2 rounded-xl" />
+        <Skeleton className="h-80 rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }

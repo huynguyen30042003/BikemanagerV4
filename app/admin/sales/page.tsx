@@ -299,7 +299,8 @@ function SalesContent() {
       title: "Xác nhận làm mới giỏ hàng",
       variant: "warning",
       confirmText: "Làm mới giỏ hàng",
-      description: "Bạn có chắc chắn muốn làm mới toàn bộ giỏ hàng này không? Mọi sản phẩm đang chọn sẽ bị xóa khỏi giỏ.",
+      description:
+        "Bạn có chắc chắn muốn làm mới toàn bộ giỏ hàng này không? Mọi sản phẩm đang chọn sẽ bị xóa khỏi giỏ.",
     });
     if (isConfirmed) {
       setCart([]);
@@ -351,8 +352,6 @@ function SalesContent() {
 
   // Chọn khách hàng vãng lai tại quầy
   const handleSelectWalkInCustomer = () => {
-    console.log(customerOptions);
-
     if (customerOptions.length > 0) {
       handleCustomerChange("a200fd5a-c5cd-4576-bfc6-61aeabca9d52");
       toast.info("Đã chọn khách hàng vãng lai tại quầy");

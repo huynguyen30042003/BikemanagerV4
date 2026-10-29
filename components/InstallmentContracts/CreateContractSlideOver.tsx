@@ -733,7 +733,7 @@ export const CreateContractSlideOver: React.FC<
               </label>
               <SearchSelect
                 options={STATUS_OPTIONS}
-                value={String(formData.TrangThaiHopDongID || 110)}
+                value={Number(formData.TrangThaiHopDongID || 110)}
                 onChange={(val) =>
                   setFormData((prev) => ({
                     ...prev,
@@ -750,7 +750,7 @@ export const CreateContractSlideOver: React.FC<
               </label>
               <SearchSelect
                 options={DISBURSEMENT_OPTIONS}
-                value={String(formData.TrangThaiGiaiNganID || 120)}
+                value={Number(formData.TrangThaiGiaiNganID || 120)}
                 onChange={(val) =>
                   setFormData((prev) => ({
                     ...prev,

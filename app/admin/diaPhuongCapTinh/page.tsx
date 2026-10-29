@@ -7,7 +7,6 @@ import {
   DM_DiaPhuongCapTinh,
   DiaPhuongCapTinhKPI,
 } from "@/types/diaPhuongCapTinh";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   DiaPhuongCapTinhKpiGrid,
   DiaPhuongCapTinhFilterBar,
@@ -48,12 +47,7 @@ function DiaPhuongCapTinhContent() {
     isLoadingKPI,
     refetchKPI,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
-    isDeleting,
+    handleDelete,
 
     handleSync,
     isSyncing,
@@ -154,7 +148,7 @@ function DiaPhuongCapTinhContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onOpenCreate={() => setOpenCreate(true)}
           onSync={handleSync}
           onResetFilters={handleResetFilters}
@@ -171,7 +165,7 @@ function DiaPhuongCapTinhContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
           onOpenCreate={() => setOpenCreate(true)}
@@ -193,30 +187,6 @@ function DiaPhuongCapTinhContent() {
         onClose={() => setEditingItem(null)}
         data={editingItem}
         onSuccess={handleReload}
-      />
-
-      {/* Modal Xác nhận Xóa */}
-      <ConfirmModal
-        open={openDelete}
-        onClose={() => setOpenDelete(false)}
-        onConfirm={handleSubmitDelete}
-        title="Xác nhận xóa tỉnh / thành phố"
-        description={
-          <div>
-            <p>
-              Bạn có chắc chắn muốn xóa &quot;
-              <strong className="text-foreground">{selectItemName}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác nếu tỉnh / thành phố này đang có
-              các xã / phường hoặc cơ sở showroom liên kết.
-            </span>
-          </div>
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

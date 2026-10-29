@@ -18,6 +18,7 @@ import {
 } from "./useSanPhamApi";
 import { useGetThuongHieu } from "../ThuongHieu/useThuongHieuApi";
 import { useGetDanhMucChiTiet } from "../DanhMucChiTiet/useDanhMucChiTietApi";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 
 export * from "./useSanPhamApi";
 
@@ -280,6 +281,24 @@ export function useSanPham(
     }
   };
 
+  const { confirm } = useConfirm();
+
+  const handleDelete = async (item: SP_SanPham | { sanPhamID: string; tenSanPham?: string }) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa sản phẩm",
+      description: `Bạn có chắc chắn muốn xóa sản phẩm "${item.tenSanPham || ""}" không? Lưu ý: Không thể xóa nếu sản phẩm này đã có các biến thể hoặc phát sinh dữ liệu tồn kho.`,
+      confirmText: "Xác nhận xóa",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
+    try {
+      await deleteMutation.mutateAsync(item.sanPhamID);
+      refetchKPI();
+    } catch {
+      // Toast notification is handled in mutation
+    }
+  };
+
   const handleSubmitDelete = async () => {
     if (!selectSanPhamId) return;
     try {
@@ -350,6 +369,7 @@ export function useSanPham(
     selectItemName,
     handleOpenDelete,
     handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     errors,

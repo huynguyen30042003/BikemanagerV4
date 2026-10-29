@@ -623,6 +623,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
       await hoanThanhVaGiaoXeMutation.mutateAsync(order.donHangID);
       toast.success("Xác nhận hoàn thành đơn và bàn giao xe thành công!");
       refetch();
+      refetchKPI();
     } catch (err: unknown) {
       toast.error(
         extractErrorMessage(
@@ -645,6 +646,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
       await deleteMutation.mutateAsync(order.donHangID);
       toast.success("Đã hủy đơn hàng thành công!");
       refetch();
+      refetchKPI();
     } catch {
       toast.error("Không thể hủy đơn hàng này!");
     }

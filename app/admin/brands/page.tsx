@@ -1,10 +1,7 @@
 "use client";
 
 import React, { Suspense, useState, useMemo } from "react";
-import {
-  useThuongHieu,
-  useDeleteThuongHieu,
-} from "@/hooks/ThuongHieu/useThuongHieu";
+import { useThuongHieu } from "@/hooks/ThuongHieu/useThuongHieu";
 import { SP_ThuongHieu } from "@/types/thuongHieu";
 import {
   BrandsKpiGrid,
@@ -12,7 +9,6 @@ import {
   BrandsGrid,
   BrandsTable,
   BrandsSkeleton,
-  BrandsDeleteModal,
   CreateBrandSlideOver,
   UpdateBrandSlideOver,
   ViewMode,
@@ -41,31 +37,18 @@ function BrandsContent() {
     kpiData,
     isLoadingKPI,
     refetchKPI,
+
+    handleDelete,
   } = useThuongHieu();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [openAdd, setOpenAdd] = useState(false);
   const [editingBrand, setEditingBrand] = useState<SP_ThuongHieu | null>(null);
-  const [deletingBrand, setDeletingBrand] = useState<SP_ThuongHieu | null>(
-    null,
-  );
-
-  const deleteMutation = useDeleteThuongHieu();
 
   const handleResetFilters = () => {
     handleSearch("");
     setStatusFilter("all");
     setPage(1);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingBrand) return;
-    try {
-      await deleteMutation.mutateAsync(deletingBrand.thuongHieuID);
-      setDeletingBrand(null);
-    } catch {
-      // Toast notification is handled inside useDeleteThuongHieu mutation
-    }
   };
 
   // Ưu tiên số liệu thống kê từ Backend KPI, fallback sang số liệu tính từ danh sách hiện tại
@@ -151,7 +134,7 @@ function BrandsContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(brand) => setEditingBrand(brand)}
-          onDelete={(brand) => setDeletingBrand(brand)}
+          onDelete={handleDelete}
           onOpenAdd={() => setOpenAdd(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -166,7 +149,7 @@ function BrandsContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(brand) => setEditingBrand(brand)}
-          onDelete={(brand) => setDeletingBrand(brand)}
+          onDelete={handleDelete}
         />
       )}
 
@@ -191,14 +174,6 @@ function BrandsContent() {
           refetch();
           refetchKPI();
         }}
-      />
-
-      {/* 6. Modal xác nhận xóa thương hiệu (Component Isolation) */}
-      <BrandsDeleteModal
-        brand={deletingBrand}
-        onClose={() => setDeletingBrand(null)}
-        onConfirm={handleDeleteConfirm}
-        isLoading={deleteMutation.isPending}
       />
     </div>
   );

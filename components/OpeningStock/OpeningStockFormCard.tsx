@@ -23,7 +23,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchSelect } from "@/components/ui/selectSearch";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   KHO_TonKho_NhapTonDauKy_Request,
   KHO_TonKho_NhapTonDauKy_Response,
@@ -75,8 +75,6 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
   soLuongToiThieu,
   setSoLuongToiThieu,
 }) => {
-  console.log("khoOptions",khoOptions);
-  
   // Form state
   const [khoId, setKhoId] = useState<string>(selectedKhoId || "");
   const [bienTheId, setBienTheId] = useState<string>(presetVariantId || "");
@@ -87,12 +85,11 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
   const [trangThaiSerialId] = useState<number>(59); // Mặc định 59: Trong kho / Tồn kho
   const [serials, setSerials] = useState<KHO_TonKho_SerialNhap_Item[]>([]);
 
+  const { confirm } = useConfirm();
+
   // Bulk paste modal / popup state
   const [showBulkPasteModal, setShowBulkPasteModal] = useState<boolean>(false);
   const [bulkPasteText, setBulkPasteText] = useState<string>("");
-
-  // Confirmation modal
-  const [showConfirmSubmit, setShowConfirmSubmit] = useState<boolean>(false);
 
   // Result alert after successful submit
   const [lastResult, setLastResult] =
@@ -282,8 +279,8 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
     );
   };
 
-  // Validation before opening confirm modal
-  const handleValidateAndPrompt = (e: React.FormEvent) => {
+  // Submit with promise-based confirm dialog
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!khoId) {
@@ -310,11 +307,21 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
       }
     }
 
-    setShowConfirmSubmit(true);
-  };
+    const khoLabel =
+      khoOptions.find((k) => k.value === khoId)?.label || "Kho đã chọn";
+    const variantName = selectedVariant?.tenBienThe || "Mặt hàng";
 
-  // Execute API submit
-  const handleExecuteSubmit = async () => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận nhập tồn kho đầu kỳ",
+      variant: "info",
+      confirmText: "Xác nhận nhập kho",
+      description: `Bạn có chắc chắn muốn ghi nhận nhập tồn kho đầu kỳ cho "${variantName}" (+${soLuong} chiếc/kiện) vào "${khoLabel}" với đơn giá vốn ${formatCurrency(donGiaVon)}${
+        isSerialManaged ? ` kèm ${serials.length} mã Serial/Khung` : ""
+      }? Hệ thống sẽ trực tiếp cập nhật số dư khả dụng và ghi thẻ kho ban đầu.`,
+    });
+
+    if (!isConfirmed) return;
+
     const payload: KHO_TonKho_NhapTonDauKy_Request = {
       KhoID: khoId,
       BienTheSanPhamID: bienTheId,
@@ -330,7 +337,6 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
     try {
       const res = await nhapTonMutation.mutateAsync(payload);
       setLastResult(res);
-      setShowConfirmSubmit(false);
       if (onSuccessNhapTon) onSuccessNhapTon(res);
 
       // Reset form partially for the next item
@@ -425,7 +431,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
         )}
 
         {/* Main Form */}
-        <form onSubmit={handleValidateAndPrompt} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Row 1: Kho hàng & Biến thể sản phẩm */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -455,7 +461,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
                 options={variantOptions}
                 value={bienTheId}
                 onChange={(val) => {
-                  setBienTheId(String(val || ""))
+                  setBienTheId(String(val || ""));
                   // setSoLuongToiThieu()
                 }}
                 isLoading={isLoadingVariants}
@@ -794,42 +800,6 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
           </div>
         </form>
       </Card>
-
-      {/* Confirmation Modal */}
-      <ConfirmModal
-        open={showConfirmSubmit}
-        onClose={() => setShowConfirmSubmit(false)}
-        onConfirm={handleExecuteSubmit}
-        title="Xác nhận nhập tồn kho đầu kỳ?"
-        description={
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <p>
-              Bạn đang thực hiện ghi nhận số lượng tồn kho đầu kỳ vào hệ thống:
-            </p>
-            <div className="p-3 rounded-lg bg-muted/60 space-y-1 font-mono text-foreground">
-              <div>
-                • Kho: {khoOptions.find((k) => k.value === khoId)?.label}
-              </div>
-              <div>• Mặt hàng: {selectedVariant?.tenBienThe}</div>
-              <div>• Số lượng: +{soLuong} chiếc / kiện</div>
-              <div>• Đơn giá vốn: {formatCurrency(donGiaVon)}</div>
-              <div>• Tổng vốn: {formatCurrency(donGiaVon * soLuong)}</div>
-              {isSerialManaged && (
-                <div className="text-blue-600 dark:text-blue-400 font-semibold">
-                  • Số lượng Serial kèm theo: {serials.length} mã
-                </div>
-              )}
-            </div>
-            <p className="text-[11px] text-amber-600 dark:text-amber-400">
-              Thao tác này sẽ trực tiếp cập nhật số dư khả dụng và ghi thẻ kho
-              ban đầu.
-            </p>
-          </div>
-        }
-        confirmText="Xác nhận nhập kho"
-        isLoading={nhapTonMutation.isPending}
-        variant="info"
-      />
 
       {/* Bulk Paste Modal */}
       {showBulkPasteModal && (

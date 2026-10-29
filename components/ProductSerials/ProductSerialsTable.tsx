@@ -44,8 +44,8 @@ interface ProductSerialsTableProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onOpenWarranty: (item: SP_SoSerial) => void;
   onOpenChangeStatus: (item: SP_SoSerial) => void;
-  onOpenEdit: () => void;
-  setSelectSerial: (item: SP_SoSerial) => void;
+  onOpenEdit: (item: SP_SoSerial) => void;
+  setSelectSerial?: (item: SP_SoSerial) => void;
   onOpenImages?: (item: SP_SoSerial) => void;
   getSerialStatusBadge: (statusId?: number | null) => {
     bgClass: string;
@@ -305,8 +305,8 @@ export const ProductSerialsTable: React.FC<ProductSerialsTableProps> = ({
             variant="ghost"
             size="icon-sm"
             onClick={() => {
-              onOpenEdit();
-              setSelectSerial(row);
+              onOpenEdit(row);
+              setSelectSerial?.(row);
             }}
             title="Chuyển trạng thái serial"
             className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"

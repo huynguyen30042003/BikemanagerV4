@@ -344,7 +344,7 @@ export const ProductSerialsFilterBar: React.FC<
                 <SearchSelect
                   placeholder="Tất cả trạng thái serial"
                   options={filterStatusOptions}
-                  value={statusFilter !== null ? String(statusFilter) : ""}
+                  value={statusFilter !== null ? Number(statusFilter) : ""}
                   onChange={(val) => {
                     onStatusFilterChange(val ? Number(val) : null);
                   }}
@@ -402,7 +402,7 @@ export const ProductSerialsFilterBar: React.FC<
               <SearchSelect
                 placeholder="Tất cả trạng thái serial"
                 options={filterStatusOptions}
-                value={statusFilter !== null ? String(statusFilter) : ""}
+                value={statusFilter !== null ? Number(statusFilter) : ""}
                 onChange={(val) => {
                   onStatusFilterChange(val ? Number(val) : null);
                 }}

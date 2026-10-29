@@ -4,8 +4,7 @@ import React, { Suspense, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { useSanPham, useDeleteSanPham } from "@/hooks/SanPham/useSanPham";
+import { useSanPham } from "@/hooks/SanPham/useSanPham";
 import { SP_SanPham } from "@/types/sanPham";
 import {
   ProductsKpiGrid,
@@ -57,16 +56,12 @@ function ProductsContent() {
     kpiData,
     isLoadingKPI,
     refetchKPI,
+    handleDelete,
   } = useSanPham(initialBrandId, initialCategoryId);
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [openAdd, setOpenAdd] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SP_SanPham | null>(null);
-  const [deletingProduct, setDeletingProduct] = useState<SP_SanPham | null>(
-    null,
-  );
-
-  const deleteMutation = useDeleteSanPham();
 
   const handleResetFilters = () => {
     handleSearch("");
@@ -74,17 +69,6 @@ function ProductsContent() {
     setBrandFilter("");
     setCategoryFilter("");
     setPage(1);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingProduct) return;
-    try {
-      await deleteMutation.mutateAsync(deletingProduct.sanPhamID);
-      setDeletingProduct(null);
-      refetchKPI();
-    } catch {
-      // Toast notification is handled in mutation
-    }
   };
 
   // Thống kê KPI ưu tiên từ Backend API GetKPI, fallback sang dataset client
@@ -209,7 +193,7 @@ function ProductsContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(product) => setEditingProduct(product)}
-          onDelete={(product) => setDeletingProduct(product)}
+          onDelete={handleDelete}
           onOpenAdd={() => setOpenAdd(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -224,7 +208,7 @@ function ProductsContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(product) => setEditingProduct(product)}
-          onDelete={(product) => setDeletingProduct(product)}
+          onDelete={handleDelete}
         />
       )}
 
@@ -261,32 +245,6 @@ function ProductsContent() {
           refetch();
           refetchKPI();
         }}
-      />
-
-      {/* 6. Modal xác nhận xóa sản phẩm an toàn */}
-      <ConfirmModal
-        open={Boolean(deletingProduct)}
-        onClose={() => setDeletingProduct(null)}
-        onConfirm={handleDeleteConfirm}
-        title="Xác nhận xóa sản phẩm"
-        description={
-          <div className="space-y-2">
-            <p>
-              Bạn có chắc chắn muốn xóa sản phẩm &quot;
-              <strong className="text-foreground">
-                {deletingProduct?.tenSanPham}
-              </strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600 dark:text-rose-400 block bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
-              Lưu ý: Không thể xóa nếu sản phẩm này đã có các biến thể màu/pin
-              hoặc phát sinh dữ liệu tồn kho.
-            </span>
-          </div>
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
-        isLoading={deleteMutation.isPending}
       />
     </div>
   );

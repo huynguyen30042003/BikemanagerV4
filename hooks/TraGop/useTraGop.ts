@@ -82,6 +82,7 @@ export const getTrangThaiGiaiNganBadge = (statusId?: number | null) => {
    HOOK QUẢN LÝ ĐƠN VỊ TRẢ GÓP
    ============================================================================== */
 export const useDonViTraGopHook = () => {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState("");
@@ -192,10 +193,11 @@ export const useDonViTraGopHook = () => {
       toast.success("Thêm đơn vị đối tác trả góp thành công!");
       setOpenAdd(false);
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || "Không thể thêm đối tác trả góp!",
-      );
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Không thể thêm đối tác trả góp!";
+      toast.error(msg);
     }
   };
 
@@ -225,10 +227,11 @@ export const useDonViTraGopHook = () => {
       toast.success("Cập nhật thông tin đối tác thành công!");
       setOpenEdit(false);
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || "Không thể cập nhật đối tác trả góp!",
-      );
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Không thể cập nhật đối tác trả góp!";
+      toast.error(msg);
     }
   };
 
@@ -236,16 +239,23 @@ export const useDonViTraGopHook = () => {
     const id = item.donViTraGopID || item.id;
     if (!id) return;
     const name = item.tenDonVi || item.ten || item.maDonVi;
-    if (!confirm(`Bạn có chắc muốn xóa đối tác "${name}"?`)) return;
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa đối tác trả góp",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: `Bạn có chắc chắn muốn xóa đối tác "${name}" không? Thao tác này không thể hoàn tác.`,
+    });
+    if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(id);
       toast.success("Đã xóa đơn vị trả góp!");
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          "Không thể xóa đối tác trả góp này (có thể đã phát sinh hợp đồng)!",
-      );
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ||
+        "Không thể xóa đối tác trả góp này (có thể đã phát sinh hợp đồng)!";
+      toast.error(msg);
     }
   };
 
@@ -277,6 +287,7 @@ export const useDonViTraGopHook = () => {
     handleSubmitAdd,
     handleSubmitEdit,
     handleDelete,
+    isDeleting: deleteMutation.isPending,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
   };
 };
@@ -415,10 +426,11 @@ export const useHopDongTraGopHook = () => {
       toast.success("Lập hồ sơ đề nghị vay trả góp thành công!");
       setOpenAdd(false);
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || "Không thể lưu hợp đồng trả góp!",
-      );
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Không thể lưu hợp đồng trả góp!";
+      toast.error(msg);
     }
   };
 
@@ -430,10 +442,11 @@ export const useHopDongTraGopHook = () => {
       toast.success("Cập nhật trạng thái thẩm định hồ sơ thành công!");
       setOpenStatusModal(false);
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || "Lỗi khi cập nhật trạng thái!",
-      );
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Lỗi khi cập nhật trạng thái!";
+      toast.error(msg);
     }
   };
 
@@ -445,10 +458,11 @@ export const useHopDongTraGopHook = () => {
       );
       setOpenDisburseModal(false);
       refetch();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || "Lỗi khi ghi nhận giải ngân!",
-      );
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Lỗi khi ghi nhận giải ngân!";
+      toast.error(msg);
     }
   };
 
@@ -459,15 +473,20 @@ export const useHopDongTraGopHook = () => {
       title: "Xác nhận hủy hồ sơ trả góp",
       variant: "danger",
       confirmText: "Hủy hồ sơ",
-      description: `Bạn có chắc muốn hủy hồ sơ trả góp "${contract.soHopDong}" không? Thao tác này không thể hoàn tác.`,
+      description: `Bạn có chắc muốn hủy hồ sơ trả góp số "${contract.soHopDong}"${
+        contract.khachHangTen ? ` của khách hàng "${contract.khachHangTen}"` : ""
+      } không? Thao tác này không thể hoàn tác.`,
     });
     if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(id);
       toast.success("Đã hủy hồ sơ trả góp!");
       refetch();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Không thể hủy hồ sơ này!");
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Không thể hủy hồ sơ này!";
+      toast.error(msg);
     }
   };
 

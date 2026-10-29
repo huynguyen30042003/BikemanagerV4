@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   NH_DonNhapHang,
   NH_LichSuThanhToan,
@@ -37,6 +38,7 @@ export const DEFAULT_PAGE_SIZE = 50;
 export const DEBOUNCE_DELAY = 400;
 
 export function useDonNhapHang() {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [supplierFilter, setSupplierFilter] = useState<string>("");
@@ -547,10 +549,19 @@ export function useDonNhapHang() {
   };
 
   const handleXacNhanNhapKho = async (orderId: string) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận nhập kho thực tế",
+      variant: "warning",
+      confirmText: "Xác nhận nhập kho",
+      description: "Bạn có chắc chắn muốn xác nhận nhập kho thực tế cho đơn hàng này? Tồn kho thực tế của các sản phẩm sẽ được cộng dồn và tính giá vốn nhập hàng FIFO.",
+    });
+    if (!isConfirmed) return;
     try {
       await nhapKhoMutation.mutateAsync(orderId);
       toast.success("Đã xác nhận nhập kho thực tế & tăng tồn kho thành công!");
       setOpenDetail(false);
+      refetch();
+      refetchKPI();
     } catch {
       toast.error("Không thể xác nhận nhập kho!");
     }
@@ -580,10 +591,19 @@ export function useDonNhapHang() {
   };
 
   const handleDelete = async (orderId: string) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa đơn nhập hàng",
+      variant: "danger",
+      confirmText: "Xóa đơn nhập",
+      description: "Bạn có chắc chắn muốn xóa đơn nhập hàng này không? Thao tác này không thể hoàn tác.",
+    });
+    if (!isConfirmed) return;
     try {
       await deleteMutation.mutateAsync(orderId);
       toast.success("Đã xóa đơn nhập hàng!");
       setOpenDetail(false);
+      refetch();
+      refetchKPI();
     } catch {
       toast.error("Không thể xóa đơn nhập hàng!");
     }

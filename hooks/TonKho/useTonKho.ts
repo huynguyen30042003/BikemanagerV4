@@ -141,17 +141,20 @@ export function useTonKho(initialKhoId?: string) {
     "stock" | "costs" | "transactions"
   >("stock");
 
-  // Query Lô chi phí tồn kho (KHO_LoChiPhiTonKho)
+  // Query Lô chi phí tồn kho (KHO_LoChiPhiTonKho) - Lazy fetch chỉ khi chuyển sang tab costs
   const {
     data: dataLoChiPhis,
     isLoading: isLoadingLoChiPhis,
     refetch: refetchLoChiPhis,
-  } = useGetLoChiPhiTonKho({
-    KhoID: khoFilter || null,
-    TuKhoa: searchTerm,
-    PageIndex: page,
-    PageSize: pageSize,
-  });
+  } = useGetLoChiPhiTonKho(
+    {
+      KhoID: khoFilter || null,
+      TuKhoa: searchTerm,
+      PageIndex: page,
+      PageSize: pageSize,
+    },
+    { enabled: activeTab === "costs" },
+  );
 
   const loChiPhiItems = useMemo(() => {
     return dataLoChiPhis?.data ?? dataLoChiPhis?.items ?? [];
@@ -165,16 +168,19 @@ export function useTonKho(initialKhoId?: string) {
     );
   }, [dataLoChiPhis, loChiPhiItems.length]);
 
-  // Query Toàn bộ giao dịch thẻ kho (KHO_GiaoDichTonKho)
+  // Query Toàn bộ giao dịch thẻ kho (KHO_GiaoDichTonKho) - Lazy fetch chỉ khi chuyển sang tab transactions
   const {
     data: dataAllGiaoDichs,
     isLoading: isLoadingAllGiaoDichs,
     refetch: refetchAllGiaoDichs,
-  } = useGetGiaoDichTonKho({
-    KhoID: khoFilter || null,
-    PageIndex: page,
-    PageSize: pageSize,
-  });
+  } = useGetGiaoDichTonKho(
+    {
+      KhoID: khoFilter || null,
+      PageIndex: page,
+      PageSize: pageSize,
+    },
+    { enabled: activeTab === "transactions" && !!khoFilter },
+  );
 
   const allGiaoDichItems = useMemo(() => {
     return dataAllGiaoDichs?.data ?? dataAllGiaoDichs?.items ?? [];

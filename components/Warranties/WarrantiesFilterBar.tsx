@@ -66,7 +66,7 @@ export function WarrantiesFilterBar({
                 { value: "", label: "Tất cả trạng thái" },
                 ...warrantyStatusOptions,
               ]}
-              value={statusFilter !== null ? String(statusFilter) : ""}
+              value={statusFilter !== null ? Number(statusFilter) : ""}
               onChange={(val) => onStatusFilterChange(val ? Number(val) : null)}
               isLoading={isLoadingStatuses}
             />

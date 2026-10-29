@@ -152,7 +152,7 @@ export function UpdateRepairServiceSlideOver({
           </label>
           <SearchSelect
             options={serviceTypeOptions}
-            value={String(formData.DanhMucChiTietID)}
+            value={Number(formData.DanhMucChiTietID)}
             onChange={(val) =>
               setFormData((prev) => ({
                 ...prev,

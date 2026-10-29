@@ -24,7 +24,9 @@ interface StockTransfersFilterBarProps {
   onOpenCreate: () => void;
 }
 
-export const StockTransfersFilterBar: React.FC<StockTransfersFilterBarProps> = ({
+export const StockTransfersFilterBar: React.FC<
+  StockTransfersFilterBarProps
+> = ({
   searchInput,
   onSearchChange,
   khoFilter,
@@ -109,14 +111,12 @@ export const StockTransfersFilterBar: React.FC<StockTransfersFilterBarProps> = (
               options={[
                 { value: "", label: "Tất cả trạng thái" },
                 ...transferStatusOptions.map((opt) => ({
-                  value: String(opt.value),
+                  value: Number(opt.value),
                   label: opt.label,
                 })),
               ]}
-              value={statusFilter !== null ? String(statusFilter) : ""}
-              onChange={(val) =>
-                onStatusFilterChange(val ? Number(val) : null)
-              }
+              value={statusFilter !== null ? Number(statusFilter) : ""}
+              onChange={(val) => onStatusFilterChange(val ? Number(val) : null)}
               isLoading={isLoadingStatusList}
               className="text-xs"
             />

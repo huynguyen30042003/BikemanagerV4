@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
-import { NH_DonNhapHang, ChuyenTrangThaiDonNhapPayload } from "@/types/donNhapHang";
+import {
+  NH_DonNhapHang,
+  ChuyenTrangThaiDonNhapPayload,
+} from "@/types/donNhapHang";
 
 export interface PurchaseOrderStatusChangeModalProps {
   open: boolean;
@@ -67,7 +70,8 @@ export const PurchaseOrderStatusChangeModal: React.FC<
       <form onSubmit={handleSubmit} className="space-y-4 py-2">
         {isCompleted && (
           <div className="p-3 text-xs bg-amber-500/10 text-amber-700 dark:text-amber-300 rounded-lg border border-amber-500/20">
-            Lưu ý: Đơn hàng đã ở trạng thái hoàn thành (nhập kho thành công), không thể chuyển trạng thái khác!
+            Lưu ý: Đơn hàng đã ở trạng thái hoàn thành (nhập kho thành công),
+            không thể chuyển trạng thái khác!
           </div>
         )}
 
@@ -78,10 +82,10 @@ export const PurchaseOrderStatusChangeModal: React.FC<
           <SearchSelect
             placeholder="Chọn trạng thái..."
             options={orderStatusOptions.map((opt) => ({
-              value: String(opt.value),
+              value: Number(opt.value),
               label: opt.label,
             }))}
-            value={String(dataStatusChange.TrangThaiID)}
+            value={Number(dataStatusChange.TrangThaiID)}
             onChange={(val) =>
               setDataStatusChange((prev) => ({
                 ...prev,

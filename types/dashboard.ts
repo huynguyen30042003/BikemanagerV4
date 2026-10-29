@@ -82,6 +82,7 @@ export interface CanhBaoTonKhoItem {
   bienTheSanPhamID: string;
   maSKU: string;
   tenSanPham: string;
+  loaiSanPham?: number | null;
   tenBienThe: string;
   tenKho: string;
   soLuong: number;

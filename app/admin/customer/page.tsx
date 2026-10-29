@@ -3,7 +3,6 @@
 import React, { useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useKhachHang } from "@/hooks/KhachHang/useKhachHang";
 import { KH_KhachHang } from "@/types/khachHang";
 import {
@@ -60,13 +59,7 @@ function CustomerContent() {
     provinceOptions,
     isLoadingTinh,
 
-    // Modal Xóa
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
-    isDeleting,
+    handleDelete,
   } = useKhachHang(initialTinhId);
 
   // Metrics (Ưu tiên lấy từ API GetKPI, fallback lọc cục bộ)
@@ -170,7 +163,7 @@ function CustomerContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(customer) => setEditingCustomer(customer)}
-          onDelete={handleOpenDelete}
+          onDelete={handleDelete}
           onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -185,7 +178,7 @@ function CustomerContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(customer) => setEditingCustomer(customer)}
-          onDelete={handleOpenDelete}
+          onDelete={handleDelete}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
           onOpenCreate={() => setOpenCreate(true)}
@@ -207,31 +200,6 @@ function CustomerContent() {
         customer={editingCustomer}
         provinceOptions={provinceOptions}
         isLoadingTinh={isLoadingTinh}
-      />
-
-      {/* Modal Xác nhận Xóa */}
-      <ConfirmModal
-        open={openDelete}
-        onClose={() => setOpenDelete(false)}
-        onConfirm={handleSubmitDelete}
-        title="Xác nhận xóa khách hàng"
-        variant="danger"
-        isLoading={isDeleting}
-        confirmText="Xác nhận xóa"
-        description={
-          <div>
-            <p>
-              Bạn có chắc chắn muốn xóa khách hàng &quot;
-              <strong className="text-foreground">{selectItemName}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác. Nếu khách hàng đang có đơn hàng,
-              hợp đồng trả góp hoặc phương tiện xe liên kết, hệ thống sẽ từ chối
-              xóa để bảo toàn dữ liệu nghiệp vụ.
-            </span>
-          </div>
-        }
       />
     </div>
   );

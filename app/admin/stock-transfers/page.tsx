@@ -1,11 +1,12 @@
 "use client";
 
-import React, { Suspense, useMemo } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WarehouseNavTabs } from "@/components/Common/WarehouseNavTabs";
 import { usePhieuChuyenKho } from "@/hooks/PhieuChuyenKho/usePhieuChuyenKho";
 import { useGetPhieuChuyenKhoKPI } from "@/hooks/PhieuChuyenKho/usePhieuChuyenKhoApi";
+import { KHO_PhieuChuyenKho } from "@/types/phieuChuyenKho";
 import {
   StockTransfersKpiGrid,
   StockTransfersFilterBar,
@@ -47,10 +48,6 @@ function StockTransfersContent() {
     handleSubmitCreate,
     isCreating,
 
-    openDetail,
-    setOpenDetail,
-    selectedPhieu,
-    handleOpenDetail,
     handleXuatKho,
     isXuatKho,
     handleNhanHang,
@@ -62,6 +59,9 @@ function StockTransfersContent() {
     getTransferStatusBadge,
     isLoadingStatusList,
   } = usePhieuChuyenKho();
+
+  // Single-State Pattern cho chi tiết điều chuyển kho
+  const [detailPhieu, setDetailPhieu] = useState<KHO_PhieuChuyenKho | null>(null);
 
   const { data: transferKpi, isLoading: isLoadingKPI } =
     useGetPhieuChuyenKhoKPI();
@@ -181,7 +181,7 @@ function StockTransfersContent() {
         setPage={setPage}
         setPageSize={setPageSize}
         getTransferStatusBadge={getTransferStatusBadge}
-        onOpenDetail={handleOpenDetail}
+        onOpenDetail={setDetailPhieu}
         onOpenCreate={handleOpenCreate}
       />
 
@@ -201,15 +201,24 @@ function StockTransfersContent() {
 
       {/* 6. Isolated Transfer Detail & Operations SlideOver */}
       <StockTransferDetailSlideOver
-        open={openDetail}
-        onClose={() => setOpenDetail(false)}
-        phieu={selectedPhieu}
+        open={Boolean(detailPhieu)}
+        onClose={() => setDetailPhieu(null)}
+        phieu={detailPhieu}
         getTransferStatusBadge={getTransferStatusBadge}
-        onXuatKho={handleXuatKho}
+        onXuatKho={async (id) => {
+          await handleXuatKho(id);
+          setDetailPhieu(null);
+        }}
         isXuatKho={isXuatKho}
-        onNhanHang={handleNhanHang}
+        onNhanHang={async (payload) => {
+          await handleNhanHang(payload);
+          setDetailPhieu(null);
+        }}
         isNhanHang={isNhanHang}
-        onHuyPhieu={handleHuyPhieu}
+        onHuyPhieu={async (id) => {
+          await handleHuyPhieu(id);
+          setDetailPhieu(null);
+        }}
         isHuyPhieu={isHuyPhieu}
       />
     </section>

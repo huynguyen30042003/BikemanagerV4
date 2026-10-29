@@ -1,19 +1,22 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Package, CreditCard, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { DH_DonHang, DH_LichSuThanhToan } from "@/types/donHang";
 import { formatCurrency } from "./OrdersKpiGrid";
-import { useGetDonHangById } from "@/hooks/DonHang/useDonHangApi";
+import {
+  useGetDonHangById,
+  useGetLichSuThanhToanDonHang,
+} from "@/hooks/DonHang/useDonHangApi";
 
 export interface OrderDetailSlideOverProps {
   open: boolean;
   onClose: () => void;
   selectedOrder: DH_DonHang | null;
-  paymentHistoryItems: DH_LichSuThanhToan[];
-  isLoadingPaymentHistory: boolean;
+  paymentHistoryItems?: DH_LichSuThanhToan[];
+  isLoadingPaymentHistory?: boolean;
 }
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -29,13 +32,33 @@ export const OrderDetailSlideOver: React.FC<OrderDetailSlideOverProps> = ({
   open,
   onClose,
   selectedOrder,
-  paymentHistoryItems,
-  isLoadingPaymentHistory,
+  paymentHistoryItems: paymentHistoryItemsProp,
+  isLoadingPaymentHistory: isLoadingPaymentHistoryProp,
 }) => {
   const { data: DonHangDetail } = useGetDonHangById(
     selectedOrder?.donHangID,
     open,
   );
+
+  const { data: dataPaymentHistory, isLoading: isLoadingPaymentQuery } =
+    useGetLichSuThanhToanDonHang(
+      open && selectedOrder?.donHangID ? selectedOrder.donHangID : "",
+    );
+
+  const paymentHistoryItems: DH_LichSuThanhToan[] = useMemo(() => {
+    if (paymentHistoryItemsProp) return paymentHistoryItemsProp;
+    if (!dataPaymentHistory) return [];
+    if (Array.isArray(dataPaymentHistory)) return dataPaymentHistory;
+    return (
+      (dataPaymentHistory as { data?: DH_LichSuThanhToan[]; items?: DH_LichSuThanhToan[] })?.data ??
+      (dataPaymentHistory as { data?: DH_LichSuThanhToan[]; items?: DH_LichSuThanhToan[] })?.items ??
+      []
+    );
+  }, [paymentHistoryItemsProp, dataPaymentHistory]);
+
+  const isLoadingPaymentHistory =
+    isLoadingPaymentHistoryProp ?? isLoadingPaymentQuery;
+
   return (
     <SlideOver
       open={open}

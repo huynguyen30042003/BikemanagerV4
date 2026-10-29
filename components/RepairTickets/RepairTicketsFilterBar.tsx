@@ -204,7 +204,8 @@ export function RepairTicketsFilterBar({
                   Phiếu Tiếp Nhận & Sửa Chữa Dịch Vụ
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">
-                  Quản lý quy trình khám xe, báo giá công thợ, xuất kho phụ tùng thay thế và thanh toán
+                  Quản lý quy trình khám xe, báo giá công thợ, xuất kho phụ tùng
+                  thay thế và thanh toán
                 </p>
               </div>
             </div>
@@ -222,7 +223,9 @@ export function RepairTicketsFilterBar({
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
               />
-              <span className="text-xs font-medium hidden xs:inline">Làm mới</span>
+              <span className="text-xs font-medium hidden xs:inline">
+                Làm mới
+              </span>
               <span className="text-xs font-medium xs:hidden">Reload</span>
             </Button>
 
@@ -335,7 +338,7 @@ export function RepairTicketsFilterBar({
                 <SearchSelect
                   placeholder="Tất cả tiến độ..."
                   options={filterStatusOptions}
-                  value={statusFilter !== null ? String(statusFilter) : ""}
+                  value={statusFilter !== null ? Number(statusFilter) : ""}
                   onChange={(val) =>
                     onStatusFilterChange(val ? Number(val) : null)
                   }
@@ -355,7 +358,7 @@ export function RepairTicketsFilterBar({
                   options={filterPaymentOptions}
                   value={
                     paymentStatusFilter !== null
-                      ? String(paymentStatusFilter)
+                      ? Number(paymentStatusFilter)
                       : ""
                   }
                   onChange={(val) =>
@@ -376,7 +379,7 @@ export function RepairTicketsFilterBar({
                   placeholder="Tất cả loại DV..."
                   options={filterServiceTypeOptions}
                   value={
-                    serviceTypeFilter !== null ? String(serviceTypeFilter) : ""
+                    serviceTypeFilter !== null ? Number(serviceTypeFilter) : ""
                   }
                   onChange={(val) =>
                     onServiceTypeFilterChange(val ? Number(val) : null)
@@ -421,7 +424,7 @@ export function RepairTicketsFilterBar({
               <SearchSelect
                 placeholder="Tất cả tiến độ"
                 options={filterStatusOptions}
-                value={statusFilter !== null ? String(statusFilter) : ""}
+                value={statusFilter !== null ? Number(statusFilter) : ""}
                 onChange={(val) =>
                   onStatusFilterChange(val ? Number(val) : null)
                 }
@@ -438,7 +441,7 @@ export function RepairTicketsFilterBar({
                 options={filterPaymentOptions}
                 value={
                   paymentStatusFilter !== null
-                    ? String(paymentStatusFilter)
+                    ? Number(paymentStatusFilter)
                     : ""
                 }
                 onChange={(val) =>
@@ -456,7 +459,7 @@ export function RepairTicketsFilterBar({
                 placeholder="Tất cả loại DV"
                 options={filterServiceTypeOptions}
                 value={
-                  serviceTypeFilter !== null ? String(serviceTypeFilter) : ""
+                  serviceTypeFilter !== null ? Number(serviceTypeFilter) : ""
                 }
                 onChange={(val) =>
                   onServiceTypeFilterChange(val ? Number(val) : null)

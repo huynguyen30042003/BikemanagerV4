@@ -258,6 +258,7 @@ function PurchaseOrdersContent() {
         onDelete={handleDelete}
         isDeleting={isDeleting}
       />
+
     </div>
   );
 }

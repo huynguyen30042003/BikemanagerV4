@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SelectOption } from "@/components/ui/selectSearch";
 import { useDiaPhuongCapXa } from "@/hooks/DiaPhuongCapXa/useDiaPhuongCapXa";
 import { DM_DiaPhuongCapXa, DiaPhuongCapXaKPI } from "@/types/diaPhuongCapXa";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   DiaPhuongCapXaKpiGrid,
   DiaPhuongCapXaFilterBar,
@@ -59,12 +58,7 @@ function DiaPhuongCapXaContent() {
     isLoadingKPI,
     refetchKPI,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
-    isDeleting,
+    handleDelete,
 
     handleSync,
     isSyncing,
@@ -185,7 +179,7 @@ function DiaPhuongCapXaContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           onOpenCreate={() => setOpenCreate(true)}
           onSync={handleSync}
           onResetFilters={handleResetFilters}
@@ -207,7 +201,7 @@ function DiaPhuongCapXaContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
-          onDelete={(item) => handleOpenDelete(item)}
+          onDelete={handleDelete}
           provinceMap={provinceMap}
           onSelectProvince={(pId) => {
             setTinhFilter(pId);
@@ -237,30 +231,6 @@ function DiaPhuongCapXaContent() {
         data={editingItem}
         provinceOptions={provinceOptions}
         onSuccess={handleReload}
-      />
-
-      {/* Modal Xác nhận Xóa */}
-      <ConfirmModal
-        open={openDelete}
-        onClose={() => setOpenDelete(false)}
-        onConfirm={handleSubmitDelete}
-        title="Xác nhận xóa xã / phường"
-        description={
-          <div>
-            <p>
-              Bạn có chắc chắn muốn xóa &quot;
-              <strong className="text-foreground">{selectItemName}</strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600/90 dark:text-rose-400 mt-2 block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-              Hành động này không thể hoàn tác nếu xã / phường này đang có các
-              cơ sở hoặc dữ liệu khách hàng liên kết.
-            </span>
-          </div>
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

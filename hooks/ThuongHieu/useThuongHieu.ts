@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   SP_ThuongHieu,
   CreateThuongHieuPayload,
@@ -31,6 +32,7 @@ export const thuongHieuSchema = z.object({
 });
 
 export function useThuongHieu() {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -42,9 +44,6 @@ export function useThuongHieu() {
 
   const [open, setOpen] = useState<boolean>(false);
   const [openUpdate, setOpenUpdate] = useState<boolean>(false);
-  const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const [selectThuongHieuId, setSelectThuongHieuId] = useState<string>("");
-  const [selectItemName, setSelectItemName] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Query Quốc gia cho dropdown
@@ -152,12 +151,6 @@ export function useThuongHieu() {
     setOpenUpdate(true);
   };
 
-  const handleOpenDelete = (item: SP_ThuongHieu) => {
-    setSelectThuongHieuId(item.thuongHieuID);
-    setSelectItemName(item.tenThuongHieu);
-    setOpenDelete(true);
-  };
-
   const handleSubmit = async () => {
     try {
       thuongHieuSchema.parse({
@@ -208,13 +201,19 @@ export function useThuongHieu() {
     }
   };
 
-  const handleSubmitDelete = async () => {
-    if (!selectThuongHieuId) return;
+  const handleDelete = async (brand: SP_ThuongHieu) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa thương hiệu",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: `Bạn có chắc chắn muốn xóa thương hiệu "${brand.tenThuongHieu}" không? Hành động này không thể hoàn tác nếu thương hiệu đang liên kết với các dòng sản phẩm xe đạp.`,
+    });
+    if (!isConfirmed) return;
     try {
-      await deleteMutation.mutateAsync(selectThuongHieuId);
-      setOpenDelete(false);
+      await deleteMutation.mutateAsync(brand.thuongHieuID);
+      refetchKPI();
     } catch {
-      // Toast handled
+      // Toast notification is handled inside useDeleteThuongHieu mutation
     }
   };
 
@@ -262,11 +261,7 @@ export function useThuongHieu() {
     handleSubmitUpdate,
     isUpdating: updateMutation.isPending,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     errors,

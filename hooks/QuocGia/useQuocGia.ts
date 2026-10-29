@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   DM_QuocGia,
   CreateQuocGiaPayload,
@@ -31,6 +32,7 @@ export const quocGiaSchema = z.object({
 });
 
 export function useQuocGia() {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -229,6 +231,29 @@ export function useQuocGia() {
     }
   };
 
+  const handleDelete = async (item: DM_QuocGia) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa quốc gia",
+      description: `Bạn có chắc chắn muốn xóa "${item.ten}" (Mã: ${item.maQuocGia}) không? Thao tác này không thể hoàn tác.`,
+      confirmText: "Xác nhận xóa",
+      variant: "danger",
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await deleteMutation.mutateAsync(item.quocGiaID);
+      toast.success(`Đã xóa "${item.ten}" thành công`);
+      refetch();
+      refetchKPI();
+    } catch (error: unknown) {
+      const msg =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Không thể xóa quốc gia (có thể đang có dữ liệu liên kết)";
+      toast.error(msg);
+    }
+  };
+
   const handleSync = async () => {
     try {
       await syncMutation.mutateAsync();
@@ -286,6 +311,7 @@ export function useQuocGia() {
     selectItemName,
     handleOpenDelete,
     handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     handleSync,

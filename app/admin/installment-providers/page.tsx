@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { useDonViTraGopHook } from "@/hooks/TraGop/useTraGop";
 import { useGetDonViTraGopKPI } from "@/hooks/TraGop/useTraGopApi";
 import { DonViTraGop } from "@/types/traGop";
@@ -33,20 +33,16 @@ function InstallmentProvidersContent() {
     refetch,
     openAdd,
     setOpenAdd,
-    openEdit,
-    setOpenEdit,
-    selectedItem,
-    setSelectedItem,
     handleSubmitAdd,
     handleSubmitEdit,
     handleDelete,
     isSubmitting,
   } = useDonViTraGopHook();
 
-  const handleOpenEdit = (item: DonViTraGop) => {
-    setSelectedItem(item);
-    setOpenEdit(true);
-  };
+  // Single-state pattern for edit slideover (AGENTS.md Section 11.2)
+  const [editingProvider, setEditingProvider] = useState<DonViTraGop | null>(
+    null,
+  );
 
   const handleFilterStatus = (status: string) => {
     setStatusFilter(status);
@@ -99,7 +95,7 @@ function InstallmentProvidersContent() {
           pageSize={pageSize}
           setPage={setPage}
           setPageSize={setPageSize}
-          onEdit={handleOpenEdit}
+          onEdit={setEditingProvider}
           onDelete={handleDelete}
           onOpenAdd={() => setOpenAdd(true)}
         />
@@ -116,10 +112,13 @@ function InstallmentProvidersContent() {
 
       {/* 5. SlideOver Form cập nhật thông tin đối tác (cô lập state) */}
       <UpdateInstallmentProviderSlideOver
-        open={openEdit}
-        onClose={() => setOpenEdit(false)}
-        item={selectedItem}
-        onSubmit={handleSubmitEdit}
+        open={Boolean(editingProvider)}
+        onClose={() => setEditingProvider(null)}
+        item={editingProvider}
+        onSubmit={async (payload) => {
+          await handleSubmitEdit(payload);
+          setEditingProvider(null);
+        }}
         isSubmitting={isSubmitting}
       />
     </div>

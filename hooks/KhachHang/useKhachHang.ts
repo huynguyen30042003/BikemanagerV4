@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import { useState, useMemo } from "react";
 import { z } from "zod";
 import { KH_KhachHang } from "@/types/khachHang";
@@ -29,6 +30,7 @@ export const khachHangSchema = z.object({
 });
 
 export function useKhachHang(initialTinhId?: string | number) {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -41,11 +43,6 @@ export function useKhachHang(initialTinhId?: string | number) {
     delay: DEBOUNCE_DELAY,
     initialValue: "",
   });
-
-  // Delete modal state
-  const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const [selectKhachHangId, setSelectKhachHangId] = useState<string>("");
-  const [selectItemName, setSelectItemName] = useState<string>("");
 
   // Query danh sách tỉnh/thành phố
   const { data: dataTinh, isLoading: isLoadingTinh } = useGetDiaPhuongCapTinh({
@@ -98,19 +95,18 @@ export function useKhachHang(initialTinhId?: string | number) {
 
   const deleteMutation = useDeleteKhachHang();
 
-  const handleOpenDelete = (item: KH_KhachHang) => {
-    setSelectKhachHangId(item.khachHangID);
-    setSelectItemName(item.tenKhachHang);
-    setOpenDelete(true);
-  };
-
-  const handleSubmitDelete = async () => {
-    if (!selectKhachHangId) return;
+  const handleDelete = async (item: KH_KhachHang) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa khách hàng",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: `Bạn có chắc chắn muốn xóa khách hàng "${item.tenKhachHang}" không? Thao tác này không thể hoàn tác nếu khách hàng đang có đơn hàng hoặc hợp đồng liên kết.`,
+    });
+    if (!isConfirmed) return;
     try {
-      await deleteMutation.mutateAsync(selectKhachHangId);
-      setOpenDelete(false);
+      await deleteMutation.mutateAsync(item.khachHangID);
     } catch {
-      // Toast được xử lý trong useDeleteKhachHang
+      // Toast xử lý trong useDeleteKhachHang
     }
   };
 
@@ -147,11 +143,7 @@ export function useKhachHang(initialTinhId?: string | number) {
     provinceOptions,
     isLoadingTinh,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
   };
 }

@@ -60,11 +60,17 @@ export const useGetTonKhoDetail = (khoId?: string, bienTheId?: string) => {
   });
 };
 
-export const useGetGiaoDichTonKho = (params: GiaoDichFilter) => {
+export const useGetGiaoDichTonKho = (
+  params: GiaoDichFilter,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: TON_KHO_QUERY_KEYS.giaoDichs(params),
     queryFn: () => getGiaoDichTonKhoApi(params),
-    enabled: !!params.KhoID || !!params.BienTheSanPhamID,
+    enabled:
+      options?.enabled !== undefined
+        ? options.enabled
+        : !!params.KhoID || !!params.BienTheSanPhamID,
   });
 };
 
@@ -84,11 +90,21 @@ export const useUpdateDinhMucTonKho = () => {
   });
 };
 
-export const useGetLoChiPhiTonKho = (params: { KhoID?: string | null; BienTheSanPhamID?: string | null; TuKhoa?: string; PageIndex?: number; PageSize?: number }) => {
+export const useGetLoChiPhiTonKho = (
+  params: {
+    KhoID?: string | null;
+    BienTheSanPhamID?: string | null;
+    TuKhoa?: string;
+    PageIndex?: number;
+    PageSize?: number;
+  },
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: [...TON_KHO_QUERY_KEYS.all, "loChiPhis", params],
-    queryFn: () => import("@/shared/api/TonKho").then((m) => m.getLoChiPhiTonKhoApi(params)),
-    enabled: true,
+    queryFn: () =>
+      import("@/shared/api/TonKho").then((m) => m.getLoChiPhiTonKhoApi(params)),
+    enabled: options?.enabled !== undefined ? options.enabled : true,
   });
 };
 

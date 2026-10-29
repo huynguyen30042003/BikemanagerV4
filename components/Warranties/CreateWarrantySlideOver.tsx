@@ -10,14 +10,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { SearchSelect } from "@/components/ui/selectSearch";
 import { useCreateBaoHanh } from "@/hooks/BaoHanh/useBaoHanhApi";
 import { CreateBaoHanhPayload } from "@/types/baoHanh";
-import { ShieldCheck, Calendar, User, Barcode, AlertCircle } from "lucide-react";
+import {
+  ShieldCheck,
+  Calendar,
+  User,
+  Barcode,
+  AlertCircle,
+} from "lucide-react";
 
 export const warrantySchema = z.object({
   SoSerialID: z.string().min(1, "Vui lòng chọn số serial / khung xe"),
   BienTheSanPhamID: z.string().min(1, "Biến thể sản phẩm không hợp lệ"),
   KhachHangID: z.string().min(1, "Vui lòng chọn khách hàng sở hữu"),
   SoThangBaoHanh: z.number().min(1, "Thời hạn bảo hành tối thiểu 1 tháng"),
-  GioiHanKm: z.number().min(0, "Giới hạn Km không được âm").optional().nullable(),
+  GioiHanKm: z
+    .number()
+    .min(0, "Giới hạn Km không được âm")
+    .optional()
+    .nullable(),
   TrangThaiID: z.number().min(1, "Vui lòng chọn trạng thái sổ bảo hành"),
   DieuKienBaoHanh: z.string().optional().nullable(),
   GhiChu: z.string().optional().nullable(),
@@ -54,7 +64,9 @@ export function CreateWarrantySlideOver({
     KhachHangID: "",
     NgayKichHoat: new Date().toISOString(),
     NgayBatDau: new Date().toISOString(),
-    NgayKetThuc: new Date(Date.now() + 365 * 24 * 3600 * 1000 * 3).toISOString(),
+    NgayKetThuc: new Date(
+      Date.now() + 365 * 24 * 3600 * 1000 * 3,
+    ).toISOString(),
     SoThangBaoHanh: 36,
     GioiHanKm: 30000,
     TrangThaiID: 91, // Đang hiệu lực
@@ -71,15 +83,21 @@ export function CreateWarrantySlideOver({
     if (open) {
       const defaultSerial = serialOptions[0];
       const defaultCustomer = customerOptions[0];
-      const defaultStatus = warrantyStatusOptions[0]?.value ? Number(warrantyStatusOptions[0].value) : 91;
+      const defaultStatus = warrantyStatusOptions[0]?.value
+        ? Number(warrantyStatusOptions[0].value)
+        : 91;
 
       setFormData({
         SoSerialID: defaultSerial?.value ? String(defaultSerial.value) : "",
         BienTheSanPhamID: defaultSerial?.bienTheID ?? "",
-        KhachHangID: defaultCustomer?.value ? String(defaultCustomer.value) : "",
+        KhachHangID: defaultCustomer?.value
+          ? String(defaultCustomer.value)
+          : "",
         NgayKichHoat: new Date().toISOString(),
         NgayBatDau: new Date().toISOString(),
-        NgayKetThuc: new Date(Date.now() + 365 * 24 * 3600 * 1000 * 3).toISOString(),
+        NgayKetThuc: new Date(
+          Date.now() + 365 * 24 * 3600 * 1000 * 3,
+        ).toISOString(),
         SoThangBaoHanh: 36,
         GioiHanKm: 30000,
         TrangThaiID: defaultStatus,
@@ -202,7 +220,7 @@ export function CreateWarrantySlideOver({
                   ...prev,
                   SoThangBaoHanh: months,
                   NgayKetThuc: new Date(
-                    Date.now() + months * 30 * 24 * 3600 * 1000
+                    Date.now() + months * 30 * 24 * 3600 * 1000,
                   ).toISOString(),
                 }));
               }}
@@ -243,7 +261,7 @@ export function CreateWarrantySlideOver({
           </label>
           <SearchSelect
             options={warrantyStatusOptions}
-            value={String(formData.TrangThaiID)}
+            value={Number(formData.TrangThaiID)}
             onChange={(val) =>
               setFormData((prev) => ({ ...prev, TrangThaiID: Number(val) }))
             }
@@ -302,9 +320,7 @@ export function CreateWarrantySlideOver({
             disabled={createMutation.isPending}
             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium cursor-pointer"
           >
-            {createMutation.isPending
-              ? "Đang lưu..."
-              : "Kích hoạt bảo hành"}
+            {createMutation.isPending ? "Đang lưu..." : "Kích hoạt bảo hành"}
           </Button>
         </div>
       </form>

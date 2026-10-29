@@ -40,9 +40,8 @@ function StatisticsContent() {
     refetchKPI,
   } = useThongKeKhachHang();
 
-  // Local state for modals to isolate form re-renders
-  const [openUpdate, setOpenUpdate] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = useState<KH_ThongKeKhachHang | null>(
+  // Single-state pattern for edit drawer (Mục 11 - AGENTS.md)
+  const [editingItem, setEditingItem] = useState<KH_ThongKeKhachHang | null>(
     null,
   );
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -146,10 +145,7 @@ function StatisticsContent() {
           pageSize={pageSize}
           setPage={setPage}
           setPageSize={setPageSize}
-          onEdit={(item) => {
-            setSelectedItem(item);
-            setOpenUpdate(true);
-          }}
+          onEdit={(item) => setEditingItem(item)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
         />
@@ -162,10 +158,7 @@ function StatisticsContent() {
           pageSize={pageSize}
           setPage={setPage}
           setPageSize={setPageSize}
-          onEdit={(item) => {
-            setSelectedItem(item);
-            setOpenUpdate(true);
-          }}
+          onEdit={(item) => setEditingItem(item)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
         />
@@ -173,12 +166,9 @@ function StatisticsContent() {
 
       {/* 4. SlideOver: Điều chỉnh Hạng thẻ & Công nợ (Cô lập form state) */}
       <UpdateCustomerStatisticsSlideOver
-        open={openUpdate}
-        onClose={() => {
-          setOpenUpdate(false);
-          setSelectedItem(null);
-        }}
-        data={selectedItem}
+        open={Boolean(editingItem)}
+        onClose={() => setEditingItem(null)}
+        data={editingItem}
         onSuccess={handleReload}
       />
     </div>

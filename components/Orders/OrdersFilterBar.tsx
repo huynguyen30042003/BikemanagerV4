@@ -469,7 +469,7 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
                 options={allPaymentStatusOptions}
                 value={
                   paymentStatusFilter !== null
-                    ? String(paymentStatusFilter)
+                    ? Number(paymentStatusFilter)
                     : ""
                 }
                 onChange={(val) =>
@@ -485,7 +485,7 @@ export const OrdersFilterBar: React.FC<OrdersFilterBarProps> = ({
               <SearchSelect
                 placeholder="Loại đơn..."
                 options={allOrderTypeOptions}
-                value={orderTypeFilter !== null ? String(orderTypeFilter) : ""}
+                value={orderTypeFilter !== null ? Number(orderTypeFilter) : ""}
                 onChange={(val) => setOrderTypeFilter(val ? Number(val) : null)}
                 isLoading={isLoadingOrderTypes}
                 className="h-9.5 text-xs w-full"

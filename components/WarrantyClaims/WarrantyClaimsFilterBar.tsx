@@ -37,7 +37,7 @@ export function WarrantyClaimsFilterBar({
   isLoadingActions = false,
 }: WarrantyClaimsFilterBarProps) {
   const hasActiveFilters = Boolean(
-    searchInput.trim() || statusFilter !== null || actionFilter !== null
+    searchInput.trim() || statusFilter !== null || actionFilter !== null,
   );
 
   const handleReset = () => {
@@ -77,7 +77,7 @@ export function WarrantyClaimsFilterBar({
                 { value: "", label: "Tất cả trạng thái" },
                 ...claimStatusOptions,
               ]}
-              value={statusFilter !== null ? String(statusFilter) : ""}
+              value={statusFilter !== null ? Number(statusFilter) : ""}
               onChange={(val) => onStatusFilterChange(val ? Number(val) : null)}
               isLoading={isLoadingClaimStatuses}
             />
@@ -90,7 +90,7 @@ export function WarrantyClaimsFilterBar({
                 { value: "", label: "Tất cả hướng xử lý" },
                 ...actionOptions,
               ]}
-              value={actionFilter !== null ? String(actionFilter) : ""}
+              value={actionFilter !== null ? Number(actionFilter) : ""}
               onChange={(val) => onActionFilterChange(val ? Number(val) : null)}
               isLoading={isLoadingActions}
             />

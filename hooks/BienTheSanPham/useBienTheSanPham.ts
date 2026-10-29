@@ -17,6 +17,7 @@ import {
   useDeleteBienThe,
 } from "./useBienTheSanPhamApi";
 import { useGetSanPham } from "../SanPham/useSanPhamApi";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 
 export * from "./useBienTheSanPhamApi";
 
@@ -244,6 +245,24 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
     }
   };
 
+  const { confirm } = useConfirm();
+
+  const handleDelete = async (item: SP_BienTheSanPham | { bienTheSanPhamID: string; tenBienThe?: string }) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa biến thể",
+      description: `Bạn có chắc chắn muốn xóa biến thể "${item.tenBienThe || ""}" không? Lưu ý: Không thể xóa nếu biến thể này đang có số Serial xe hoặc số lượng tồn kho.`,
+      confirmText: "Xác nhận xóa",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
+    try {
+      await deleteMutation.mutateAsync(item.bienTheSanPhamID);
+      refetchKPI();
+    } catch {
+      // Toast notification is handled in mutation
+    }
+  };
+
   const handleSubmitDelete = async () => {
     if (!selectBienTheId) return;
     try {
@@ -306,6 +325,7 @@ export function useBienTheSanPham(initialSanPhamId?: string) {
     selectItemName,
     handleOpenDelete,
     handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     errors,

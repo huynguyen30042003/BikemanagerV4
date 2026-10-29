@@ -22,7 +22,6 @@ import { useGetDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
 import { useConfirm } from "@/components/Common/ConfirmContext";
 
 export const useBaoHanhHook = () => {
-  const { confirm } = useConfirm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState("");
@@ -151,20 +150,34 @@ export const useBaoHanhHook = () => {
     }
   };
 
-  const handleDelete = async (item: BH_BaoHanh) => {
+  const { confirm } = useConfirm();
+
+  const handleDelete = async (
+    target: BH_BaoHanh | string,
+  ): Promise<boolean> => {
+    const id = typeof target === "string" ? target : target.baoHanhID;
+    const title = typeof target === "string" ? target : target.maBaoHanh || "";
+    const serial =
+      typeof target === "string" ? "" : target.maSerial || "Chưa có serial";
+
     const isConfirmed = await confirm({
-      title: "Xác nhận hủy sổ bảo hành",
+      title: "Hủy Sổ Bảo Hành Điện Tử",
+      description: `Bạn có chắc chắn muốn hủy sổ bảo hành "${title}" (${serial})? Thao tác này không thể hoàn tác.`,
+      confirmText: "Hủy sổ bảo hành",
       variant: "danger",
-      confirmText: "Hủy bảo hành",
-      description: `Bạn có chắc muốn hủy sổ bảo hành "${item.maBaoHanh}" không? Thao tác này không thể hoàn tác.`,
     });
-    if (!isConfirmed) return;
+    if (!isConfirmed) return false;
+
     try {
-      await deleteMutation.mutateAsync(item.baoHanhID);
-      toast.success("Đã hủy sổ bảo hành!");
+      await deleteMutation.mutateAsync(id);
+      toast.success(`Đã hủy sổ bảo hành ${title}!`);
       refetch();
-    } catch {
-      toast.error("Không thể hủy bảo hành!");
+      return true;
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Không thể hủy sổ bảo hành!";
+      toast.error(message);
+      return false;
     }
   };
 
@@ -201,7 +214,6 @@ export const useBaoHanhHook = () => {
 };
 
 export const usePhieuBaoHanhHook = () => {
-  const { confirm } = useConfirm();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState("");
@@ -314,20 +326,31 @@ export const usePhieuBaoHanhHook = () => {
     }
   };
 
-  const handleDelete = async (claim: BH_PhieuBaoHanh) => {
+  const { confirm } = useConfirm();
+
+  const handleDelete = async (
+    target: BH_PhieuBaoHanh | string,
+  ): Promise<boolean> => {
+    const id = typeof target === "string" ? target : target.phieuBaoHanhID;
+    const code =
+      typeof target === "string" ? target : target.maPhieuBaoHanh || "";
+
     const isConfirmed = await confirm({
       title: "Xác nhận xóa phiếu bảo hành",
+      description: `Bạn có chắc chắn muốn xóa phiếu tiếp nhận "${code}"? Thao tác này sẽ xóa toàn bộ nhật ký kiểm tra và không thể hoàn tác.`,
+      confirmText: "Xác nhận xóa",
       variant: "danger",
-      confirmText: "Xóa phiếu",
-      description: `Bạn có chắc muốn xóa phiếu "${claim.maPhieuBaoHanh}" không? Thao tác này không thể hoàn tác.`,
     });
-    if (!isConfirmed) return;
+    if (!isConfirmed) return false;
+
     try {
-      await deleteMutation.mutateAsync(claim.phieuBaoHanhID);
-      toast.success("Đã xóa phiếu bảo hành!");
+      await deleteMutation.mutateAsync(id);
+      toast.success("Đã xóa phiếu bảo hành thành công!");
       refetch();
+      return true;
     } catch {
       toast.error("Không thể xóa phiếu bảo hành!");
+      return false;
     }
   };
 

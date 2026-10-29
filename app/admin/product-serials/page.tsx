@@ -61,8 +61,7 @@ function SerialsContent() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [openAdd, setOpenAdd] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [selectSerial, setSelectSerial] = useState<SP_SoSerial>();
+  const [editingSerial, setEditingSerial] = useState<SP_SoSerial | null>(null);
   const [warrantySerial, setWarrantySerial] = useState<SP_SoSerial | null>(
     null,
   );
@@ -225,8 +224,7 @@ function SerialsContent() {
           onOpenChangeStatus={(serial) => setStatusSerial(serial)}
           onOpenImages={(serial) => setImageSerial(serial)}
           onOpenAdd={() => setOpenAdd(true)}
-          onOpenEdit={() => setOpenEdit(true)}
-          setSelectSerial={setSelectSerial}
+          onOpenEdit={(serial) => setEditingSerial(serial)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
           getSerialStatusBadge={getSerialStatusBadge}
@@ -243,8 +241,7 @@ function SerialsContent() {
           onOpenWarranty={(serial) => setWarrantySerial(serial)}
           onOpenChangeStatus={(serial) => setStatusSerial(serial)}
           onOpenImages={(serial) => setImageSerial(serial)}
-          onOpenEdit={() => setOpenEdit(true)}
-          setSelectSerial={setSelectSerial}
+          onOpenEdit={(serial) => setEditingSerial(serial)}
           getSerialStatusBadge={getSerialStatusBadge}
         />
       )}
@@ -261,20 +258,18 @@ function SerialsContent() {
           refetchKPI();
         }}
       />
-      {openEdit && selectSerial && (
-        <EditProductSerialSlideOver
-          open={openEdit}
-          selectSerial={selectSerial}
-          onClose={() => setOpenEdit(false)}
-          variantOptions={variantOptions}
-          isLoadingVariants={isLoadingVariants}
-          defaultBienTheId={bienTheFilter}
-          onSuccess={() => {
-            refetch();
-            refetchKPI();
-          }}
-        />
-      )}
+      <EditProductSerialSlideOver
+        open={Boolean(editingSerial)}
+        selectSerial={editingSerial}
+        onClose={() => setEditingSerial(null)}
+        variantOptions={variantOptions}
+        isLoadingVariants={isLoadingVariants}
+        defaultBienTheId={bienTheFilter}
+        onSuccess={() => {
+          refetch();
+          refetchKPI();
+        }}
+      />
       {/* 5. SlideOver: Kích hoạt Bảo hành Điện tử (State Form cô lập hoàn toàn) */}
       <ActivateWarrantySlideOver
         open={Boolean(warrantySerial)}

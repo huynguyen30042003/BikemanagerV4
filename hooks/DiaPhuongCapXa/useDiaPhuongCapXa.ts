@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   DM_DiaPhuongCapXa,
   CreateDiaPhuongCapXaPayload,
@@ -35,6 +36,7 @@ export const diaPhuongCapXaSchema = z.object({
 });
 
 export function useDiaPhuongCapXa(initialTinhId?: string | number) {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -277,6 +279,29 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
     }
   };
 
+  const handleDelete = async (item: DM_DiaPhuongCapXa) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa xã / phường",
+      description: `Bạn có chắc chắn muốn xóa "${item.ten}" (Mã: ${item.maXa}) không? Thao tác này không thể hoàn tác.`,
+      confirmText: "Xác nhận xóa",
+      variant: "danger",
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await deleteMutation.mutateAsync(item.xaID);
+      toast.success(`Đã xóa "${item.ten}" thành công`);
+      refetch();
+      refetchKPI();
+    } catch (error: unknown) {
+      const msg =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Không thể xóa xã/phường (có thể đang liên kết với địa điểm showroom/khách hàng)";
+      toast.error(msg);
+    }
+  };
+
   const handleSync = async () => {
     try {
       await syncMutation.mutateAsync();
@@ -341,6 +366,7 @@ export function useDiaPhuongCapXa(initialTinhId?: string | number) {
     selectItemName,
     handleOpenDelete,
     handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     handleSync,

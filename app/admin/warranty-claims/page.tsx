@@ -14,7 +14,6 @@ import {
   WarrantyClaimsTable,
   CreateWarrantyClaimSlideOver,
   WarrantyClaimDetailSlideOver,
-  DeleteWarrantyClaimModal,
 } from "@/components/WarrantyClaims";
 import { FileText, Plus, RefreshCw } from "lucide-react";
 
@@ -43,14 +42,14 @@ function WarrantyClaimsContent() {
     isLoading,
     isFetching,
     refetch,
+    handleDelete,
   } = usePhieuBaoHanhHook();
 
   const { data: kpi } = useGetPhieuBaoHanhKPI();
 
-  // Dialog and drawer states (Isolated from page re-renders)
+  // Dialog and drawer states (Single-State Pattern)
   const [openCreate, setOpenCreate] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<BH_PhieuBaoHanh | null>(null);
-  const [deleteItem, setDeleteItem] = useState<BH_PhieuBaoHanh | null>(null);
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen">
@@ -140,7 +139,7 @@ function WarrantyClaimsContent() {
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
         onViewDetail={(item) => setSelectedDetail(item)}
-        onDelete={(item) => setDeleteItem(item)}
+        onDelete={handleDelete}
         onAddNew={() => setOpenCreate(true)}
         getClaimStatusBadge={getClaimStatusBadge}
         getActionBadge={getActionBadge}
@@ -165,14 +164,6 @@ function WarrantyClaimsContent() {
         selectedItem={selectedDetail}
         getClaimStatusBadge={getClaimStatusBadge}
         getActionBadge={getActionBadge}
-      />
-
-      {/* Modal xác nhận xóa phiếu */}
-      <DeleteWarrantyClaimModal
-        open={Boolean(deleteItem)}
-        item={deleteItem}
-        onClose={() => setDeleteItem(null)}
-        onSuccess={() => refetch()}
       />
     </div>
   );

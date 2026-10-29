@@ -5,7 +5,7 @@ import { SlideOver } from "@/components/ui/SlideOver";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import { KHO_PhieuKiemKe, KHO_ChiTietKiemKe } from "@/types/phieuKiemKe";
 import { useGetPhieuKiemKeById } from "@/hooks/PhieuKiemKe/usePhieuKiemKeApi";
 import { StatusBadgeInfo } from "@/hooks/DanhMucChiTiet/useDanhMucChiTietLookup";
@@ -70,9 +70,8 @@ export const StockAuditDetailSlideOver: React.FC<StockAuditDetailSlideOverProps>
   onHuyPhieu,
   isHuyPhieu,
 }) => {
+  const { confirm } = useConfirm();
   const [filterText, setFilterText] = useState("");
-  const [showConfirmCanBang, setShowConfirmCanBang] = useState(false);
-  const [showConfirmHuy, setShowConfirmHuy] = useState(false);
 
   // Lấy chi tiết tươi mới nhất từ API /api/PhieuKiemKeApi/Get nếu có id
   const { data: detailData, isLoading: isLoadingDetail } = useGetPhieuKiemKeById(
@@ -103,13 +102,40 @@ export const StockAuditDetailSlideOver: React.FC<StockAuditDetailSlideOverProps>
   const isDangKiemKe = activePhieu.trangThaiID === 26 || activePhieu.trangThaiID === 1;
 
   const handleConfirmCanBang = async () => {
+    const isConfirmed = await confirm({
+      title: "Duyệt cân bằng số liệu tồn kho?",
+      description: (
+        <div className="space-y-1.5 text-xs text-muted-foreground">
+          <p>
+            Hệ thống sẽ tự động điều chỉnh số lượng tồn thực tế trong kho{" "}
+            <strong className="text-foreground">{activePhieu.tenKho}</strong> theo kết quả kiểm đếm của biên bản{" "}
+            <strong className="text-foreground">#{activePhieu.maPhieuKiemKe}</strong>.
+          </p>
+          <p className="text-amber-600 dark:text-amber-400 font-medium">
+            Lưu ý: Thao tác này sẽ cập nhật thẻ kho và không thể hoàn tác!
+          </p>
+        </div>
+      ),
+      confirmText: "Xác nhận cân bằng",
+      variant: "warning",
+    });
+    if (!isConfirmed) return;
     await onCanBang(activePhieu.phieuKiemKeID);
-    setShowConfirmCanBang(false);
   };
 
   const handleConfirmHuy = async () => {
+    const isConfirmed = await confirm({
+      title: "Hủy bỏ đợt kiểm kê này?",
+      description: (
+        <p className="text-xs text-muted-foreground">
+          Bạn có chắc chắn muốn hủy phiếu kiểm kê <strong className="text-foreground">#{activePhieu.maPhieuKiemKe}</strong>? Số liệu tồn kho sẽ không bị thay đổi.
+        </p>
+      ),
+      confirmText: "Đồng ý hủy",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     await onHuyPhieu(activePhieu.phieuKiemKeID);
-    setShowConfirmHuy(false);
   };
 
   return (
@@ -313,7 +339,7 @@ export const StockAuditDetailSlideOver: React.FC<StockAuditDetailSlideOverProps>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowConfirmHuy(true)}
+                    onClick={handleConfirmHuy}
                     disabled={isHuyPhieu}
                     className="text-xs h-9 text-rose-600 hover:text-rose-700 border-rose-200 dark:border-rose-900 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950/40"
                   >
@@ -323,7 +349,7 @@ export const StockAuditDetailSlideOver: React.FC<StockAuditDetailSlideOverProps>
 
                   <Button
                     size="sm"
-                    onClick={() => setShowConfirmCanBang(true)}
+                    onClick={handleConfirmCanBang}
                     disabled={isCanBang}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs font-semibold h-9 shadow-xs"
                   >
@@ -346,44 +372,7 @@ export const StockAuditDetailSlideOver: React.FC<StockAuditDetailSlideOverProps>
         </div>
       </SlideOver>
 
-      {/* Modal xác nhận Duyệt cân bằng kho */}
-      <ConfirmModal
-        open={showConfirmCanBang}
-        onClose={() => setShowConfirmCanBang(false)}
-        onConfirm={handleConfirmCanBang}
-        title="Duyệt cân bằng số liệu tồn kho?"
-        description={
-          <div className="space-y-1.5 text-xs text-muted-foreground">
-            <p>
-              Hệ thống sẽ tự động điều chỉnh số lượng tồn thực tế trong kho{" "}
-              <strong className="text-foreground">{activePhieu.tenKho}</strong> theo kết quả kiểm đếm của biên bản{" "}
-              <strong className="text-foreground">#{activePhieu.maPhieuKiemKe}</strong>.
-            </p>
-            <p className="text-amber-600 dark:text-amber-400 font-medium">
-              Lưu ý: Thao tác này sẽ cập nhật thẻ kho và không thể hoàn tác!
-            </p>
-          </div>
-        }
-        confirmText="Xác nhận cân bằng"
-        variant="warning"
-        isLoading={isCanBang}
-      />
 
-      {/* Modal xác nhận Hủy phiếu kiểm kê */}
-      <ConfirmModal
-        open={showConfirmHuy}
-        onClose={() => setShowConfirmHuy(false)}
-        onConfirm={handleConfirmHuy}
-        title="Hủy bỏ đợt kiểm kê này?"
-        description={
-          <p className="text-xs text-muted-foreground">
-            Bạn có chắc chắn muốn hủy phiếu kiểm kê <strong className="text-foreground">#{activePhieu.maPhieuKiemKe}</strong>? Số liệu tồn kho sẽ không bị thay đổi.
-          </p>
-        }
-        confirmText="Đồng ý hủy"
-        variant="danger"
-        isLoading={isHuyPhieu}
-      />
     </>
   );
 };

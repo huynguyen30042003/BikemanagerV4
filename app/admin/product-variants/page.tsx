@@ -4,11 +4,7 @@ import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import {
-  useBienTheSanPham,
-  useDeleteBienThe,
-} from "@/hooks/BienTheSanPham/useBienTheSanPham";
+import { useBienTheSanPham } from "@/hooks/BienTheSanPham/useBienTheSanPham";
 import { SP_BienTheSanPham } from "@/types/bienTheSanPham";
 import {
   ProductVariantsKpiGrid,
@@ -49,32 +45,18 @@ function VariantsContent() {
     kpiData,
     isLoadingKPI,
     refetchKPI,
+    handleDelete,
   } = useBienTheSanPham(initialSanPhamId);
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [openAdd, setOpenAdd] = useState(false);
   const [editingVariant, setEditingVariant] =
     useState<SP_BienTheSanPham | null>(null);
-  const [deletingVariant, setDeletingVariant] =
-    useState<SP_BienTheSanPham | null>(null);
-
-  const deleteMutation = useDeleteBienThe();
 
   const handleResetFilters = () => {
     handleSearch("");
     setSanPhamFilter("");
     setPage(1);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingVariant) return;
-    try {
-      await deleteMutation.mutateAsync(deletingVariant.bienTheSanPhamID);
-      setDeletingVariant(null);
-      refetchKPI();
-    } catch {
-      // Toast notification is handled in mutation
-    }
   };
 
   // Thống kê KPI ưu tiên từ Backend API GetKPI, fallback sang dataset client
@@ -174,7 +156,7 @@ function VariantsContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(variant) => setEditingVariant(variant)}
-          onDelete={(variant) => setDeletingVariant(variant)}
+          onDelete={handleDelete}
           onOpenAdd={() => setOpenAdd(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -189,7 +171,7 @@ function VariantsContent() {
           setPage={setPage}
           setPageSize={setPageSize}
           onEdit={(variant) => setEditingVariant(variant)}
-          onDelete={(variant) => setDeletingVariant(variant)}
+          onDelete={handleDelete}
         />
       )}
 
@@ -217,32 +199,6 @@ function VariantsContent() {
           refetch();
           refetchKPI();
         }}
-      />
-
-      {/* 6. Modal xác nhận xóa biến thể */}
-      <ConfirmModal
-        open={Boolean(deletingVariant)}
-        onClose={() => setDeletingVariant(null)}
-        onConfirm={handleDeleteConfirm}
-        title="Xác nhận xóa biến thể"
-        description={
-          <div className="space-y-2">
-            <p>
-              Bạn có chắc chắn muốn xóa biến thể &quot;
-              <strong className="text-foreground">
-                {deletingVariant?.tenBienThe}
-              </strong>
-              &quot; không?
-            </p>
-            <span className="text-xs text-rose-600 dark:text-rose-400 block bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
-              Lưu ý: Không thể xóa nếu biến thể này đang có số Serial xe hoặc số
-              lượng tồn kho.
-            </span>
-          </div>
-        }
-        confirmText="Xác nhận xóa"
-        variant="danger"
-        isLoading={deleteMutation.isPending}
       />
     </div>
   );

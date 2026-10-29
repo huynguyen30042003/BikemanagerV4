@@ -212,7 +212,8 @@ export const PurchaseOrdersFilterBar: React.FC<
                   Đơn nhập hàng & Nhập kho PO
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">
-                  Quản lý mua hàng từ nhà cung cấp, chi phí vận chuyển, công nợ và duyệt nhập kho xe thực tế
+                  Quản lý mua hàng từ nhà cung cấp, chi phí vận chuyển, công nợ
+                  và duyệt nhập kho xe thực tế
                 </p>
               </div>
             </div>
@@ -233,7 +234,9 @@ export const PurchaseOrdersFilterBar: React.FC<
                   isFetching || isLoadingKPI ? "animate-spin text-blue-500" : ""
                 }`}
               />
-              <span className="text-xs font-medium hidden xs:inline">Làm mới</span>
+              <span className="text-xs font-medium hidden xs:inline">
+                Làm mới
+              </span>
               <span className="text-xs font-medium xs:hidden">Reload</span>
             </Button>
 
@@ -377,7 +380,7 @@ export const PurchaseOrdersFilterBar: React.FC<
                 <SearchSelect
                   placeholder="Tất cả trạng thái..."
                   options={filterStatusOptions}
-                  value={statusFilter !== null ? String(statusFilter) : ""}
+                  value={statusFilter !== null ? Number(statusFilter) : ""}
                   onChange={(val) =>
                     onStatusFilterChange(val ? Number(val) : null)
                   }
@@ -448,7 +451,7 @@ export const PurchaseOrdersFilterBar: React.FC<
               <SearchSelect
                 placeholder="Tất cả trạng thái"
                 options={filterStatusOptions}
-                value={statusFilter !== null ? String(statusFilter) : ""}
+                value={statusFilter !== null ? Number(statusFilter) : ""}
                 onChange={(val) =>
                   onStatusFilterChange(val ? Number(val) : null)
                 }

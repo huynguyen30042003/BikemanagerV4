@@ -113,10 +113,10 @@ export const PurchaseOrderPaymentModal: React.FC<
           <SearchSelect
             placeholder="Chọn phương thức..."
             options={paymentMethodOptions.map((opt) => ({
-              value: String(opt.value),
+              value: Number(opt.value),
               label: opt.label,
             }))}
-            value={String(dataPayment.PhuongTucThanhToanID)}
+            value={Number(dataPayment.PhuongTucThanhToanID)}
             onChange={(val) =>
               setDataPayment((prev) => ({
                 ...prev,

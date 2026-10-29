@@ -184,7 +184,8 @@ export function RepairServicesFilterBar({
                   Bảng Giá Tiền Công & Gói Dịch Vụ
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">
-                  Cấu hình đơn giá tiền công bảo dưỡng định kỳ, sửa chữa cơ điện, cứu hộ xe điện
+                  Cấu hình đơn giá tiền công bảo dưỡng định kỳ, sửa chữa cơ
+                  điện, cứu hộ xe điện
                 </p>
               </div>
             </div>
@@ -202,7 +203,9 @@ export function RepairServicesFilterBar({
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue-500" : ""}`}
               />
-              <span className="text-xs font-medium hidden xs:inline">Làm mới</span>
+              <span className="text-xs font-medium hidden xs:inline">
+                Làm mới
+              </span>
               <span className="text-xs font-medium xs:hidden">Reload</span>
             </Button>
 
@@ -315,7 +318,7 @@ export function RepairServicesFilterBar({
                 <SearchSelect
                   placeholder="Tất cả nhóm dịch vụ..."
                   options={filterCategoryOptions}
-                  value={categoryFilter !== null ? String(categoryFilter) : ""}
+                  value={categoryFilter !== null ? Number(categoryFilter) : ""}
                   onChange={(val) =>
                     onCategoryFilterChange(val ? Number(val) : null)
                   }
@@ -383,7 +386,7 @@ export function RepairServicesFilterBar({
               <SearchSelect
                 placeholder="Tất cả nhóm dịch vụ"
                 options={filterCategoryOptions}
-                value={categoryFilter !== null ? String(categoryFilter) : ""}
+                value={categoryFilter !== null ? Number(categoryFilter) : ""}
                 onChange={(val) =>
                   onCategoryFilterChange(val ? Number(val) : null)
                 }

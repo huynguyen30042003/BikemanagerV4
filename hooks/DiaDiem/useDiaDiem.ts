@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   DM_DiaDiem,
   CreateDiaDiemPayload,
@@ -19,7 +20,6 @@ import {
   useDeleteDiaDiem,
 } from "./useDiaDiemApi";
 import { useGetDiaPhuongCapTinh } from "../DiaPhuongCapTinh/useDiaPhuongCapTinhApi";
-import { useGetDiaPhuongCapXa } from "../DiaPhuongCapXa/useDiaPhuongCapXaApi";
 import { DANH_MUC_CHUNG } from "@/constants/danhMuc";
 import { useDanhMucChiTietLookup } from "../DanhMucChiTiet/useDanhMucChiTietLookup";
 
@@ -32,12 +32,20 @@ export const DEBOUNCE_DELAY = 400;
 export const diaDiemSchema = z.object({
   tenDiaDiem: z.string().trim().min(1, "Vui lòng nhập tên địa điểm / showroom"),
   loaiDiaDiemID: z.number().min(1, "Vui lòng chọn loại cơ sở"),
+  diaDiemCapChaID: z.string().nullable().optional(),
   tinhID: z.number().min(1, "Vui lòng chọn Tỉnh / Thành phố"),
   xaID: z.number().min(1, "Vui lòng chọn Phường / Xã"),
   diaChiSo: z.string().trim().min(1, "Vui lòng nhập địa chỉ cụ thể"),
+  moTa: z.string().optional(),
+  kinhDo: z.number().nullable().optional(),
+  viDo: z.number().nullable().optional(),
+  trangThai: z.boolean(),
 });
 
+export type DiaDiemFormData = z.infer<typeof diaDiemSchema>;
+
 export function useDiaDiem(initialTinhId?: string | number) {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -58,9 +66,6 @@ export function useDiaDiem(initialTinhId?: string | number) {
 
   const [open, setOpen] = useState<boolean>(false);
   const [openUpdate, setOpenUpdate] = useState<boolean>(false);
-  const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const [selectDiaDiemId, setSelectDiaDiemId] = useState<string>("");
-  const [selectItemName, setSelectItemName] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Form states
@@ -117,21 +122,7 @@ export function useDiaDiem(initialTinhId?: string | number) {
     return map;
   }, [provinces]);
 
-  // Query danh sách xã phường theo TỉnhID đang chọn trong Add / Update form
-  const activeFormTinhId = open ? dataAdd.TinhID : openUpdate ? dataUpdate.TinhID : 0;
-  const { data: dataXa } = useGetDiaPhuongCapXa({
-    TinhID: activeFormTinhId > 0 ? activeFormTinhId : null,
-    PageIndex: 1,
-    PageSize: 200,
-  });
 
-  const communeOptions = useMemo(() => {
-    const communes: DM_DiaPhuongCapXa[] = dataXa?.data ?? [];
-    return communes.map((c) => ({
-      value: c.xaID,
-      label: c.ten,
-    }));
-  }, [dataXa]);
 
   const filterParams = useMemo(() => {
     let trangThai: boolean | null = null;
@@ -242,12 +233,6 @@ export function useDiaDiem(initialTinhId?: string | number) {
     setOpenUpdate(true);
   };
 
-  const handleOpenDelete = (item: DM_DiaDiem) => {
-    setSelectDiaDiemId(item.diaDiemID);
-    setSelectItemName(item.tenDiaDiem);
-    setOpenDelete(true);
-  };
-
   const handleSubmit = async () => {
     const validation = diaDiemSchema.safeParse({
       tenDiaDiem: dataAdd.TenDiaDiem,
@@ -316,12 +301,17 @@ export function useDiaDiem(initialTinhId?: string | number) {
     }
   };
 
-  const handleSubmitDelete = async () => {
-    if (!selectDiaDiemId) return;
+  const handleDelete = async (item: DM_DiaDiem) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa cơ sở / showroom",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: `Bạn có chắc chắn muốn xóa cơ sở "${item.tenDiaDiem}" không? Hành động này không thể hoàn tác nếu cơ sở đang có kho hoặc đơn hàng liên kết.`,
+    });
+    if (!isConfirmed) return;
     try {
-      await deleteMutation.mutateAsync(selectDiaDiemId);
-      toast.success(`Đã xóa "${selectItemName}" thành công`);
-      setOpenDelete(false);
+      await deleteMutation.mutateAsync(item.diaDiemID);
+      toast.success(`Đã xóa "${item.tenDiaDiem}" thành công`);
       refetch();
       refetchKPI();
     } catch (error: unknown) {
@@ -347,7 +337,6 @@ export function useDiaDiem(initialTinhId?: string | number) {
     provinces,
     provinceOptions,
     provinceMap,
-    communeOptions,
     parentLocationOptions,
     isLoadingTinh,
 
@@ -384,11 +373,7 @@ export function useDiaDiem(initialTinhId?: string | number) {
     handleSubmitUpdate,
     isUpdating: updateMutation.isPending,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     errors,

@@ -65,12 +65,15 @@ export function CreateSupplierSlideOver({
   }, [open]);
 
   // Query Xã theo Tỉnh đã chọn cục bộ
-  const { data: dataCommunes } = useGetDiaPhuongCapXa({
-    TinhID: dataAdd.TinhID ?? 0,
-    PageIndex: 1,
-    PageSize: 200,
-    TrangThai: true,
-  });
+  const { data: dataCommunes } = useGetDiaPhuongCapXa(
+    {
+      TinhID: dataAdd.TinhID ?? 0,
+      PageIndex: 1,
+      PageSize: 200,
+      TrangThai: true,
+    },
+    Boolean(open && dataAdd.TinhID),
+  );
 
   const communeOptions = useMemo(() => {
     if (!dataAdd.TinhID) return [];

@@ -48,6 +48,7 @@ FE/
 │   └── layout.tsx                    # Root Layout (Cấu hình Font, Metadata gốc, Providers)
 ├── components/                       # UI Components dùng chung & Feature Components
 │   ├── Common/                       # Component dùng chung toàn hệ thống
+│   │   ├── ConfirmContext.tsx        # Context & useConfirm() toàn cục (Promise-based Confirm)
 │   │   ├── AccessDenied.tsx          # Component hiển thị 403 nội bộ (inline)
 │   │   ├── RoleGuard.tsx             # RoleGuard (component) & AdminRouteGuard (layout)
 │   │   ├── SiderBarAdmin.tsx         # Sidebar động lọc menu theo role của user
@@ -484,49 +485,80 @@ const isSafeUrl = (url: string | null) => {
    - Chỉ hiển thị nút xóa ảnh khi thực sự có ảnh mới đang preview hoặc bản ghi gốc đang có ảnh và chưa bị đánh dấu xóa:
      `Boolean(previewUrl || (!formData.XoaAnh && formData.anhHienTai))`.
 
-### 10.4. Quy chuẩn Hộp thoại Xác nhận Hành vi Nguy hiểm (Cấm tuyệt đối `window.confirm`)
+### 10.4. Quy chuẩn Hộp thoại Xác nhận Hành vi Nguy hiểm: Bắt buộc dùng `useConfirm()` thay thế `<ConfirmModal />` cục bộ
 
 - ❌ **TUYỆT ĐỐI CẤM DÙNG `window.confirm(...)` HOẶC `confirm(...)` MẶC ĐỊNH**:
   - Gây đứng luồng chính (Blocking Main Thread) làm đơ mọi animation, timer và React state.
   - Không có cờ `isLoading` khiến người dùng dễ bấm đúp (double-click) gây lỗi trừ kho kép, trừ tiền kép khi API đang chạy.
   - Giao diện thô cứng của hệ điều hành, phá vỡ Dark/Light Design System và có thể bị chặn trên Mobile WebView.
-  - Cấm nhúng hàm `confirm(...)` vào trong Custom Hook nghiệp vụ (Hook chỉ cung cấp hàm mutation).
-- ✅ **BẮT BUỘC SỬ DỤNG 1 TRONG 2 CƠ CHẾ CHUẨN**:
-  1. **Cơ chế Promise-based (`useConfirm()`)** (Khuyến nghị cho Hooks / Event Handlers):
-     - Được cấp phát toàn cục thông qua `ConfirmProvider` tại `providers/QueryProvider.tsx`.
-     - Cho phép gọi hộp thoại xác nhận bất đồng bộ cực kỳ sạch sẽ mà không cần khai báo thêm `useState` quản lý modal:
-     ```tsx
-     import { useConfirm } from "@/components/Common/ConfirmContext";
 
-     const { confirm } = useConfirm();
+- ❌ **KHÔNG NÊN DÙNG `<ConfirmModal />` KHAI BÁO THỦ CÔNG TẠI MỖI TRANG**:
+  - Việc tự khai báo `const [confirmItem, setConfirmItem] = useState<T | null>(null)` hoặc `const [openConfirm, setOpenConfirm] = useState(false)` ở từng page gây rác mã nguồn (boilerplate), làm phình to cây JSX ở cuối file và dễ gây lỗi lệch pha dữ liệu khi đóng/mở.
 
-     const handleAction = async (item: T) => {
-       const isConfirmed = await confirm({
-         title: "Xác nhận hoàn thành và bàn giao xe",
-         variant: "warning",
-         confirmText: "Xác nhận bàn giao",
-         description: `Xác nhận bàn giao xe cho đơn hàng "${item.maDonHang}"? Hệ thống sẽ trừ kho và kích hoạt bảo hành điện tử.`,
-       });
-       if (!isConfirmed) return;
-       // Gọi API mutation...
-     };
-     ```
-  2. **Cơ chế State-driven Component (`<ConfirmModal />` từ `@/components/ui/ConfirmModal`)**:
-     - Dành cho các trang cần hiển thị trạng thái đang xử lý (`isLoading={mutation.isPending}`) trực tiếp trên nút bấm xác nhận của Modal.
-     - Quản lý đóng/mở qua state đối tượng cần xác nhận (State-driven Confirmation):
-     ```tsx
-     const [confirmItem, setConfirmItem] = useState<T | null>(null);
+- ✅ **BẮT BUỘC CHUẨN HÓA: DÙNG PROMISE-BASED `useConfirm()` THAY THẾ `<ConfirmModal />`**:
+  - Toàn bộ ứng dụng được bọc bởi `<ConfirmProvider>` duy nhất tại `providers/QueryProvider.tsx` (tự động quản lý vòng đời, backdrop blur, animation và phím tắt `Escape` / click outside).
+  - Cho phép gọi hộp thoại xác nhận bất đồng bộ cực kỳ sạch sẽ, trả về `Promise<boolean>` trực tiếp trong Custom Hook hoặc Event Handler:
 
-     <ConfirmModal
-       open={Boolean(confirmItem)}
-       onClose={() => setConfirmItem(null)}
-       onConfirm={handleExecuteConfirm}
-       isLoading={mutation.isPending}
-       variant="warning"
-       title="..."
-       description="..."
-     />
-     ```
+  ```tsx
+  import { useConfirm } from "@/components/Common/ConfirmContext";
+
+  export const useDonHang = () => {
+    const { confirm } = useConfirm();
+
+    const handleHoanThanhVaGiaoXe = async (order: DH_DonHang) => {
+      // 👉 Bật hộp thoại xác nhận bất đồng bộ cực kỳ sạch sẽ, không cần khai báo useState ở page!
+      const isConfirmed = await confirm({
+        title: "Xác nhận hoàn thành và bàn giao xe",
+        variant: "warning", // "warning" | "danger" | "info"
+        confirmText: "Xác nhận bàn giao",
+        cancelText: "Hủy bỏ",
+        description: `Xác nhận hoàn thành và bàn giao xe cho đơn hàng "${order.maDonHang}"? Hệ thống sẽ trigger trừ tồn kho thực tế, tính giá vốn FIFO, kích hoạt bảo hành điện tử và tích điểm cho khách.`,
+      });
+      if (!isConfirmed) return; // Người dùng bấm Hủy -> Dừng lại ngay
+
+      // Người dùng bấm Xác nhận -> Chạy tiếp API Mutation:
+      try {
+        await hoanThanhVaGiaoXeMutation.mutateAsync(order.donHangID);
+        toast.success("Xác nhận hoàn thành đơn và bàn giao xe thành công!");
+        refetch();
+        refetchKPI();
+      } catch (err: unknown) {
+        toast.error("Không thể xác nhận hoàn thành & bàn giao xe!");
+      }
+    };
+
+    const handleDelete = async (order: DH_DonHang) => {
+      const isConfirmed = await confirm({
+        title: "Xác nhận hủy đơn hàng",
+        variant: "danger",
+        confirmText: "Hủy đơn hàng",
+        description: `Bạn có chắc chắn muốn hủy đơn hàng "${order.maDonHang}" không? Thao tác này không thể hoàn tác.`,
+      });
+      if (!isConfirmed) return;
+
+      try {
+        await deleteMutation.mutateAsync(order.donHangID);
+        toast.success("Đã hủy đơn hàng thành công!");
+        refetch();
+        refetchKPI();
+      } catch {
+        toast.error("Không thể hủy đơn hàng này!");
+      }
+    };
+
+    return {
+      // ...
+      handleHoanThanhVaGiaoXe,
+      handleDelete,
+    };
+  };
+  ```
+
+  - **Lợi ích kiến trúc của `useConfirm()` so với `<ConfirmModal />` thông thường**:
+    1. **Zero Boilerplate**: Không cần khai báo 4-5 dòng state (`confirmItem`, `setConfirmItem`, `isOpen`) cho từng hành vi xác nhận trong mỗi file `page.tsx`.
+    2. **JSX tinh gọn**: `page.tsx` chỉ cần truyền thẳng handler xuống Table/Card (`onHoanThanhVaGiaoXe={handleHoanThanhVaGiaoXe}`), không phải render hàng tá thẻ `<ConfirmModal />` ở chân trang.
+    3. **An toàn bộ nhớ**: Tự động resolve `false` và giải phóng ref khi component unmount hoặc khi người dùng nhấn `Escape`, click backdrop.
+    4. **Đồng bộ Design System**: Kế thừa 100% giao diện cao cấp từ `@/components/ui/ConfirmModal` với đầy đủ icon cảnh báo, màu sắc theo `variant`, hiệu ứng backdrop blur và phông chữ chuẩn.
 
 ---
 
@@ -662,7 +694,7 @@ Mỗi khi thêm một trang hoặc module mới (ví dụ: `/admin/reports` ho�
 3. **Kiến trúc Modal & Performance**:
    - Tách Slide-over/Modal Thêm & Sửa thành component con đặt tại `components/<Feature>/`.
    - Áp dụng `editingItem: T | null` (Mục 11.4) và Conditional Mounting cho modal sửa.
-   - Dùng `<ConfirmModal />` thay cho `window.confirm` (Mục 10.4).
+   - Dùng hook `useConfirm()` (Promise-based Confirm Dialog, Mục 10.4) thay thế cho `window.confirm` và thay thế việc khai báo `<ConfirmModal />` thủ công tại page.
    - Đảm bảo việc gõ phím trong form không gây re-render cho trang cha.
 4. **Controls & Form**:
    - Sử dụng `<SearchSelect>` / `<MultiSearchSelect>` thay cho thẻ `<select>` mặc định ở tất cả dropdown (kể cả bộ chọn số bản ghi phân trang).

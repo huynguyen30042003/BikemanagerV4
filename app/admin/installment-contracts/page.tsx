@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { useHopDongTraGopHook } from "@/hooks/TraGop/useTraGop";
 import { useGetTraGopKPI } from "@/hooks/TraGop/useTraGopApi";
 import { HopDongTraGop } from "@/types/traGop";
@@ -39,12 +39,6 @@ function InstallmentContractsContent() {
     refetch,
     openAdd,
     setOpenAdd,
-    openStatusModal,
-    setOpenStatusModal,
-    openDisburseModal,
-    setOpenDisburseModal,
-    selectedContract,
-    setSelectedContract,
     handleSubmitAdd,
     handleChuyenTrangThai,
     handleXacNhanGiaiNgan,
@@ -52,15 +46,11 @@ function InstallmentContractsContent() {
     isSubmitting,
   } = useHopDongTraGopHook();
 
-  const handleOpenApproveModal = (contract: HopDongTraGop) => {
-    setSelectedContract(contract);
-    setOpenStatusModal(true);
-  };
-
-  const handleOpenDisburseModal = (contract: HopDongTraGop) => {
-    setSelectedContract(contract);
-    setOpenDisburseModal(true);
-  };
+  // Single-state pattern for action modals (AGENTS.md Section 11.2)
+  const [approvingContract, setApprovingContract] =
+    useState<HopDongTraGop | null>(null);
+  const [disbursingContract, setDisbursingContract] =
+    useState<HopDongTraGop | null>(null);
 
   const handleFilterStatus = (status: string) => {
     setStatusFilter(status);
@@ -126,8 +116,8 @@ function InstallmentContractsContent() {
           pageSize={pageSize}
           setPage={setPage}
           setPageSize={setPageSize}
-          onApprove={handleOpenApproveModal}
-          onDisburse={handleOpenDisburseModal}
+          onApprove={setApprovingContract}
+          onDisburse={setDisbursingContract}
           onDelete={handleDelete}
           onOpenAdd={() => setOpenAdd(true)}
         />
@@ -144,19 +134,29 @@ function InstallmentContractsContent() {
 
       {/* 5. Modal Cập nhật tiến độ thẩm định hồ sơ */}
       <ApproveContractModal
-        open={openStatusModal}
-        onOpenChange={setOpenStatusModal}
-        contract={selectedContract}
-        onSubmit={handleChuyenTrangThai}
+        open={Boolean(approvingContract)}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setApprovingContract(null);
+        }}
+        contract={approvingContract}
+        onSubmit={async (payload) => {
+          await handleChuyenTrangThai(payload);
+          setApprovingContract(null);
+        }}
         isSubmitting={isSubmitting}
       />
 
       {/* 6. Modal Xác nhận tiền giải ngân về showroom */}
       <DisburseContractModal
-        open={openDisburseModal}
-        onOpenChange={setOpenDisburseModal}
-        contract={selectedContract}
-        onSubmit={handleXacNhanGiaiNgan}
+        open={Boolean(disbursingContract)}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setDisbursingContract(null);
+        }}
+        contract={disbursingContract}
+        onSubmit={async (payload) => {
+          await handleXacNhanGiaiNgan(payload);
+          setDisbursingContract(null);
+        }}
         isSubmitting={isSubmitting}
       />
     </div>

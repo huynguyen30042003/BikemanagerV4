@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import { useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -38,13 +39,14 @@ export const danhMucChiTietSchema = z.object({
  * Hook quản lý toàn bộ State & UI của trang Danh mục chi tiết
  */
 export function useDanhMucChiTiet(initialParentId?: string | number) {
+  const { confirm } = useConfirm();
   // Pagination & Filter state
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all"); // "all" | "active" | "inactive"
-  const [parentCategoryFilter, setParentCategoryFilter] = useState<string | number>(
-    initialParentId ?? ""
-  ); // Lọc theo danh mục cha
+  const [parentCategoryFilter, setParentCategoryFilter] = useState<
+    string | number
+  >(initialParentId ?? ""); // Lọc theo danh mục cha
 
   // Search
   const { searchInput, searchTerm, setSearchInput } = useDebounceSearch({
@@ -55,9 +57,6 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
   // Modal / Drawer state
   const [open, setOpen] = useState<boolean>(false);
   const [openUpdate, setOpenUpdate] = useState<boolean>(false);
-  const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const [selectDetailId, setSelectDetailId] = useState<number>(0);
-  const [selectItemName, setSelectItemName] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Form Add State
@@ -80,10 +79,11 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
   });
 
   // Lấy danh sách danh mục cha (danh mục chung) để chọn trong SearchSelect
-  const { data: dataDanhMucChung, isLoading: isLoadingParent } = useGetDanhMucChung({
-    PageIndex: 1,
-    PageSize: 100,
-  });
+  const { data: dataDanhMucChung, isLoading: isLoadingParent } =
+    useGetDanhMucChung({
+      PageIndex: 1,
+      PageSize: 100,
+    });
 
   const parentCategories: DM_DanhMucChung[] = useMemo(() => {
     return dataDanhMucChung?.data ?? dataDanhMucChung?.items ?? [];
@@ -116,8 +116,8 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
       typeof parentCategoryFilter === "number"
         ? parentCategoryFilter
         : parentCategoryFilter !== ""
-        ? Number(parentCategoryFilter)
-        : null;
+          ? Number(parentCategoryFilter)
+          : null;
 
     return {
       DanhMucID: danhMucId,
@@ -161,8 +161,8 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
         typeof parentCategoryFilter === "number"
           ? parentCategoryFilter
           : parentCategoryOptions.length > 0
-          ? Number(parentCategoryOptions[0].value)
-          : 0,
+            ? Number(parentCategoryOptions[0].value)
+            : 0,
       Ten: "",
       MoTa: "",
       ThuTu: 1,
@@ -188,7 +188,8 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
       });
       setErrors(errMap);
       toast.error(
-        validation.error.issues[0]?.message || "Vui lòng kiểm tra lại thông tin"
+        validation.error.issues[0]?.message ||
+          "Vui lòng kiểm tra lại thông tin",
       );
       return;
     }
@@ -203,8 +204,8 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
     } catch (error: unknown) {
       console.error("[Thêm danh mục chi tiết lỗi]", error);
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Thêm mới thất bại";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Thêm mới thất bại";
       toast.error(msg);
     }
   };
@@ -239,7 +240,8 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
       });
       setErrors(errMap);
       toast.error(
-        validation.error.issues[0]?.message || "Vui lòng kiểm tra lại thông tin"
+        validation.error.issues[0]?.message ||
+          "Vui lòng kiểm tra lại thông tin",
       );
       return;
     }
@@ -254,35 +256,31 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
     } catch (error: unknown) {
       console.error("[Cập nhật danh mục chi tiết lỗi]", error);
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Cập nhật thất bại";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Cập nhật thất bại";
       toast.error(msg);
     }
   };
 
-  // Mở modal xóa
-  const handleOpenDelete = (item: DM_DanhMucChiTiet) => {
-    setSelectDetailId(item.danhMucChiTietID);
-    setSelectItemName(item.ten);
-    setOpenDelete(true);
-  };
-
-  // Submit xóa
-  const handleSubmitDelete = async () => {
-    if (!selectDetailId) return;
+  const handleDelete = async (item: DM_DanhMucChiTiet) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa danh mục chi tiết",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: `Bạn có chắc chắn muốn xóa mục chi tiết "${item.ten}" không? Dữ liệu liên kết có thể bị ảnh hưởng.`,
+    });
+    if (!isConfirmed) return;
 
     try {
-      await deleteDetail.mutateAsync(selectDetailId);
-      toast.success(`Đã xóa "${selectItemName}" thành công!`);
-      setOpenDelete(false);
-      setSelectDetailId(0);
-      setSelectItemName("");
+      await deleteDetail.mutateAsync(item.danhMucChiTietID);
+      toast.success(`Đã xóa "${item.ten}" thành công!`);
       refetch();
+      refetchKPI();
     } catch (error: unknown) {
-      console.error("[Xóa danh mục chi tiết lỗi]", error);
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Xóa thất bại";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ||
+        "Không thể xóa mục chi tiết (Có thể do có dữ liệu ràng buộc)";
       toast.error(msg);
     }
   };
@@ -296,8 +294,8 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
     } catch (error: unknown) {
       console.error("[Đồng bộ danh mục chi tiết lỗi]", error);
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Đồng bộ thất bại";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Đồng bộ thất bại";
       toast.error(msg);
     }
   };
@@ -370,11 +368,7 @@ export function useDanhMucChiTiet(initialParentId?: string | number) {
     isUpdating: updateDetail.isPending,
 
     // Delete state & actions
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteDetail.isPending,
 
     // Sync

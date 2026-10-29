@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/Common/ConfirmContext";
 import {
   KH_PhuongTienKhachHang,
   CreatePhuongTienPayload,
@@ -31,6 +32,7 @@ export const phuongTienSchema = z.object({
 });
 
 export function usePhuongTienKhachHang(initialKhachHangId?: string) {
+  const { confirm } = useConfirm();
   const [page, setPage] = useState<number>(DEFAULT_PAGE);
   const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -45,9 +47,6 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
 
   const [open, setOpen] = useState<boolean>(false);
   const [openUpdate, setOpenUpdate] = useState<boolean>(false);
-  const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const [selectPhuongTienId, setSelectPhuongTienId] = useState<string>("");
-  const [selectItemName, setSelectItemName] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Query khách hàng cho dropdown
@@ -178,12 +177,6 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
     setOpenUpdate(true);
   };
 
-  const handleOpenDelete = (item: KH_PhuongTienKhachHang) => {
-    setSelectPhuongTienId(item.id);
-    setSelectItemName(`${item.tenModel} (${item.bienSo})`);
-    setOpenDelete(true);
-  };
-
   const handleSubmit = async () => {
     try {
       phuongTienSchema.parse({
@@ -234,13 +227,19 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
     }
   };
 
-  const handleSubmitDelete = async () => {
-    if (!selectPhuongTienId) return;
+  const handleDelete = async (item: KH_PhuongTienKhachHang) => {
+    const isConfirmed = await confirm({
+      title: "Xác nhận xóa phương tiện khách hàng",
+      variant: "danger",
+      confirmText: "Xác nhận xóa",
+      description: `Bạn có chắc chắn muốn xóa phương tiện "${item.tenModel} (${item.bienSo})" không? Hành động này sẽ xóa toàn bộ thông số và lịch sử của xe trong hệ thống.`,
+    });
+    if (!isConfirmed) return;
     try {
-      await deleteMutation.mutateAsync(selectPhuongTienId);
-      setOpenDelete(false);
+      await deleteMutation.mutateAsync(item.id);
+      refetchKPI();
     } catch {
-      // Toast handled
+      // Toast notification is handled inside useDeletePhuongTien
     }
   };
 
@@ -291,11 +290,7 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
     handleSubmitUpdate,
     isUpdating: updateMutation.isPending,
 
-    openDelete,
-    setOpenDelete,
-    selectItemName,
-    handleOpenDelete,
-    handleSubmitDelete,
+    handleDelete,
     isDeleting: deleteMutation.isPending,
 
     errors,

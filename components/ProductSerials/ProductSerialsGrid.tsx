@@ -49,10 +49,10 @@ interface ProductSerialsGridProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onOpenWarranty: (item: SP_SoSerial) => void;
   onOpenChangeStatus: (item: SP_SoSerial) => void;
-  setSelectSerial: (item: SP_SoSerial) => void;
+  setSelectSerial?: (item: SP_SoSerial) => void;
   onOpenImages?: (item: SP_SoSerial) => void;
   onOpenAdd: () => void;
-  onOpenEdit: () => void;
+  onOpenEdit: (item: SP_SoSerial) => void;
   onResetFilters: () => void;
   hasActiveFilters: boolean;
   getSerialStatusBadge: (statusId?: number | null) => {
@@ -309,8 +309,8 @@ export const ProductSerialsGrid: React.FC<ProductSerialsGridProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    onOpenEdit();
-                    setSelectSerial(serial);
+                    onOpenEdit(serial);
+                    setSelectSerial?.(serial);
                   }}
                   className="flex-1 h-8 text-xs flex items-center justify-center gap-1 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer shadow-2xs"
                 >

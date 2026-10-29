@@ -10,16 +10,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { SearchSelect } from "@/components/ui/selectSearch";
 import { useCreatePhieuBaoHanh } from "@/hooks/BaoHanh/useBaoHanhApi";
 import { CreatePhieuBaoHanhPayload } from "@/types/baoHanh";
-import { Store, AlertTriangle, Wrench, ShieldCheck, AlertCircle } from "lucide-react";
+import {
+  Store,
+  AlertTriangle,
+  Wrench,
+  ShieldCheck,
+  AlertCircle,
+} from "lucide-react";
 
 export const warrantyClaimSchema = z.object({
-  MoTaLoi: z.string().trim().min(5, "Vui lòng mô tả chi tiết sự cố hư hỏng (tối thiểu 5 ký tự)"),
+  MoTaLoi: z
+    .string()
+    .trim()
+    .min(5, "Vui lòng mô tả chi tiết sự cố hư hỏng (tối thiểu 5 ký tự)"),
   DiaDiemID: z.string().optional().nullable(),
   HuongXuLyID: z.number().min(1, "Vui lòng chọn hướng xử lý"),
   TrangThaiID: z.number().min(1, "Vui lòng chọn trạng thái phiếu"),
   KetQuaKiemTra: z.string().optional().nullable(),
-  ChiPhiHangHoTro: z.number().min(0, "Chi phí không được âm").optional().nullable(),
-  ChiPhiKhachTra: z.number().min(0, "Chi phí không được âm").optional().nullable(),
+  ChiPhiHangHoTro: z
+    .number()
+    .min(0, "Chi phí không được âm")
+    .optional()
+    .nullable(),
+  ChiPhiKhachTra: z
+    .number()
+    .min(0, "Chi phí không được âm")
+    .optional()
+    .nullable(),
   GhiChu: z.string().optional().nullable(),
 });
 
@@ -70,9 +87,15 @@ export function CreateWarrantyClaimSlideOver({
   // Reset form when opened
   useEffect(() => {
     if (open) {
-      const defaultDiaDiem = diaDiemOptions[0]?.value ? String(diaDiemOptions[0].value) : "";
-      const defaultAction = actionOptions[0]?.value ? Number(actionOptions[0].value) : 102;
-      const defaultStatus = claimStatusOptions[0]?.value ? Number(claimStatusOptions[0].value) : 96;
+      const defaultDiaDiem = diaDiemOptions[0]?.value
+        ? String(diaDiemOptions[0].value)
+        : "";
+      const defaultAction = actionOptions[0]?.value
+        ? Number(actionOptions[0].value)
+        : 102;
+      const defaultStatus = claimStatusOptions[0]?.value
+        ? Number(claimStatusOptions[0].value)
+        : 96;
 
       setFormData({
         BaoHanhID: "",
@@ -200,7 +223,7 @@ export function CreateWarrantyClaimSlideOver({
             </label>
             <SearchSelect
               options={actionOptions}
-              value={String(formData.HuongXuLyID)}
+              value={Number(formData.HuongXuLyID)}
               onChange={(val) =>
                 setFormData((prev) => ({
                   ...prev,
@@ -218,7 +241,7 @@ export function CreateWarrantyClaimSlideOver({
             </label>
             <SearchSelect
               options={claimStatusOptions}
-              value={String(formData.TrangThaiID)}
+              value={Number(formData.TrangThaiID)}
               onChange={(val) =>
                 setFormData((prev) => ({
                   ...prev,

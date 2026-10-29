@@ -1,9 +1,10 @@
 "use client";
 
-import React, { Suspense, useMemo } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTonKho } from "@/hooks/TonKho/useTonKho";
 import { useGetTonKhoKPI } from "@/hooks/TonKho/useTonKhoApi";
+import { KHO_TonKho } from "@/types/tonKho";
 import {
   InventoryKpiGrid,
   InventoryFilterBar,
@@ -51,19 +52,13 @@ function InventoryContent() {
     totalAllGiaoDichs,
     isLoadingAllGiaoDichs,
 
-    openDinhMuc,
-    setOpenDinhMuc,
-    selectedItem,
-    handleOpenDinhMuc,
     handleSubmitDinhMuc,
     isUpdatingDinhMuc,
-
-    openTheKho,
-    setOpenTheKho,
-    theKhoItems,
-    isLoadingTheKho,
-    handleOpenTheKho,
   } = useTonKho(initialKhoId);
+
+  // Single-state pattern cho các SlideOver thao tác mặt hàng tồn kho
+  const [dinhMucItem, setDinhMucItem] = useState<KHO_TonKho | null>(null);
+  const [theKhoItem, setTheKhoItem] = useState<KHO_TonKho | null>(null);
 
   const { data: tonKhoKpi, isLoading: isLoadingKPI } = useGetTonKhoKPI();
 
@@ -169,8 +164,8 @@ function InventoryContent() {
             pageSize={pageSize}
             setPage={setPage}
             setPageSize={setPageSize}
-            onOpenTheKho={handleOpenTheKho}
-            onOpenDinhMuc={handleOpenDinhMuc}
+            onOpenTheKho={setTheKhoItem}
+            onOpenDinhMuc={setDinhMucItem}
           />
         ))}
 
@@ -204,20 +199,21 @@ function InventoryContent() {
 
       {/* 4. SlideOver Cập nhật Định mức tồn tối thiểu & Vị trí kệ */}
       <UpdateDinhMucSlideOver
-        open={openDinhMuc}
-        onClose={() => setOpenDinhMuc(false)}
-        selectedItem={selectedItem}
-        onSubmit={handleSubmitDinhMuc}
+        open={Boolean(dinhMucItem)}
+        onClose={() => setDinhMucItem(null)}
+        selectedItem={dinhMucItem}
+        onSubmit={async (payload) => {
+          await handleSubmitDinhMuc(payload);
+          setDinhMucItem(null);
+        }}
         isUpdating={isUpdatingDinhMuc}
       />
 
       {/* 5. SlideOver Xem Thẻ kho / Lịch sử giao dịch biến động */}
       <TheKhoSlideOver
-        open={openTheKho}
-        onClose={() => setOpenTheKho(false)}
-        selectedItem={selectedItem}
-        theKhoItems={theKhoItems}
-        isLoadingTheKho={isLoadingTheKho}
+        open={Boolean(theKhoItem)}
+        onClose={() => setTheKhoItem(null)}
+        selectedItem={theKhoItem}
       />
     </div>
   );
