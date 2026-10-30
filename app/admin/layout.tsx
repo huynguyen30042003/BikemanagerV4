@@ -5,10 +5,35 @@ import MobileSidebarAdmin from "@/components/Common/MobileSidebarAdmin";
 import { AdminRouteGuard } from "@/components/Common/RoleGuard";
 import { ReactNode } from "react";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://store.nhithoi.io.vn";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Hệ thống Quản trị",
     template: "%s | Quản trị Bike Manager",
+  },
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    url: `${siteUrl}/admin`,
+    siteName: "Cửa hàng xe đạp Nhi Thời",
+    title: "Hệ thống Quản trị | Cửa hàng xe đạp Nhi Thời",
+    description: "Trang quản trị & vận hành hệ thống Cửa hàng xe đạp Nhi Thời",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1060,
+        height: 937,
+        alt: "Logo Cửa hàng xe đạp Nhi Thời",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hệ thống Quản trị | Cửa hàng xe đạp Nhi Thời",
+    description: "Trang quản trị & vận hành hệ thống Cửa hàng xe đạp Nhi Thời",
+    images: ["/logo.png"],
   },
   robots: {
     index: false,

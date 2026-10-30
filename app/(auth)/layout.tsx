@@ -1,10 +1,36 @@
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://store.nhithoi.io.vn";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "Đăng nhập hệ thống",
-    template: "%s | Quản trị Bike Manager",
+    default: "Đăng nhập hệ thống | Cửa hàng xe đạp Nhi Thời",
+    template: "%s | Cửa hàng xe đạp Nhi Thời",
+  },
+  description: "Trang quản trị & đăng nhập hệ thống Cửa hàng xe đạp Nhi Thời",
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    url: `${siteUrl}/login`,
+    siteName: "Cửa hàng xe đạp Nhi Thời",
+    title: "Đăng nhập hệ thống | Cửa hàng xe đạp Nhi Thời",
+    description: "Trang quản trị & đăng nhập hệ thống Cửa hàng xe đạp Nhi Thời",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1060,
+        height: 937,
+        alt: "Logo Cửa hàng xe đạp Nhi Thời",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Đăng nhập hệ thống | Cửa hàng xe đạp Nhi Thời",
+    description: "Trang quản trị & đăng nhập hệ thống Cửa hàng xe đạp Nhi Thời",
+    images: ["/logo.png"],
   },
   robots: {
     index: false,

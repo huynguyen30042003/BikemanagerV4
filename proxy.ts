@@ -11,14 +11,28 @@ function isSafeCallbackUrl(url: string | null): url is string {
 
 export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+  const userAgent = req.headers.get("user-agent") || "";
 
   // Bỏ qua tuyệt đối các file tĩnh, hình ảnh, scripts và API
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/logo") ||
+    pathname.startsWith("/opengraph-image") ||
+    pathname.startsWith("/twitter-image") ||
+    pathname.startsWith("/icon") ||
     pathname.includes(".")
   ) {
+    return NextResponse.next();
+  }
+
+  // Cho phép các bot mạng xã hội (Zalo, Facebook, Telegram, v.v.) cào dữ liệu thẻ meta OpenGraph trực tiếp
+  const isSocialCrawler =
+    /facebookexternalhit|zalo|telegrambot|twitterbot|slackbot|discordbot|whatsapp|linkedinbot/i.test(
+      userAgent,
+    );
+  if (isSocialCrawler) {
     return NextResponse.next();
   }
 
