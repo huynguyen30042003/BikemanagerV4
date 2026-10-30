@@ -56,11 +56,10 @@ export const CustomerCard = memo(function CustomerCard({
 
   return (
     <motion.div
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+      initial={shouldReduceMotion || index < 4 ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.25,
-        delay: Math.min(index * 0.03, 0.3),
+        duration: 0.2,
       }}
     >
       <Card className="group rounded-xl border border-border/80 bg-card p-4 pb-2 shadow-2xs hover:shadow-md hover:border-blue-500/40 transition-all flex flex-col justify-between gap-3 relative h-full">
@@ -113,13 +112,13 @@ export const CustomerCard = memo(function CustomerCard({
 
           {/* Customer Name & Code */}
           <div>
-            <h3
+            <h2
               onClick={() => onEdit(customer)}
               className="text-sm sm:text-base font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer line-clamp-1"
               title={customer.tenKhachHang}
             >
               {customer.tenKhachHang}
-            </h3>
+            </h2>
 
             {/* Mã KH click-to-copy */}
             <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">

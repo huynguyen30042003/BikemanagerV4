@@ -46,9 +46,10 @@ export function RoleGuard({
   return <>{children}</>;
 }
 
-interface AdminRouteGuardProps {
+export interface AdminRouteGuardProps {
   children: ReactNode;
   mode?: "redirect" | "render";
+  initialToken?: string | null;
 }
 
 /**
@@ -59,13 +60,20 @@ interface AdminRouteGuardProps {
 export function AdminRouteGuard({
   children,
   mode = "render",
+  initialToken,
 }: AdminRouteGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, fetchUser, isLoading } = useAuthStore();
 
-  const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(null);
-  const [hasChecked, setHasChecked] = useState(false);
+  // Khởi tạo tokenUser ngay lập tức từ initialToken (phía Server/SSR) hoặc từ getAccessToken() (phía Client)
+  const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(() => {
+    return getUserFromToken(initialToken);
+  });
+  const [hasChecked, setHasChecked] = useState<boolean>(() => {
+    const initialUser = getUserFromToken(initialToken);
+    return Boolean(initialUser && initialUser.roles.length > 0);
+  });
 
   // 1. Xác thực phiên làm việc từ Token cục bộ và đồng bộ với API /api/auth/me
   useEffect(() => {
@@ -74,9 +82,12 @@ export function AdminRouteGuard({
     const verifySession = async () => {
       // Đọc tức thì từ Token nếu còn hạn để chống giật frame (Flash of Forbidden khi F5)
       if (!isAccessTokenExpired()) {
-        const tUser = getUserFromToken();
+        const tUser = getUserFromToken(initialToken);
         if (isMounted && tUser) {
           setTokenUser(tUser);
+          if (tUser.roles.length > 0) {
+            setHasChecked(true);
+          }
         }
       }
 
@@ -85,7 +96,7 @@ export function AdminRouteGuard({
         const u = await fetchUser();
         if (isMounted) {
           if (u) {
-            setTokenUser(getUserFromToken());
+            setTokenUser(getUserFromToken(initialToken));
           } else {
             setTokenUser(null);
           }
@@ -107,7 +118,7 @@ export function AdminRouteGuard({
     return () => {
       isMounted = false;
     };
-  }, [fetchUser]);
+  }, [fetchUser, initialToken]);
 
   const requiredRoles = getRequiredRolesForPath(pathname);
   const isAuthenticated = Boolean(user || tokenUser);

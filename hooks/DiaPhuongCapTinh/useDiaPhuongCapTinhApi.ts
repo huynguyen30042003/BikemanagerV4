@@ -16,8 +16,10 @@ import {
 
 export const DIA_PHUONG_CAP_TINH_KEYS = {
   all: ["diaPhuongCapTinh"] as const,
-  list: (params?: object) => [...DIA_PHUONG_CAP_TINH_KEYS.all, "list", params] as const,
-  detail: (id: number) => [...DIA_PHUONG_CAP_TINH_KEYS.all, "detail", id] as const,
+  list: (params?: object) =>
+    [...DIA_PHUONG_CAP_TINH_KEYS.all, "list", params] as const,
+  detail: (id: number) =>
+    [...DIA_PHUONG_CAP_TINH_KEYS.all, "detail", id] as const,
   kpi: () => ["diaPhuongCapTinhKPI"] as const,
 };
 
@@ -28,7 +30,7 @@ export const useGetDiaPhuongCapTinhKPI = () =>
   useQuery({
     queryKey: DIA_PHUONG_CAP_TINH_KEYS.kpi(),
     queryFn: () => getDiaPhuongCapTinhKPIApi(),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 30 * 20,
     refetchOnWindowFocus: true,
   });
 
@@ -36,7 +38,7 @@ export const useGetDiaPhuongCapTinh = (params: DiaPhuongCapTinhFilter) =>
   useQuery({
     queryKey: DIA_PHUONG_CAP_TINH_KEYS.list(params),
     queryFn: () => getDiaPhuongCapTinhApi(params),
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 20,
   });
 
 export const useGetDiaPhuongCapTinhById = (id?: number) =>
@@ -44,13 +46,14 @@ export const useGetDiaPhuongCapTinhById = (id?: number) =>
     queryKey: DIA_PHUONG_CAP_TINH_KEYS.detail(id ?? 0),
     queryFn: () => (id ? getDiaPhuongCapTinhByIdApi(id) : null),
     enabled: typeof id === "number" && id > 0,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 20,
   });
 
 export const useCreateDiaPhuongCapTinh = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateDiaPhuongCapTinhPayload) => createDiaPhuongCapTinhApi(body),
+    mutationFn: (body: CreateDiaPhuongCapTinhPayload) =>
+      createDiaPhuongCapTinhApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_TINH_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_TINH_KEYS.kpi() });
@@ -62,10 +65,13 @@ export const useCreateDiaPhuongCapTinh = () => {
 export const useUpdateDiaPhuongCapTinh = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: UpdateDiaPhuongCapTinhPayload) => updateDiaPhuongCapTinhApi(body),
+    mutationFn: (body: UpdateDiaPhuongCapTinhPayload) =>
+      updateDiaPhuongCapTinhApi(body),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_TINH_KEYS.all });
-      qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_TINH_KEYS.detail(vars.TinhID) });
+      qc.invalidateQueries({
+        queryKey: DIA_PHUONG_CAP_TINH_KEYS.detail(vars.TinhID),
+      });
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_TINH_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },

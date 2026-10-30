@@ -16,8 +16,10 @@ import {
 
 export const DANH_MUC_CHI_TIET_KEYS = {
   all: ["danhMucChiTiet"] as const,
-  list: (params?: object) => [...DANH_MUC_CHI_TIET_KEYS.all, "list", params] as const,
-  detail: (id: number) => [...DANH_MUC_CHI_TIET_KEYS.all, "detail", id] as const,
+  list: (params?: object) =>
+    [...DANH_MUC_CHI_TIET_KEYS.all, "list", params] as const,
+  detail: (id: number) =>
+    [...DANH_MUC_CHI_TIET_KEYS.all, "detail", id] as const,
   kpi: () => ["danhMucChiTietKPI"] as const,
 };
 
@@ -28,7 +30,7 @@ export const useGetDanhMucChiTietKPI = () =>
   useQuery({
     queryKey: DANH_MUC_CHI_TIET_KEYS.kpi(),
     queryFn: () => getDanhMucChiTietKPIApi(),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 30 * 20,
     refetchOnWindowFocus: true,
   });
 
@@ -39,7 +41,7 @@ export const useGetDanhMucChiTiet = (params: DanhMucChiTietFilter) =>
   useQuery({
     queryKey: DANH_MUC_CHI_TIET_KEYS.list(params),
     queryFn: () => getDanhMucChiTietApi(params),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 20,
   });
 
 /**
@@ -50,7 +52,7 @@ export const useGetDanhMucChiTietById = (id?: number) =>
     queryKey: DANH_MUC_CHI_TIET_KEYS.detail(id ?? 0),
     queryFn: () => (id ? getDanhMucChiTietByIdApi(id) : null),
     enabled: typeof id === "number" && id > 0,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 20,
   });
 
 /**
@@ -59,7 +61,8 @@ export const useGetDanhMucChiTietById = (id?: number) =>
 export const useCreateDanhMucChiTiet = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateDanhMucChiTietPayload) => createDanhMucChiTietApi(body),
+    mutationFn: (body: CreateDanhMucChiTietPayload) =>
+      createDanhMucChiTietApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
@@ -74,10 +77,13 @@ export const useCreateDanhMucChiTiet = () => {
 export const useUpdateDanhMucChiTiet = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: UpdateDanhMucChiTietPayload) => updateDanhMucChiTietApi(body),
+    mutationFn: (body: UpdateDanhMucChiTietPayload) =>
+      updateDanhMucChiTietApi(body),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
-      qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.detail(vars.DanhMucChiTietID) });
+      qc.invalidateQueries({
+        queryKey: DANH_MUC_CHI_TIET_KEYS.detail(vars.DanhMucChiTietID),
+      });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["danhMucChungNavTabs"] });
     },
@@ -113,4 +119,3 @@ export const useSyncDanhMucChiTiet = () => {
     },
   });
 };
-

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import SiderBarAdmin from "@/components/Common/SiderBarAdmin";
 import MobileSidebarAdmin from "@/components/Common/MobileSidebarAdmin";
 import { AdminRouteGuard } from "@/components/Common/RoleGuard";
@@ -24,7 +25,10 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
-const AdminLayout = ({ children }: AdminLayoutProps) => {
+const AdminLayout = async ({ children }: AdminLayoutProps) => {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("access_token")?.value ?? null;
+
   return (
     <div className="w-full min-h-screen flex flex-col lg:flex-row bg-background">
       {/* Mobile Header & Sliding Drawer Navigation (Dành riêng cho màn hình nhỏ / mobile) */}
@@ -35,7 +39,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       {/* Nội dung trang quản trị */}
       <main className="flex-1 min-h-screen bg-background w-full min-w-0">
-        <AdminRouteGuard mode="redirect">{children}</AdminRouteGuard>
+        <AdminRouteGuard initialToken={accessToken} mode="redirect">
+          {children}
+        </AdminRouteGuard>
       </main>
     </div>
   );

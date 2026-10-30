@@ -52,3 +52,29 @@ export const CustomerSkeleton: React.FC<CustomerSkeletonProps> = ({
     </Card>
   );
 };
+
+export const CustomerPageSkeleton: React.FC = () => {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* 1. Toolbar Skeleton */}
+      <div className="rounded-xl border border-border/80 bg-card p-3 shadow-xs flex flex-col lg:flex-row gap-2.5 justify-between">
+        <Skeleton className="h-9.5 w-full lg:max-w-md rounded-lg" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9.5 w-36 rounded-lg" />
+          <Skeleton className="h-9.5 w-44 rounded-lg" />
+          <Skeleton className="h-9.5 w-20 rounded-lg" />
+        </div>
+      </div>
+
+      {/* 2. KPI Cards Skeleton */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <Skeleton key={idx} className="h-24 w-full rounded-xl" />
+        ))}
+      </div>
+
+      {/* 3. Grid Cards Skeleton */}
+      <CustomerSkeleton viewMode="grid" />
+    </div>
+  );
+};

@@ -172,6 +172,7 @@ export function MobileSidebarAdmin() {
           <Link
             href="/admin"
             className="flex items-center gap-2 group cursor-pointer"
+            aria-label="Bảng điều khiển quản trị"
             title="Bike Manager Platform"
           >
             <div className="w-8 h-8 rounded-lg bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 flex items-center justify-center border border-blue-500/20 shadow-xs">
@@ -271,9 +272,9 @@ export function MobileSidebarAdmin() {
                   {userInitials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-foreground truncate">
+                  <p className="text-xs font-bold text-foreground truncate">
                     {displayName}
-                  </h4>
+                  </p>
                   <div className="flex items-center gap-1 mt-0.5">
                     <ShieldCheck className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
                     <span className="text-[10px] text-muted-foreground font-medium truncate">

@@ -16,8 +16,10 @@ import {
 
 export const DIA_PHUONG_CAP_XA_KEYS = {
   all: ["diaPhuongCapXa"] as const,
-  list: (params?: object) => [...DIA_PHUONG_CAP_XA_KEYS.all, "list", params] as const,
-  detail: (id: number) => [...DIA_PHUONG_CAP_XA_KEYS.all, "detail", id] as const,
+  list: (params?: object) =>
+    [...DIA_PHUONG_CAP_XA_KEYS.all, "list", params] as const,
+  detail: (id: number) =>
+    [...DIA_PHUONG_CAP_XA_KEYS.all, "detail", id] as const,
   kpi: () => ["diaPhuongCapXaKPI"] as const,
 };
 
@@ -40,7 +42,7 @@ export const useGetDiaPhuongCapXa = (
     queryKey: DIA_PHUONG_CAP_XA_KEYS.list(params),
     queryFn: () => getDiaPhuongCapXaApi(params),
     enabled,
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 20,
   });
 
 export const useGetDiaPhuongCapXaById = (id?: number) =>
@@ -48,13 +50,14 @@ export const useGetDiaPhuongCapXaById = (id?: number) =>
     queryKey: DIA_PHUONG_CAP_XA_KEYS.detail(id ?? 0),
     queryFn: () => (id ? getDiaPhuongCapXaByIdApi(id) : null),
     enabled: typeof id === "number" && id > 0,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 20,
   });
 
 export const useCreateDiaPhuongCapXa = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateDiaPhuongCapXaPayload) => createDiaPhuongCapXaApi(body),
+    mutationFn: (body: CreateDiaPhuongCapXaPayload) =>
+      createDiaPhuongCapXaApi(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
@@ -66,10 +69,13 @@ export const useCreateDiaPhuongCapXa = () => {
 export const useUpdateDiaPhuongCapXa = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: UpdateDiaPhuongCapXaPayload) => updateDiaPhuongCapXaApi(body),
+    mutationFn: (body: UpdateDiaPhuongCapXaPayload) =>
+      updateDiaPhuongCapXaApi(body),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
-      qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.detail(vars.XaID) });
+      qc.invalidateQueries({
+        queryKey: DIA_PHUONG_CAP_XA_KEYS.detail(vars.XaID),
+      });
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },

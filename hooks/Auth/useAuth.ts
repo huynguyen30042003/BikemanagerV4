@@ -91,11 +91,15 @@ export const useMe = () => {
  */
 export const useRole = () => {
   const { user, fetchUser, isLoading } = useAuthStore();
-  const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(null);
+  const [tokenUser, setTokenUser] = useState<UserTokenInfo | null>(() => {
+    return getUserFromToken();
+  });
 
   useEffect(() => {
     const tUser = getUserFromToken();
-    setTokenUser(tUser);
+    if (tUser) {
+      setTokenUser(tUser);
+    }
 
     // Tự động gọi API /api/auth/me nếu chưa có dữ liệu user trong Zustand nhưng còn phiên đăng nhập
     if (!user && hasAuthSession()) {

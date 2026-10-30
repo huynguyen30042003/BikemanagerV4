@@ -1,3 +1,6 @@
+export * from "./CustomerHeader";
+export * from "./CustomerCreateButton";
+export * from "./CustomerClientView";
 export * from "./CustomerFilterBar";
 export * from "./CustomerKpiGrid";
 export * from "./CustomerCard";
@@ -6,4 +9,3 @@ export * from "./CustomerTable";
 export * from "./CustomerSkeleton";
 export * from "./CreateCustomerSlideOver";
 export * from "./UpdateCustomerSlideOver";
-
