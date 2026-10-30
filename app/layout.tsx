@@ -12,6 +12,11 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Cửa hàng xe đạp Nhi Thời",
   description: "Trang quản lí cửa hàng xe đạp Nhi Thời",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

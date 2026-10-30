@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import Image from "next/image";
+import logo from "@/image/logo.png";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -162,8 +163,15 @@ function LoginFormContent() {
           {/* Subtle top ambient indicator */}
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/25">
-                <Bike className="w-6 h-6 stroke-[2.2]" />
+              <div className="w-11 h-11 rounded-xl bg-blue-600/10 flex items-center justify-center p-1.5 border border-border/70 shadow-sm">
+                <Image
+                  src={logo}
+                  alt="Bike Manager Logo"
+                  width={36}
+                  height={36}
+                  priority
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <span className="text-lg font-bold tracking-tight text-foreground flex items-center gap-1.5">
@@ -254,8 +262,15 @@ function LoginFormContent() {
             {/* FORM ĐĂNG NHẬP */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3 lg:hidden">
-                <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20">
-                  <Bike className="w-5 h-5 stroke-[2]" />
+                <div className="w-9 h-9 rounded-xl bg-blue-600/10 flex items-center justify-center p-1 border border-border/70 shadow-xs">
+                  <Image
+                    src={logo}
+                    alt="Bike Manager Logo"
+                    width={28}
+                    height={28}
+                    priority
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <span className="text-base font-bold tracking-tight text-foreground">
                   BikeManager <span className="text-blue-600">V4</span>

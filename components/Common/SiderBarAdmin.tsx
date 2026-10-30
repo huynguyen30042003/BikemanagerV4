@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuthStore, useRole, useLogout } from "@/hooks/Auth/useAuth";
 
-import bike from "@/image/bike.svg";
+import logo from "@/image/logo.png";
 
 import {
   Award,
@@ -593,8 +593,15 @@ export default function SiderBarAdmin() {
           className="flex items-center gap-3 overflow-hidden group"
           title="Bike Manager Platform"
         >
-          <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-xs group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
-            <Image src={bike} alt="logo" width={22} height={22} priority />
+          <div className="w-9 h-9 flex items-center justify-center shrink-0">
+            <Image
+              src={logo}
+              alt="Bike Manager Logo"
+              width={36}
+              height={36}
+              priority
+              className="h-full w-auto object-contain"
+            />
           </div>
 
           <div

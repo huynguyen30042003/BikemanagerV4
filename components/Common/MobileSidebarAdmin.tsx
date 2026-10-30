@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuthStore, useRole, useLogout } from "@/hooks/Auth/useAuth";
-import bike from "@/image/bike.svg";
+import logo from "@/image/logo.png";
 import {
   MENU_SECTIONS,
   MenuGroup,
@@ -175,8 +175,15 @@ export function MobileSidebarAdmin() {
             aria-label="Bảng điều khiển quản trị"
             title="Bike Manager Platform"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 flex items-center justify-center border border-blue-500/20 shadow-xs">
-              <Image src={bike} alt="logo" width={20} height={20} priority />
+            <div className="w-8 h-8 flex items-center justify-center shrink-0">
+              <Image
+                src={logo}
+                alt="Bike Manager Logo"
+                width={32}
+                height={32}
+                priority
+                className="h-full w-auto object-contain"
+              />
             </div>
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-sm sm:text-base tracking-tight text-foreground">
@@ -230,13 +237,14 @@ export function MobileSidebarAdmin() {
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-2.5"
               >
-                <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 flex items-center justify-center border border-blue-500/25 shadow-xs">
+                <div className="w-9 h-9 flex items-center justify-center shrink-0">
                   <Image
-                    src={bike}
-                    alt="logo"
-                    width={22}
-                    height={22}
+                    src={logo}
+                    alt="Bike Manager Logo"
+                    width={36}
+                    height={36}
                     priority
+                    className="h-full w-auto object-contain"
                   />
                 </div>
                 <div>
@@ -282,7 +290,6 @@ export function MobileSidebarAdmin() {
                     </span>
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -407,7 +414,6 @@ export function MobileSidebarAdmin() {
           </div>
         </div>
       )}
-
     </>
   );
 }
