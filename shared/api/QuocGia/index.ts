@@ -17,89 +17,55 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Lấy số liệu thống kê KPI Quốc gia
- * POST/GET /api/QuocGiaApi/GetKPI hoặc /api/QuocGia/GetKPI
+ * Lấy số liệu thống kê KPI Quốc gia (qua Next.js BFF Route Cache)
+ * GET /api/quoc-gia/kpi
  */
 export const getQuocGiaKPIApi = async (): Promise<QuocGiaKPI> => {
-  try {
-    const response = await api.post(
-      `${APP_URL}/QuocGiaApi/GetKPI`,
-      {},
-      {
-        headers: getAuthHeaders(),
-        withCredentials: true,
-      }
-    );
-    return response.data?.data ?? response.data;
-  } catch (error: unknown) {
-    try {
-      const response = await api.get(`${APP_URL}/QuocGiaApi/GetKPI`, {
-        headers: getAuthHeaders(),
-        withCredentials: true,
-      });
-      return response.data?.data ?? response.data;
-    } catch {
-      try {
-        const response = await api.post(
-          `${APP_URL}/QuocGia/GetKPI`,
-          {},
-          {
-            headers: getAuthHeaders(),
-            withCredentials: true,
-          }
-        );
-        return response.data?.data ?? response.data;
-      } catch {
-        const response = await api.get(`${APP_URL}/QuocGia/GetKPI`, {
-          headers: getAuthHeaders(),
-          withCredentials: true,
-        });
-        return response.data?.data ?? response.data;
-      }
-    }
+  const response = await fetch(`/api/quoc-gia/kpi`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải KPI quốc gia: ${response.statusText}`);
   }
+  return response.json();
 };
 
-
 /**
- * Lấy danh sách quốc gia có phân trang và tìm kiếm
- * POST /api/QuocGiaApi/Gets
+ * Lấy danh sách quốc gia có phân trang và tìm kiếm (qua Next.js BFF Route Cache)
+ * GET /api/quoc-gia
  */
 export const getQuocGiaApi = async (
   filter: QuocGiaFilter = { PageIndex: 1, PageSize: 50, TuKhoa: "", TrangThai: null }
 ) => {
-  const response = await api.post(
-    `${APP_URL}/QuocGiaApi/Gets`,
-    {
-      TuKhoa: filter.TuKhoa ?? "",
-      PageIndex: filter.PageIndex ?? 1,
-      PageSize: filter.PageSize ?? 50,
-      TrangThai: filter.TrangThai ?? null,
-    },
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const params = new URLSearchParams();
+  if (filter.TuKhoa) {
+    params.set("TuKhoa", filter.TuKhoa);
+  }
+  if (filter.PageIndex) {
+    params.set("PageIndex", String(filter.PageIndex));
+  }
+  if (filter.PageSize) {
+    params.set("PageSize", String(filter.PageSize));
+  }
+  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
+    params.set("TrangThai", String(filter.TrangThai));
+  }
 
-  return response.data;
+  const response = await fetch(`/api/quoc-gia?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải danh mục quốc gia: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**
- * Lấy chi tiết thông tin một quốc gia theo ID
- * POST /api/QuocGiaApi/Get
+ * Lấy chi tiết thông tin một quốc gia theo ID (qua Next.js BFF Route Cache)
+ * GET /api/quoc-gia/[id]
  */
 export const getQuocGiaByIdApi = async (id: number) => {
-  const response = await api.post(
-    `${APP_URL}/QuocGiaApi/Get`,
-    { Id: id },
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
-
-  return response.data;
+  const response = await fetch(`/api/quoc-gia/${id}`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải chi tiết quốc gia ID ${id}: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**

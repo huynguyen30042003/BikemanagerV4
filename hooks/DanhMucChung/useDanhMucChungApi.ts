@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { revalidateTagAction } from "@/app/actions/revalidate";
 import {
   getDanhMucChungApi,
   getDanhMucChungByIdApi,
@@ -30,8 +31,8 @@ export const useGetDanhMucChungKPI = () =>
   useQuery({
     queryKey: DANH_MUC_CHUNG_KEYS.kpi(),
     queryFn: () => getDanhMucChungKPIApi(),
-    staleTime: 1000 * 30,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 60, // 1 giờ
+    refetchOnWindowFocus: false,
   });
 
 /**
@@ -41,19 +42,21 @@ export const useGetDanhMucChungNavTabs = () =>
   useQuery({
     queryKey: DANH_MUC_CHUNG_KEYS.navTabs(),
     queryFn: () => getDanhMucChungNavTabsApi(),
-    staleTime: 10000,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 /**
  * Hook lấy danh sách danh mục chung (phân trang & tìm kiếm)
  */
-
 export const useGetDanhMucChung = (params: DanhMucChungFilter) =>
   useQuery({
     queryKey: DANH_MUC_CHUNG_KEYS.list(params),
     queryFn: () => getDanhMucChungApi(params),
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 /**
@@ -64,7 +67,9 @@ export const useGetDanhMucChungById = (id?: number) =>
     queryKey: DANH_MUC_CHUNG_KEYS.detail(id ?? 0),
     queryFn: () => (id ? getDanhMucChungByIdApi(id) : null),
     enabled: typeof id === "number" && id > 0,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 /**
@@ -74,7 +79,10 @@ export const useCreateDanhMucChung = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateDanhMucChungPayload) => createDanhMucChungApi(body),
-    onSuccess: () => {
+    onSuccess: async () => {
+      // 1. Xóa cache phía Server (Next.js Data Cache tag)
+      await revalidateTagAction("danh-muc-chung");
+      // 2. Xóa cache phía Client (TanStack React Query)
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.navTabs() });
@@ -89,7 +97,10 @@ export const useUpdateDanhMucChung = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateDanhMucChungPayload) => updateDanhMucChungApi(body),
-    onSuccess: (_data, vars) => {
+    onSuccess: async (_data, vars) => {
+      // 1. Xóa cache phía Server (Next.js Data Cache tag)
+      await revalidateTagAction("danh-muc-chung");
+      // 2. Xóa cache phía Client (TanStack React Query)
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.detail(vars.DanhMucID) });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.kpi() });
@@ -105,7 +116,10 @@ export const useDeleteDanhMucChung = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => deleteDanhMucChungApi(id),
-    onSuccess: () => {
+    onSuccess: async () => {
+      // 1. Xóa cache phía Server (Next.js Data Cache tag)
+      await revalidateTagAction("danh-muc-chung");
+      // 2. Xóa cache phía Client (TanStack React Query)
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.navTabs() });
@@ -120,11 +134,13 @@ export const useSyncDanhMucChung = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => syncDanhMucChungApi(),
-    onSuccess: () => {
+    onSuccess: async () => {
+      // 1. Xóa cache phía Server (Next.js Data Cache tag)
+      await revalidateTagAction("danh-muc-chung");
+      // 2. Xóa cache phía Client (TanStack React Query)
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHUNG_KEYS.navTabs() });
     },
   });
 };
-

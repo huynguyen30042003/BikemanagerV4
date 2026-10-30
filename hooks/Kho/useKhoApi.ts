@@ -12,6 +12,7 @@ import {
   getKhoKPIApi,
 } from "@/shared/api/Kho";
 import { CreateKhoPayload, KhoFilter, UpdateKhoPayload } from "@/types/kho";
+import { revalidateTagAction } from "@/app/actions/revalidate";
 
 export const KHO_QUERY_KEYS = {
   all: ["kho"] as const,
@@ -27,8 +28,9 @@ export const useGetWarehouseNavTabs = () => {
   return useQuery({
     queryKey: KHO_QUERY_KEYS.navTabs(),
     queryFn: () => getWarehouseNavTabsApi(),
-    staleTime: 10000,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -37,18 +39,19 @@ export const useGetKhoKPI = () => {
     queryKey: KHO_QUERY_KEYS.kpi(),
     queryFn: () => getKhoKPIApi(),
     placeholderData: (prev) => prev,
-    staleTime: 10000,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 60, // 1 giờ
+    refetchOnWindowFocus: false,
   });
 };
-
 
 export const useGetKho = (params: KhoFilter) => {
   return useQuery({
     queryKey: KHO_QUERY_KEYS.list(params),
     queryFn: () => getKhoApi(params),
     placeholderData: (prev) => prev,
-    staleTime: 5000,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -57,6 +60,9 @@ export const useGetKhoById = (id?: string) => {
     queryKey: KHO_QUERY_KEYS.detail(id || ""),
     queryFn: () => getKhoByIdApi(id!),
     enabled: !!id,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -65,7 +71,9 @@ export const useCreateKho = () => {
 
   return useMutation({
     mutationFn: (payload: CreateKhoPayload) => createKhoApi(payload),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("kho");
+      await revalidateTagAction("kho-nav-tabs");
       queryClient.invalidateQueries({ queryKey: KHO_QUERY_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
       queryClient.invalidateQueries({ queryKey: KHO_QUERY_KEYS.kpi() });
@@ -82,7 +90,9 @@ export const useUpdateKho = () => {
 
   return useMutation({
     mutationFn: (payload: UpdateKhoPayload) => updateKhoApi(payload),
-    onSuccess: (_data, variables) => {
+    onSuccess: async (_data, variables) => {
+      await revalidateTagAction("kho");
+      await revalidateTagAction("kho-nav-tabs");
       queryClient.invalidateQueries({ queryKey: KHO_QUERY_KEYS.lists() });
       queryClient.invalidateQueries({
         queryKey: KHO_QUERY_KEYS.detail(variables.KhoID),
@@ -102,7 +112,9 @@ export const useDeleteKho = () => {
 
   return useMutation({
     mutationFn: (id: string) => deleteKhoApi(id),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("kho");
+      await revalidateTagAction("kho-nav-tabs");
       queryClient.invalidateQueries({ queryKey: KHO_QUERY_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: ["warehouseNavTabs"] });
       queryClient.invalidateQueries({ queryKey: KHO_QUERY_KEYS.kpi() });
@@ -113,4 +125,3 @@ export const useDeleteKho = () => {
     },
   });
 };
-

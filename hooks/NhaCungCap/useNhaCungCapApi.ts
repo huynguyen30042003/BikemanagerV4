@@ -14,6 +14,7 @@ import {
   UpdateNhaCungCapPayload,
   NhaCungCapKPI,
 } from "@/types/nhaCungCap";
+import { revalidateTagAction } from "@/app/actions/revalidate";
 
 export const NHA_CUNG_CAP_KEYS = {
   all: ["nhaCungCap"] as const,
@@ -27,15 +28,18 @@ export const useGetPurchaseNavTabs = () =>
   useQuery({
     queryKey: NHA_CUNG_CAP_KEYS.navTabs(),
     queryFn: () => getPurchaseNavTabsApi(),
-    staleTime: 10000,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 export const useGetNhaCungCap = (params: NhaCungCapFilter) =>
   useQuery({
     queryKey: NHA_CUNG_CAP_KEYS.list(params),
     queryFn: () => getNhaCungCapApi(params),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 export const useGetNhaCungCapKPI = () =>
@@ -46,7 +50,8 @@ export const useGetNhaCungCapKPI = () =>
       return (res?.data ?? res) as NhaCungCapKPI;
     },
     placeholderData: (prev) => prev,
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60 * 60, // 1 giờ
+    refetchOnWindowFocus: false,
   });
 
 export const useGetNhaCungCapById = (id?: string) =>
@@ -54,16 +59,21 @@ export const useGetNhaCungCapById = (id?: string) =>
     queryKey: NHA_CUNG_CAP_KEYS.detail(id ?? ""),
     queryFn: () => (id ? getNhaCungCapByIdApi(id) : null),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 export const useCreateNhaCungCap = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateNhaCungCapPayload) => createNhaCungCapApi(body),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("nha-cung-cap");
+      await revalidateTagAction("nha-cung-cap-nav-tabs");
       qc.invalidateQueries({ queryKey: NHA_CUNG_CAP_KEYS.all });
       qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
+      qc.invalidateQueries({ queryKey: NHA_CUNG_CAP_KEYS.kpi() });
     },
   });
 };
@@ -72,9 +82,12 @@ export const useUpdateNhaCungCap = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateNhaCungCapPayload) => updateNhaCungCapApi(body),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("nha-cung-cap");
+      await revalidateTagAction("nha-cung-cap-nav-tabs");
       qc.invalidateQueries({ queryKey: NHA_CUNG_CAP_KEYS.all });
       qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
+      qc.invalidateQueries({ queryKey: NHA_CUNG_CAP_KEYS.kpi() });
     },
   });
 };
@@ -83,10 +96,12 @@ export const useDeleteNhaCungCap = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteNhaCungCapApi(id),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("nha-cung-cap");
+      await revalidateTagAction("nha-cung-cap-nav-tabs");
       qc.invalidateQueries({ queryKey: NHA_CUNG_CAP_KEYS.all });
       qc.invalidateQueries({ queryKey: ["purchaseNavTabs"] });
+      qc.invalidateQueries({ queryKey: NHA_CUNG_CAP_KEYS.kpi() });
     },
   });
 };
-

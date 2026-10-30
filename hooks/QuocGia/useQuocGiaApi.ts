@@ -13,6 +13,7 @@ import {
   QuocGiaFilter,
   UpdateQuocGiaPayload,
 } from "@/types/quocGia";
+import { revalidateTagAction } from "@/app/actions/revalidate";
 
 export const QUOC_GIA_KEYS = {
   all: ["quocGia"] as const,
@@ -25,7 +26,9 @@ export const useGetQuocGia = (params: QuocGiaFilter) =>
   useQuery({
     queryKey: QUOC_GIA_KEYS.list(params),
     queryFn: () => getQuocGiaApi(params),
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 export const useGetQuocGiaById = (id?: number) =>
@@ -33,21 +36,25 @@ export const useGetQuocGiaById = (id?: number) =>
     queryKey: QUOC_GIA_KEYS.detail(id ?? 0),
     queryFn: () => (id ? getQuocGiaByIdApi(id) : null),
     enabled: typeof id === "number" && id > 0,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 export const useGetQuocGiaKPI = () =>
   useQuery({
     queryKey: QUOC_GIA_KEYS.kpi(),
     queryFn: () => getQuocGiaKPIApi(),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60, // 1 giờ
+    refetchOnWindowFocus: false,
   });
 
 export const useCreateQuocGia = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateQuocGiaPayload) => createQuocGiaApi(body),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("quoc-gia");
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
@@ -59,7 +66,8 @@ export const useUpdateQuocGia = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateQuocGiaPayload) => updateQuocGiaApi(body),
-    onSuccess: (_data, vars) => {
+    onSuccess: async (_data, vars) => {
+      await revalidateTagAction("quoc-gia");
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.detail(vars.QuocGiaID) });
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.kpi() });
@@ -72,7 +80,8 @@ export const useDeleteQuocGia = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => deleteQuocGiaApi(id),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("quoc-gia");
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
@@ -84,11 +93,11 @@ export const useSyncQuocGia = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => syncQuocGiaApi(),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("quoc-gia");
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.all });
       qc.invalidateQueries({ queryKey: QUOC_GIA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
     },
   });
 };
-

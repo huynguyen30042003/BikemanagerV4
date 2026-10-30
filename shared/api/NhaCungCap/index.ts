@@ -1,8 +1,7 @@
 import api from "@/shared/api";
-import { APP_URL, BE_URL } from "@/shared/constants/apiConstants";
+import { APP_URL } from "@/shared/constants/apiConstants";
 import { getAccessToken } from "@/lib/auth";
 import {
-  NH_NhaCungCap,
   NhaCungCapFilter,
   CreateNhaCungCapPayload,
   UpdateNhaCungCapPayload,
@@ -16,46 +15,50 @@ const getAuthHeaders = () => {
   };
 };
 
-
 /**
- * Lấy danh sách nhà cung cấp (phân trang, lọc quốc gia, công nợ, tìm kiếm)
- * POST /api/NhaCungCapApi/Gets
+ * Lấy danh sách nhà cung cấp (phân trang, lọc quốc gia, công nợ, tìm kiếm) qua Next.js BFF Route Cache
+ * GET /api/nha-cung-cap
  */
 export const getNhaCungCapApi = async (
   filter: NhaCungCapFilter = { PageIndex: 1, PageSize: 20, TuKhoa: "", TrangThai: true }
 ) => {
-  const response = await api.post(
-    `${APP_URL}/NhaCungCapApi/Gets`,
-    {
-      TuKhoa: filter.TuKhoa ?? "",
-      QuocGiaID: filter.QuocGiaID ?? null,
-      CoCongNo: filter.CoCongNo ?? null,
-      PageIndex: filter.PageIndex ?? 1,
-      PageSize: filter.PageSize ?? 20,
-      TrangThai: filter.TrangThai ?? null,
-    },
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
-  return response.data;
+  const params = new URLSearchParams();
+  if (filter.TuKhoa) {
+    params.set("TuKhoa", filter.TuKhoa);
+  }
+  if (filter.QuocGiaID !== undefined && filter.QuocGiaID !== null) {
+    params.set("QuocGiaID", String(filter.QuocGiaID));
+  }
+  if (filter.CoCongNo !== undefined && filter.CoCongNo !== null) {
+    params.set("CoCongNo", String(filter.CoCongNo));
+  }
+  if (filter.PageIndex) {
+    params.set("PageIndex", String(filter.PageIndex));
+  }
+  if (filter.PageSize) {
+    params.set("PageSize", String(filter.PageSize));
+  }
+  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
+    params.set("TrangThai", String(filter.TrangThai));
+  }
+
+  const response = await fetch(`/api/nha-cung-cap?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải danh sách nhà cung cấp: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**
- * Lấy chi tiết thông tin nhà cung cấp theo ID
- * POST /api/NhaCungCapApi/Get
+ * Lấy chi tiết thông tin nhà cung cấp theo ID qua Next.js BFF Route Cache
+ * GET /api/nha-cung-cap/[id]
  */
 export const getNhaCungCapByIdApi = async (id: string) => {
-  const response = await api.post(
-    `${APP_URL}/NhaCungCapApi/Get`,
-    { GuidId: id },
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
-  return response.data;
+  const response = await fetch(`/api/nha-cung-cap/${id}`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải chi tiết nhà cung cấp ID ${id}: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**
@@ -106,68 +109,27 @@ export const deleteNhaCungCapApi = async (id: string) => {
 };
 
 /**
- * Lấy số liệu KPI tổng quan nhà cung cấp
- * POST /api/NhaCungCapApi/GetKPI
+ * Lấy số liệu KPI tổng quan nhà cung cấp qua Next.js BFF Route Cache
+ * GET /api/nha-cung-cap/kpi
  */
 export const getNhaCungCapKPIApi = async () => {
-  const response = await api.post(
-    `${APP_URL}/NhaCungCapApi/GetKPI`,
-    {},
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
-  return response.data;
+  const response = await fetch(`/api/nha-cung-cap/kpi`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải KPI nhà cung cấp: ${response.statusText}`);
+  }
+  const json = await response.json();
+  return json?.data ?? json;
 };
 
 /**
- * Lấy số lượng thống kê cho các tabs nhập hàng (Nhà cung cấp, Đơn nhập hàng & Nhập kho)
- * POST /api/v1/NhaCungCapApi/NavTabs
+ * Lấy số lượng thống kê cho các tabs nhập hàng qua Next.js BFF Route Cache
+ * GET /api/nha-cung-cap/nav-tabs
  */
 export const getPurchaseNavTabsApi = async (): Promise<NH_PurchaseNavTabs> => {
-  const endpoints = [
-    `${APP_URL}/NhaCungCapApi/NavTabs`,
-  ];
-
-  for (const url of endpoints) {
-    try {
-      const response = await api.post(
-        url,
-        {},
-        {
-          headers: getAuthHeaders(),
-          withCredentials: true,
-        }
-      );
-      if (response?.data) {
-        return response.data?.data ?? response.data;
-      }
-    } catch {
-      try {
-        const response = await api.get(url, {
-          headers: getAuthHeaders(),
-          withCredentials: true,
-        });
-        if (response?.data) {
-          return response.data?.data ?? response.data;
-        }
-      } catch {
-        // Thử endpoint tiếp theo
-      }
-    }
+  const response = await fetch(`/api/nha-cung-cap/nav-tabs`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải NavTabs nhập hàng: ${response.statusText}`);
   }
-
-  const fallback = await api.post(
-    `${BE_URL}/api/NhaCungCapApi/NavTabs`,
-    {},
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
-  return fallback.data?.data ?? fallback.data;
+  const json = await response.json();
+  return json?.data ?? json;
 };
-
-
-

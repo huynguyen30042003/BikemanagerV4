@@ -19,44 +19,43 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Lấy danh sách danh mục chung có tìm kiếm và phân trang
- * POST /api/DanhMucChungApi/Gets
+ * Lấy danh sách danh mục chung có tìm kiếm và phân trang (gọi qua Next.js Route Handler BFF)
+ * GET /api/danh-muc-chung
  */
 export const getDanhMucChungApi = async (
   filter: DanhMucChungFilter = { PageIndex: 1, PageSize: 10, TuKhoa: "", TrangThai: null }
 ) => {
-  const response = await api.post(
-    `${APP_URL}/DanhMucChungApi/Gets`,
-    {
-      TuKhoa: filter.TuKhoa ?? "",
-      PageIndex: filter.PageIndex ?? 1,
-      PageSize: filter.PageSize ?? 10,
-      TrangThai: filter.TrangThai ?? null,
-    },
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const params = new URLSearchParams();
+  if (filter.TuKhoa) {
+    params.set("TuKhoa", filter.TuKhoa);
+  }
+  if (filter.PageIndex) {
+    params.set("PageIndex", String(filter.PageIndex));
+  }
+  if (filter.PageSize) {
+    params.set("PageSize", String(filter.PageSize));
+  }
+  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
+    params.set("TrangThai", String(filter.TrangThai));
+  }
 
-  return response.data;
+  const response = await fetch(`/api/danh-muc-chung?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải danh mục chung: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**
- * Lấy thông tin chi tiết một danh mục chung theo ID
- * POST /api/DanhMucChungApi/Get
+ * Lấy thông tin chi tiết một danh mục chung theo ID (gọi qua Next.js Route Handler BFF)
+ * GET /api/danh-muc-chung/[id]
  */
 export const getDanhMucChungByIdApi = async (id: number) => {
-  const response = await api.post(
-    `${APP_URL}/DanhMucChungApi/Get`,
-    { Id: id },
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
-
-  return response.data;
+  const response = await fetch(`/api/danh-muc-chung/${id}`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải chi tiết danh mục chung ID ${id}: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**
@@ -128,16 +127,15 @@ export const syncDanhMucChungApi = async () => {
 };
 
 /**
- * Lấy số lượng thống kê cho các tabs danh mục
- * GET /api/DanhMucChungApi/NavTabs
+ * Lấy số lượng thống kê cho các tabs danh mục (gọi qua Next.js Route Handler BFF)
+ * GET /api/danh-muc-chung/nav-tabs
  */
 export const getDanhMucChungNavTabsApi = async (): Promise<DMC_NavTabs> => {
-  const response = await api.get(`${APP_URL}/DanhMucChungApi/NavTabs`, {
-    headers: getAuthHeaders(),
-    withCredentials: true,
-  });
-
-  return response.data?.data ?? response.data;
+  const response = await fetch(`/api/danh-muc-chung/nav-tabs`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải NavTabs danh mục chung: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**

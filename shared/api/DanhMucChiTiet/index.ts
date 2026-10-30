@@ -17,45 +17,46 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Lấy danh sách danh mục chi tiết (có tìm kiếm, lọc theo danh mục cha, phân trang)
- * POST /api/DanhMucChiTietApi/Gets
+ * Lấy danh sách danh mục chi tiết (gọi qua Next.js Route Handler BFF để tận dụng Data Cache 24h)
+ * GET /api/danh-muc-chi-tiet
  */
 export const getDanhMucChiTietApi = async (
   filter: DanhMucChiTietFilter = { PageIndex: 1, PageSize: 10, TuKhoa: "", TrangThai: null }
 ) => {
-  const response = await api.post(
-    `${APP_URL}/DanhMucChiTietApi/Gets`,
-    {
-      DanhMucID: filter.DanhMucID ?? null,
-      TuKhoa: filter.TuKhoa ?? "",
-      PageIndex: filter.PageIndex ?? 1,
-      PageSize: filter.PageSize ?? 10,
-      TrangThai: filter.TrangThai ?? null,
-    },
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const params = new URLSearchParams();
+  if (filter.DanhMucID !== undefined && filter.DanhMucID !== null) {
+    params.set("DanhMucID", String(filter.DanhMucID));
+  }
+  if (filter.TuKhoa) {
+    params.set("TuKhoa", filter.TuKhoa);
+  }
+  if (filter.PageIndex) {
+    params.set("PageIndex", String(filter.PageIndex));
+  }
+  if (filter.PageSize) {
+    params.set("PageSize", String(filter.PageSize));
+  }
+  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
+    params.set("TrangThai", String(filter.TrangThai));
+  }
 
-  return response.data;
+  const response = await fetch(`/api/danh-muc-chi-tiet?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải danh mục chi tiết: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**
- * Lấy thông tin chi tiết một danh mục con theo ID
- * POST /api/DanhMucChiTietApi/Get
+ * Lấy thông tin chi tiết một danh mục con theo ID (gọi qua Next.js Route Handler BFF)
+ * GET /api/danh-muc-chi-tiet/[id]
  */
 export const getDanhMucChiTietByIdApi = async (id: number) => {
-  const response = await api.post(
-    `${APP_URL}/DanhMucChiTietApi/Get`,
-    { Id: id },
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
-
-  return response.data;
+  const response = await fetch(`/api/danh-muc-chi-tiet/${id}`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải chi tiết danh mục ID ${id}: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 /**
@@ -127,18 +128,13 @@ export const syncDanhMucChiTietApi = async () => {
 };
 
 /**
- * Lấy dữ liệu thống kê KPI danh mục chi tiết
- * POST /api/DanhMucChiTiet/GetKPI
+ * Lấy dữ liệu thống kê KPI danh mục chi tiết (gọi qua Next.js Route Handler BFF)
+ * GET /api/danh-muc-chi-tiet/kpi
  */
 export const getDanhMucChiTietKPIApi = async (): Promise<DanhMucChiTietKPI> => {
-  const response = await api.post(
-    `${APP_URL}/DanhMucChiTiet/GetKPI`,
-    {},
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
-
-  return response.data?.data ?? response.data;
+  const response = await fetch(`/api/danh-muc-chi-tiet/kpi`);
+  if (!response.ok) {
+    throw new Error(`Lỗi tải KPI danh mục chi tiết: ${response.statusText}`);
+  }
+  return response.json();
 };

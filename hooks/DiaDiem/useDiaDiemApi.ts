@@ -13,6 +13,7 @@ import {
   DiaDiemFilter,
   UpdateDiaDiemPayload,
 } from "@/types/diaDiem";
+import { revalidateTagAction } from "@/app/actions/revalidate";
 
 export const DIA_DIEM_KEYS = {
   all: ["diaDiem"] as const,
@@ -29,23 +30,26 @@ export const useGetDiaDiemKPI = () =>
   useQuery({
     queryKey: DIA_DIEM_KEYS.kpi(),
     queryFn: () => getDiaDiemKPIApi(),
-    staleTime: 1000 * 30,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 60, // 1 giờ
+    refetchOnWindowFocus: false,
   });
 
 export const useGetDiaDiemNavTabs = () =>
   useQuery({
     queryKey: DIA_DIEM_KEYS.navTabs(),
     queryFn: () => getDiaDiemNavTabsApi(),
-    staleTime: 10000,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 export const useGetDiaDiem = (params: DiaDiemFilter) =>
   useQuery({
     queryKey: DIA_DIEM_KEYS.list(params),
     queryFn: () => getDiaDiemApi(params),
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 export const useGetDiaDiemById = (id?: string) =>
@@ -53,14 +57,18 @@ export const useGetDiaDiemById = (id?: string) =>
     queryKey: DIA_DIEM_KEYS.detail(id ?? ""),
     queryFn: () => (id ? getDiaDiemByIdApi(id) : null),
     enabled: typeof id === "string" && id.length > 0,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
+    gcTime: 1000 * 60 * 60 * 48,
+    refetchOnWindowFocus: false,
   });
 
 export const useCreateDiaDiem = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateDiaDiemPayload) => createDiaDiemApi(body),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("dia-diem");
+      await revalidateTagAction("dia-diem-nav-tabs");
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.navTabs() });
@@ -72,7 +80,9 @@ export const useUpdateDiaDiem = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateDiaDiemPayload) => updateDiaDiemApi(body),
-    onSuccess: (_data, vars) => {
+    onSuccess: async (_data, vars) => {
+      await revalidateTagAction("dia-diem");
+      await revalidateTagAction("dia-diem-nav-tabs");
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.detail(vars.DiaDiemID) });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.kpi() });
@@ -85,11 +95,12 @@ export const useDeleteDiaDiem = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteDiaDiemApi(id),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await revalidateTagAction("dia-diem");
+      await revalidateTagAction("dia-diem-nav-tabs");
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: DIA_DIEM_KEYS.navTabs() });
     },
   });
 };
-
