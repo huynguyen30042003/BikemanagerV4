@@ -13,7 +13,7 @@ export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   const userAgent = req.headers.get("user-agent") || "";
 
-  // Bỏ qua tuyệt đối các file tĩnh, hình ảnh, scripts và API
+  // Bỏ qua tuyệt đối các file tĩnh, hình ảnh, scripts, PWA service worker và API
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
@@ -21,7 +21,12 @@ export function proxy(req: NextRequest) {
     pathname.startsWith("/logo") ||
     pathname.startsWith("/opengraph-image") ||
     pathname.startsWith("/twitter-image") ||
+    pathname.startsWith("/og-image") ||
     pathname.startsWith("/icon") ||
+    pathname.startsWith("/icons") ||
+    pathname.startsWith("/manifest") ||
+    pathname.startsWith("/sw.js") ||
+    pathname.startsWith("/offline.html") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();

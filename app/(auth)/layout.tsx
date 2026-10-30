@@ -6,31 +6,40 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://store.nhithoi.io.vn
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Đăng nhập hệ thống | Cửa hàng xe đạp Nhi Thời",
+    default: "Cửa hàng xe đạp Nhi Thời - Đăng nhập",
     template: "%s | Cửa hàng xe đạp Nhi Thời",
   },
   description: "Trang quản trị & đăng nhập hệ thống Cửa hàng xe đạp Nhi Thời",
+  icons: {
+    icon: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+      { url: "/logo.png", type: "image/png" },
+    ],
+    shortcut: "/icons/icon-192x192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
   openGraph: {
     type: "website",
     locale: "vi_VN",
     url: `${siteUrl}/login`,
     siteName: "Cửa hàng xe đạp Nhi Thời",
-    title: "Đăng nhập hệ thống | Cửa hàng xe đạp Nhi Thời",
-    description: "Trang quản trị & đăng nhập hệ thống Cửa hàng xe đạp Nhi Thời",
+    title: "Cửa hàng xe đạp Nhi Thời - Hệ thống Quản trị & Bán hàng",
+    description: "Trang quản trị & vận hành hệ thống Cửa hàng xe đạp Nhi Thời",
     images: [
       {
-        url: "/logo.png",
-        width: 1060,
-        height: 937,
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
         alt: "Logo Cửa hàng xe đạp Nhi Thời",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Đăng nhập hệ thống | Cửa hàng xe đạp Nhi Thời",
-    description: "Trang quản trị & đăng nhập hệ thống Cửa hàng xe đạp Nhi Thời",
-    images: ["/logo.png"],
+    title: "Cửa hàng xe đạp Nhi Thời - Hệ thống Quản trị & Bán hàng",
+    description: "Trang quản trị & vận hành hệ thống Cửa hàng xe đạp Nhi Thời",
+    images: ["/og-image.png"],
   },
   robots: {
     index: false,

@@ -22,9 +22,9 @@ export const metadata: Metadata = {
     description: "Trang quản trị & vận hành hệ thống Cửa hàng xe đạp Nhi Thời",
     images: [
       {
-        url: "/logo.png",
-        width: 1060,
-        height: 937,
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
         alt: "Logo Cửa hàng xe đạp Nhi Thời",
       },
     ],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Hệ thống Quản trị | Cửa hàng xe đạp Nhi Thời",
     description: "Trang quản trị & vận hành hệ thống Cửa hàng xe đạp Nhi Thời",
-    images: ["/logo.png"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: false,
