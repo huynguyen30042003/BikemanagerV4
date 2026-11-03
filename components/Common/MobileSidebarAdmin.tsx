@@ -228,7 +228,7 @@ export function MobileSidebarAdmin() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu quản trị di động"
-            className="relative z-50 w-full sm:w-[85vw] max-w-full sm:max-w-85 h-full bg-card border-r border-border/80 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 ease-out select-none"
+            className="relative z-50 w-[85vw] max-w-[320px] xs:max-w-[340px] h-full bg-card border-r border-border/80 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 ease-out select-none"
           >
             {/* Header trong Drawer */}
             <div className="h-15 px-4 border-b border-border/80 flex items-center justify-between shrink-0 bg-muted/20">
@@ -319,7 +319,7 @@ export function MobileSidebarAdmin() {
                             key={group.title}
                             href={group.href}
                             onClick={() => setIsOpen(false)}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-xl text-[16px] font-medium transition-all ${
+                            className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                               isGroupActive
                                 ? "bg-blue-600 text-white font-semibold shadow-xs"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
@@ -337,7 +337,7 @@ export function MobileSidebarAdmin() {
                           <button
                             type="button"
                             onClick={() => toggleGroup(group.title)}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[16px] font-medium transition-all cursor-pointer ${
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                               isGroupActive
                                 ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold border border-blue-500/20"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
@@ -366,7 +366,7 @@ export function MobileSidebarAdmin() {
                                     key={subItem.title}
                                     href={subItem.href}
                                     onClick={() => setIsOpen(false)}
-                                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[16px] font-medium transition-all ${
+                                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                                       isSubActive
                                         ? "bg-blue-600 text-white font-semibold shadow-2xs"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -395,7 +395,7 @@ export function MobileSidebarAdmin() {
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full flex items-center justify-center gap-2 h-9 px-3 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 hover:border-rose-500/30 text-rose-600 dark:text-rose-400 text-[16px] font-medium transition-all active:scale-98 cursor-pointer shadow-2xs"
+                className="w-full flex items-center justify-center gap-2 h-9 px-3 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 hover:border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium transition-all active:scale-98 cursor-pointer shadow-2xs"
               >
                 {isLoggingOut ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
