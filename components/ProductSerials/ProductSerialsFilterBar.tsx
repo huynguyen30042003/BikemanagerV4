@@ -83,7 +83,7 @@ export const ProductSerialsFilterBar: React.FC<
     return [
       { value: "", label: "Tất cả trạng thái serial" },
       ...serialStatusOptions.map((opt) => ({
-        value: String(opt.value),
+        value: Number(opt.value),
         label: opt.label,
       })),
     ];

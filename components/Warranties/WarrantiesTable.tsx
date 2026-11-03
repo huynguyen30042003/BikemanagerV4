@@ -56,7 +56,7 @@ export function WarrantiesTable({
       key: "maBaoHanh",
       title: "Mã Sổ Bảo Hành",
       classNameHeader:
-        "w-36 inline-block text-center text-xs font-semibold text-muted-foreground",
+        "w-36 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (v) => (
         <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
@@ -78,7 +78,12 @@ export function WarrantiesTable({
           </span>
           {row.soKhung && (
             <span className="text-[11px] font-mono text-muted-foreground">
-              Số khung VIN: {row.soKhung}
+              Số khung: {row.soKhung}
+            </span>
+          )}
+          {row.soMay && (
+            <span className="text-[11px] font-mono text-muted-foreground">
+              Số May: {row.soMay}
             </span>
           )}
           {row.tenBienThe && (

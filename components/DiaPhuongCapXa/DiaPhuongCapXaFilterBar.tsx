@@ -357,8 +357,8 @@ export const DiaPhuongCapXaFilterBar: React.FC<
                 </label>
                 <SearchSelect
                   options={filterProvinceOptions}
-                  value={tinhFilter}
-                  onChange={(val) => onTinhFilterChange(val)}
+                  value={Number(tinhFilter)}
+                  onChange={(val) => onTinhFilterChange(Number(val))}
                   placeholder="Lọc theo Tỉnh / TP..."
                   className="h-9.5 text-xs w-full"
                   height={9.5}
@@ -423,8 +423,8 @@ export const DiaPhuongCapXaFilterBar: React.FC<
             <div className="w-[220px] shrink-0">
               <SearchSelect
                 options={filterProvinceOptions}
-                value={tinhFilter}
-                onChange={(val) => onTinhFilterChange(val)}
+                value={Number(tinhFilter)}
+                onChange={(val) => onTinhFilterChange(Number(val))}
                 placeholder="Lọc theo Tỉnh / TP..."
                 className="h-9.5 text-xs w-full"
                 height={9.5}
