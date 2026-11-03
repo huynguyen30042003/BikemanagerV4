@@ -17,6 +17,7 @@ interface CustomerVehiclesGridProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onEdit: (item: KH_PhuongTienKhachHang) => void;
   onDelete: (item: KH_PhuongTienKhachHang) => void;
+  onOpenImages?: (item: KH_PhuongTienKhachHang) => void;
   onOpenCreate: () => void;
   onResetFilters: () => void;
   hasActiveFilters: boolean;
@@ -32,6 +33,7 @@ export const CustomerVehiclesGrid: React.FC<CustomerVehiclesGridProps> = ({
   setPageSize,
   onEdit,
   onDelete,
+  onOpenImages,
   onOpenCreate,
   onResetFilters,
   hasActiveFilters,
@@ -83,6 +85,7 @@ export const CustomerVehiclesGrid: React.FC<CustomerVehiclesGridProps> = ({
             index={idx}
             onEdit={onEdit}
             onDelete={onDelete}
+            onOpenImages={onOpenImages}
           />
         ))}
       </div>

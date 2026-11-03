@@ -18,6 +18,7 @@ import {
   UpdateCustomerVehicleSlideOver,
   ViewMode,
 } from "@/components/Customer/Vehicles";
+import { SerialImagesSlideOver } from "@/components/ProductSerials";
 
 function VehiclesContent() {
   const searchParams = useSearchParams();
@@ -29,6 +30,12 @@ function VehiclesContent() {
     null,
   );
   const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const [imageSerial, setImageSerial] = useState<{
+    soSerialID: string;
+    maSerial?: string;
+    soKhung?: string;
+    tenBienThe?: string;
+  } | null>(null);
 
   const {
     page,
@@ -98,6 +105,15 @@ function VehiclesContent() {
     setPage(1);
   };
 
+  const handleOpenImages = (item: KH_PhuongTienKhachHang) => {
+    setImageSerial({
+      soSerialID: item.soSerialID || item.id,
+      maSerial: item.bienSo || item.soKhung || "",
+      soKhung: item.soKhung || "",
+      tenBienThe: item.tenModel || "",
+    });
+  };
+
   const hasActiveFilters = Boolean(
     searchInput || statusFilter !== "all" || khachHangFilter,
   );
@@ -161,6 +177,7 @@ function VehiclesContent() {
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
           onDelete={handleDelete}
+          onOpenImages={handleOpenImages}
           onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -176,6 +193,7 @@ function VehiclesContent() {
           setPageSize={setPageSize}
           onEdit={(item) => setEditingItem(item)}
           onDelete={handleDelete}
+          onOpenImages={handleOpenImages}
           onOpenCreate={() => setOpenCreate(true)}
           onResetFilters={handleResetFilters}
           hasActiveFilters={hasActiveFilters}
@@ -192,7 +210,14 @@ function VehiclesContent() {
         onSuccess={handleReload}
       />
 
-      {/* 5. SlideOver: Cập nhật thông số phương tiện (Cô lập form state) */}
+      {/* 5. SlideOver: Xem & tải lên thư viện ảnh xe / phương tiện */}
+      <SerialImagesSlideOver
+        open={Boolean(imageSerial)}
+        onClose={() => setImageSerial(null)}
+        serial={imageSerial}
+      />
+
+      {/* 6. SlideOver: Cập nhật thông số phương tiện (Cô lập form state) */}
       <UpdateCustomerVehicleSlideOver
         open={Boolean(editingItem)}
         onClose={() => setEditingItem(null)}

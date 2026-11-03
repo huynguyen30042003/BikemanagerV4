@@ -11,6 +11,7 @@ import {
   Trash2,
   User,
   Phone,
+  Camera,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export interface CustomerVehicleCardProps {
   index: number;
   onEdit: (item: KH_PhuongTienKhachHang) => void;
   onDelete: (item: KH_PhuongTienKhachHang) => void;
+  onOpenImages?: (item: KH_PhuongTienKhachHang) => void;
 }
 
 export const CustomerVehicleCard = memo(function CustomerVehicleCard({
@@ -29,6 +31,7 @@ export const CustomerVehicleCard = memo(function CustomerVehicleCard({
   index,
   onEdit,
   onDelete,
+  onOpenImages,
 }: CustomerVehicleCardProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -149,6 +152,18 @@ export const CustomerVehicleCard = memo(function CustomerVehicleCard({
           </Link>
 
           <div className="flex items-center gap-1">
+            {onOpenImages && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => onOpenImages(item)}
+                title="Xem và tải lên hình ảnh xe"
+                className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
+              >
+                <Camera className="w-4 h-4 text-blue-600" />
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="icon-sm"

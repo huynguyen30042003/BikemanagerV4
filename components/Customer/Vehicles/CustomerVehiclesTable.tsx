@@ -11,6 +11,7 @@ import {
   Trash2,
   FolderOpen,
   Plus,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
@@ -27,6 +28,7 @@ interface CustomerVehiclesTableProps {
   setPageSize: (size: number | ((prev: number) => number)) => void;
   onEdit: (item: KH_PhuongTienKhachHang) => void;
   onDelete: (item: KH_PhuongTienKhachHang) => void;
+  onOpenImages?: (item: KH_PhuongTienKhachHang) => void;
   onOpenCreate: () => void;
   onResetFilters: () => void;
   hasActiveFilters: boolean;
@@ -42,6 +44,7 @@ export const CustomerVehiclesTable: React.FC<CustomerVehiclesTableProps> = ({
   setPageSize,
   onEdit,
   onDelete,
+  onOpenImages,
   onOpenCreate,
   onResetFilters,
   hasActiveFilters,
@@ -160,10 +163,22 @@ export const CustomerVehiclesTable: React.FC<CustomerVehiclesTableProps> = ({
       key: "function",
       title: "Thao tác",
       classNameHeader:
-        "w-32 text-center text-xs font-semibold text-muted-foreground",
+        "w-40 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex gap-1 justify-center items-center">
+          {onOpenImages && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => onOpenImages(row)}
+              title="Xem và tải lên hình ảnh xe"
+              className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
+            >
+              <Camera className="w-4 h-4 text-blue-600" />
+            </Button>
+          )}
+
           <Link
             href={`/admin/customer/ownerships?vehicleId=${row.id}`}
             title="Lịch sử sở hữu & Sang tên xe"
