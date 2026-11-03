@@ -425,7 +425,7 @@ export function SerialImagesSlideOver({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {filteredImages.map((img) => {
                 const badge = getLoaiBadge(img.loaiAnhID);
-                const imgUrl = takeImage(img.duongDanAnh, 480);
+                const imgUrl = takeImage(img.duongDanAnh, null);
 
                 return (
                   <div
