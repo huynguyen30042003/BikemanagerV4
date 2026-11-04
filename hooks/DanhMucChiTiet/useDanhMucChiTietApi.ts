@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { revalidateTagAction } from "@/app/actions/revalidate";
 import {
   getDanhMucChiTietApi,
   getDanhMucChiTietByIdApi,
@@ -17,11 +16,12 @@ import {
 
 export const DANH_MUC_CHI_TIET_KEYS = {
   all: ["danhMucChiTiet"] as const,
+  lists: () => [...DANH_MUC_CHI_TIET_KEYS.all, "list"] as const,
   list: (params?: object) =>
-    [...DANH_MUC_CHI_TIET_KEYS.all, "list", params] as const,
-  detail: (id: number) =>
-    [...DANH_MUC_CHI_TIET_KEYS.all, "detail", id] as const,
-  kpi: () => ["danhMucChiTietKPI"] as const,
+    [...DANH_MUC_CHI_TIET_KEYS.lists(), params] as const,
+  details: () => [...DANH_MUC_CHI_TIET_KEYS.all, "detail"] as const,
+  detail: (id: number) => [...DANH_MUC_CHI_TIET_KEYS.details(), id] as const,
+  kpi: () => [...DANH_MUC_CHI_TIET_KEYS.all, "kpi"] as const,
 };
 
 /**
@@ -31,20 +31,20 @@ export const useGetDanhMucChiTietKPI = () =>
   useQuery({
     queryKey: DANH_MUC_CHI_TIET_KEYS.kpi(),
     queryFn: () => getDanhMucChiTietKPIApi(),
-    staleTime: 1000 * 60 * 60, // 1 giờ
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
 
 /**
  * Hook lấy danh sách danh mục chi tiết (phân trang, lọc theo danh mục cha & tìm kiếm)
- * Cấu hình staleTime 24h: Danh mục ít thay đổi, mở dropdown lập tức 0ms từ RAM
  */
 export const useGetDanhMucChiTiet = (params: DanhMucChiTietFilter) =>
   useQuery({
     queryKey: DANH_MUC_CHI_TIET_KEYS.list(params),
     queryFn: () => getDanhMucChiTietApi(params),
-    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
-    gcTime: 1000 * 60 * 60 * 48, // 48 giờ lưu trong bộ nhớ
+    placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 30, // 30 phút trong RAM cho cả bảng và các dropdown lookup
+    gcTime: 1000 * 60 * 60,
     refetchOnWindowFocus: false,
   });
 
@@ -56,8 +56,7 @@ export const useGetDanhMucChiTietById = (id?: number) =>
     queryKey: DANH_MUC_CHI_TIET_KEYS.detail(id ?? 0),
     queryFn: () => (id ? getDanhMucChiTietByIdApi(id) : null),
     enabled: typeof id === "number" && id > 0,
-    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
-    gcTime: 1000 * 60 * 60 * 48,
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
 
@@ -69,10 +68,7 @@ export const useCreateDanhMucChiTiet = () => {
   return useMutation({
     mutationFn: (body: CreateDanhMucChiTietPayload) =>
       createDanhMucChiTietApi(body),
-    onSuccess: async () => {
-      // 1. Xóa cache phía Server (Next.js Data Cache tag)
-      await revalidateTagAction("danh-muc-chi-tiet");
-      // 2. Xóa cache phía Client (TanStack React Query)
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["danhMucChungNavTabs"] });
@@ -88,10 +84,7 @@ export const useUpdateDanhMucChiTiet = () => {
   return useMutation({
     mutationFn: (body: UpdateDanhMucChiTietPayload) =>
       updateDanhMucChiTietApi(body),
-    onSuccess: async (_data, vars) => {
-      // 1. Xóa cache phía Server (Next.js Data Cache tag)
-      await revalidateTagAction("danh-muc-chi-tiet");
-      // 2. Xóa cache phía Client (TanStack React Query)
+    onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
       qc.invalidateQueries({
         queryKey: DANH_MUC_CHI_TIET_KEYS.detail(vars.DanhMucChiTietID),
@@ -109,10 +102,7 @@ export const useDeleteDanhMucChiTiet = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => deleteDanhMucChiTietApi(id),
-    onSuccess: async () => {
-      // 1. Xóa cache phía Server (Next.js Data Cache tag)
-      await revalidateTagAction("danh-muc-chi-tiet");
-      // 2. Xóa cache phía Client (TanStack React Query)
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["danhMucChungNavTabs"] });
@@ -127,10 +117,7 @@ export const useSyncDanhMucChiTiet = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => syncDanhMucChiTietApi(),
-    onSuccess: async () => {
-      // 1. Xóa cache phía Server (Next.js Data Cache tag)
-      await revalidateTagAction("danh-muc-chi-tiet");
-      // 2. Xóa cache phía Client (TanStack React Query)
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.all });
       qc.invalidateQueries({ queryKey: DANH_MUC_CHI_TIET_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["danhMucChungNavTabs"] });

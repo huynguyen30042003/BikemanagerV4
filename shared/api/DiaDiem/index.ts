@@ -26,8 +26,8 @@ const getAuthFormDataHeaders = () => {
 };
 
 /**
- * Lấy danh sách địa điểm / chi nhánh có phân trang và tìm kiếm (qua Next.js BFF Route Cache)
- * GET /api/dia-diem
+ * Lấy danh sách địa điểm / chi nhánh có phân trang và tìm kiếm
+ * POST /api/DiaDiemApi/Gets
  */
 export const getDiaDiemApi = async (
   filter: DiaDiemFilter = {
@@ -36,46 +36,41 @@ export const getDiaDiemApi = async (
     TuKhoa: "",
     TrangThai: null,
     TinhID: null,
-  }
+  },
 ) => {
-  const params = new URLSearchParams();
-  if (filter.TuKhoa) {
-    params.set("TuKhoa", filter.TuKhoa);
-  }
-  if (filter.TinhID !== undefined && filter.TinhID !== null) {
-    params.set("TinhID", String(filter.TinhID));
-  }
-  if (filter.PageIndex) {
-    params.set("PageIndex", String(filter.PageIndex));
-  }
-  if (filter.PageSize) {
-    params.set("PageSize", String(filter.PageSize));
-  }
-  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
-    params.set("TrangThai", String(filter.TrangThai));
-  }
+  const response = await api.post(
+    `${APP_URL}/DiaDiemApi/Gets`,
+    {
+      TuKhoa: filter.TuKhoa ?? "",
+      TinhID: filter.TinhID ?? null,
+      PageIndex: filter.PageIndex ?? 1,
+      PageSize: filter.PageSize ?? 20,
+      TrangThai: filter.TrangThai ?? null,
+    },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
 
-  const response = await fetch(`/api/dia-diem?${params.toString()}`, {
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throw new Error(`Lỗi tải danh mục địa điểm: ${response.statusText}`);
-  }
-  return response.json();
+  return response.data;
 };
 
 /**
- * Lấy chi tiết thông tin một địa điểm theo GuidId (qua Next.js BFF Route Cache)
- * GET /api/dia-diem/[id]
+ * Lấy chi tiết thông tin một địa điểm theo GuidId
+ * POST /api/DiaDiemApi/Get
  */
 export const getDiaDiemByIdApi = async (id: string) => {
-  const response = await fetch(`/api/dia-diem/${id}`, {
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throw new Error(`Lỗi tải chi tiết địa điểm ID ${id}: ${response.statusText}`);
-  }
-  return response.json();
+  const response = await api.post(
+    `${APP_URL}/DiaDiemApi/Get`,
+    { GuidId: id },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data;
 };
 
 /**
@@ -156,27 +151,31 @@ export const deleteDiaDiemApi = async (diaDiemId: string) => {
 };
 
 /**
- * Lấy số lượng thống kê cho các tabs địa bàn & cơ sở (qua Next.js BFF Route Cache)
- * GET /api/dia-diem/nav-tabs
+ * Lấy số lượng thống kê cho các tabs địa bàn & cơ sở
+ * GET /api/DiaDiemApi/NavTabs
  */
 export const getDiaDiemNavTabsApi = async (): Promise<DD_NavTabs> => {
-  const response = await fetch(`/api/dia-diem/nav-tabs`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải NavTabs địa điểm: ${response.statusText}`);
-  }
-  const json = await response.json();
-  return json?.data ?? json;
+  const response = await api.get(`${APP_URL}/DiaDiemApi/NavTabs`, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
+
+  return response.data?.data ?? response.data;
 };
 
 /**
- * Lấy dữ liệu thống kê KPI địa điểm cơ sở / showroom (qua Next.js BFF Route Cache)
- * GET /api/dia-diem/kpi
+ * Lấy dữ liệu thống kê KPI địa điểm cơ sở / showroom
+ * POST /api/DiaDiemApi/GetKPI
  */
 export const getDiaDiemKPIApi = async (): Promise<DiaDiemKPI> => {
-  const response = await fetch(`/api/dia-diem/kpi`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải dữ liệu KPI địa điểm: ${response.statusText}`);
-  }
-  const json = await response.json();
-  return json?.data ?? json;
+  const response = await api.post(
+    `${APP_URL}/DiaDiemApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data?.data ?? response.data;
 };

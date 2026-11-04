@@ -18,43 +18,49 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Lấy danh sách kho hàng có phân trang và tìm kiếm (qua Next.js BFF Route Cache)
- * GET /api/kho
+ * Lấy danh sách kho hàng có phân trang và tìm kiếm
+ * POST /api/KhoApi/Gets
  */
 export const getKhoApi = async (
-  filter: KhoFilter = { PageIndex: 1, PageSize: 50, TuKhoa: "", TrangThai: null }
+  filter: KhoFilter = {
+    PageIndex: 1,
+    PageSize: 50,
+    TuKhoa: "",
+    TrangThai: null,
+  },
 ) => {
-  const params = new URLSearchParams();
-  if (filter.TuKhoa) {
-    params.set("TuKhoa", filter.TuKhoa);
-  }
-  if (filter.PageIndex) {
-    params.set("PageIndex", String(filter.PageIndex));
-  }
-  if (filter.PageSize) {
-    params.set("PageSize", String(filter.PageSize));
-  }
-  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
-    params.set("TrangThai", String(filter.TrangThai));
-  }
+  const response = await api.post(
+    `${APP_URL}/KhoApi/Gets`,
+    {
+      TuKhoa: filter.TuKhoa ?? "",
+      PageIndex: filter.PageIndex ?? 1,
+      PageSize: filter.PageSize ?? 50,
+      TrangThai: filter.TrangThai ?? null,
+    },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
 
-  const response = await fetch(`/api/kho?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải danh sách kho: ${response.statusText}`);
-  }
-  return response.json();
+  return response.data;
 };
 
 /**
- * Lấy chi tiết thông tin kho hàng theo ID (qua Next.js BFF Route Cache)
- * GET /api/kho/[id]
+ * Lấy chi tiết thông tin kho hàng theo ID
+ * POST /api/KhoApi/Get
  */
 export const getKhoByIdApi = async (id: string) => {
-  const response = await fetch(`/api/kho/${id}`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải chi tiết kho ID ${id}: ${response.statusText}`);
-  }
-  return response.json();
+  const response = await api.post(
+    `${APP_URL}/KhoApi/Get`,
+    { GuidId: id },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data;
 };
 
 /**
@@ -62,14 +68,10 @@ export const getKhoByIdApi = async (id: string) => {
  * POST /api/KhoApi/Add
  */
 export const createKhoApi = async (payload: CreateKhoPayload) => {
-  const response = await api.post(
-    `${APP_URL}/KhoApi/Add`,
-    payload,
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.post(`${APP_URL}/KhoApi/Add`, payload, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -79,14 +81,10 @@ export const createKhoApi = async (payload: CreateKhoPayload) => {
  * POST /api/KhoApi/Edit
  */
 export const updateKhoApi = async (payload: UpdateKhoPayload) => {
-  const response = await api.post(
-    `${APP_URL}/KhoApi/Edit`,
-    payload,
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.post(`${APP_URL}/KhoApi/Edit`, payload, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -102,34 +100,38 @@ export const deleteKhoApi = async (id: string) => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
 };
 
 /**
- * Lấy số lượng thống kê cho các tabs quản lý kho bãi (qua Next.js BFF Route Cache)
- * GET /api/kho/nav-tabs
+ * Lấy số lượng thống kê cho các tabs quản lý kho bãi
+ * GET /api/KhoApi/NavTabs
  */
 export const getWarehouseNavTabsApi = async (): Promise<KHO_WarehouseNavTabs> => {
-  const response = await fetch(`/api/kho/nav-tabs`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải NavTabs kho bãi: ${response.statusText}`);
-  }
-  const json = await response.json();
-  return json?.data ?? json;
+  const response = await api.get(`${APP_URL}/KhoApi/NavTabs`, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
+
+  return response.data?.data ?? response.data;
 };
 
 /**
- * Lấy số liệu thống kê KPI Kho bãi (qua Next.js BFF Route Cache)
- * GET /api/kho/kpi
+ * Lấy số liệu thống kê KPI Kho bãi
+ * POST /api/KhoApi/GetKPI
  */
 export const getKhoKPIApi = async (): Promise<KHO_KhoKPI> => {
-  const response = await fetch(`/api/kho/kpi`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải KPI kho bãi: ${response.statusText}`);
-  }
-  const json = await response.json();
-  return json?.data ?? json;
+  const response = await api.post(
+    `${APP_URL}/KhoApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data?.data ?? response.data;
 };

@@ -110,45 +110,17 @@ export const deletePhuongTienApi = async (phuongTienId: string) => {
 
 /**
  * Lấy số liệu thống kê KPI Phương tiện khách hàng
- * POST /api/PhuongTienKhachHangApi/GetKPI hoặc GET /api/PhuongTienKhachHangApi/GetKPI
+ * POST /api/PhuongTienKhachHangApi/GetKPI
  */
 export const getPhuongTienKhachHangKPIApi = async (): Promise<PhuongTienKhachHangKPI> => {
-  try {
-    const response = await api.post(
-      `${APP_URL}/PhuongTienKhachHangApi/GetKPI`,
-      {},
-      {
-        headers: getAuthHeaders(),
-        withCredentials: true,
-      }
-    );
-    return response.data?.data ?? response.data;
-  } catch {
-    try {
-      const response = await api.get(`${APP_URL}/PhuongTienKhachHangApi/GetKPI`, {
-        headers: getAuthHeaders(),
-        withCredentials: true,
-      });
-      return response.data?.data ?? response.data;
-    } catch {
-      try {
-        const response = await api.post(
-          `${APP_URL}/PhuongTienKhachHangApi/KPI`,
-          {},
-          {
-            headers: getAuthHeaders(),
-            withCredentials: true,
-          }
-        );
-        return response.data?.data ?? response.data;
-      } catch {
-        const response = await api.get(`${APP_URL}/PhuongTienKhachHangApi/KPI`, {
-          headers: getAuthHeaders(),
-          withCredentials: true,
-        });
-        return response.data?.data ?? response.data;
-      }
+  const response = await api.post(
+    `${APP_URL}/PhuongTienKhachHangApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
     }
-  }
+  );
+  return response.data?.data ?? response.data;
 };
 

@@ -9,7 +9,6 @@ import {
   DanhMucChungKPI,
 } from "@/types/danhMucChung";
 
-
 const getAuthHeaders = () => {
   const token = getAccessToken();
   return {
@@ -19,58 +18,62 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Lấy danh sách danh mục chung có tìm kiếm và phân trang (gọi qua Next.js Route Handler BFF)
- * GET /api/danh-muc-chung
+ * Lấy danh sách danh mục chung có tìm kiếm và phân trang
+ * POST /api/DanhMucChungApi/Gets
  */
 export const getDanhMucChungApi = async (
-  filter: DanhMucChungFilter = { PageIndex: 1, PageSize: 10, TuKhoa: "", TrangThai: null }
+  filter: DanhMucChungFilter = {
+    PageIndex: 1,
+    PageSize: 10,
+    TuKhoa: "",
+    TrangThai: null,
+  },
 ) => {
-  const params = new URLSearchParams();
-  if (filter.TuKhoa) {
-    params.set("TuKhoa", filter.TuKhoa);
-  }
-  if (filter.PageIndex) {
-    params.set("PageIndex", String(filter.PageIndex));
-  }
-  if (filter.PageSize) {
-    params.set("PageSize", String(filter.PageSize));
-  }
-  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
-    params.set("TrangThai", String(filter.TrangThai));
-  }
+  const response = await api.post(
+    `${APP_URL}/DanhMucChungApi/Gets`,
+    {
+      TuKhoa: filter.TuKhoa ?? "",
+      PageIndex: filter.PageIndex ?? 1,
+      PageSize: filter.PageSize ?? 10,
+      TrangThai: filter.TrangThai ?? null,
+    },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
 
-  const response = await fetch(`/api/danh-muc-chung?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải danh mục chung: ${response.statusText}`);
-  }
-  return response.json();
+  return response.data;
 };
 
 /**
- * Lấy thông tin chi tiết một danh mục chung theo ID (gọi qua Next.js Route Handler BFF)
- * GET /api/danh-muc-chung/[id]
+ * Lấy thông tin chi tiết một danh mục chung theo ID
+ * POST /api/DanhMucChungApi/Get
  */
 export const getDanhMucChungByIdApi = async (id: number) => {
-  const response = await fetch(`/api/danh-muc-chung/${id}`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải chi tiết danh mục chung ID ${id}: ${response.statusText}`);
-  }
-  return response.json();
+  const response = await api.post(
+    `${APP_URL}/DanhMucChungApi/Get`,
+    { Id: id },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data;
 };
 
 /**
  * Thêm mới danh mục chung
  * POST /api/DanhMucChungApi/Add
  */
-export const createDanhMucChungApi = async (payload: CreateDanhMucChungPayload) => {
-  const response = await api.post(
-    `${APP_URL}/DanhMucChungApi/Add`,
-    payload,
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+export const createDanhMucChungApi = async (
+  payload: CreateDanhMucChungPayload,
+) => {
+  const response = await api.post(`${APP_URL}/DanhMucChungApi/Add`, payload, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -79,15 +82,13 @@ export const createDanhMucChungApi = async (payload: CreateDanhMucChungPayload) 
  * Cập nhật thông tin danh mục chung
  * PUT /api/DanhMucChungApi/Edit
  */
-export const updateDanhMucChungApi = async (payload: UpdateDanhMucChungPayload) => {
-  const response = await api.put(
-    `${APP_URL}/DanhMucChungApi/Edit`,
-    payload,
-    {
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+export const updateDanhMucChungApi = async (
+  payload: UpdateDanhMucChungPayload,
+) => {
+  const response = await api.put(`${APP_URL}/DanhMucChungApi/Edit`, payload, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -97,14 +98,11 @@ export const updateDanhMucChungApi = async (payload: UpdateDanhMucChungPayload) 
  * DELETE /api/DanhMucChungApi/Delete?DanhMucID={id}
  */
 export const deleteDanhMucChungApi = async (danhMucId: number) => {
-  const response = await api.delete(
-    `${APP_URL}/DanhMucChungApi/Delete`,
-    {
-      params: { DanhMucID: danhMucId },
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.delete(`${APP_URL}/DanhMucChungApi/Delete`, {
+    params: { DanhMucID: danhMucId },
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -120,69 +118,38 @@ export const syncDanhMucChungApi = async () => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
 };
 
 /**
- * Lấy số lượng thống kê cho các tabs danh mục (gọi qua Next.js Route Handler BFF)
- * GET /api/danh-muc-chung/nav-tabs
+ * Lấy số lượng thống kê cho các tabs danh mục
+ * GET /api/DanhMucChungApi/NavTabs
  */
 export const getDanhMucChungNavTabsApi = async (): Promise<DMC_NavTabs> => {
-  const response = await fetch(`/api/danh-muc-chung/nav-tabs`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải NavTabs danh mục chung: ${response.statusText}`);
-  }
-  return response.json();
+  const response = await api.get(`${APP_URL}/DanhMucChungApi/NavTabs`, {
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
+
+  return response.data?.data ?? response.data;
 };
 
 /**
  * Lấy dữ liệu thống kê KPI danh mục dùng chung
- * GET /api/DanhMucChung/GetKPI
+ * POST /api/DanhMucChungApi/GetKPI
  */
 export const getDanhMucChungKPIApi = async (): Promise<DanhMucChungKPI> => {
-  const endpoints = [
-    `${APP_URL}/DanhMucChung/GetKPI`,
+  const response = await api.post(
     `${APP_URL}/DanhMucChungApi/GetKPI`,
-    `/api/DanhMucChung/GetKPI`,
-  ];
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
 
-  for (const url of endpoints) {
-    try {
-      const response = await api.get(url, {
-        headers: getAuthHeaders(),
-        withCredentials: true,
-      });
-      if (response?.data?.data) {
-        return response.data.data;
-      }
-      if (response?.data?.total_DanhMucChung !== undefined) {
-        return response.data;
-      }
-    } catch {
-      try {
-        const response = await api.post(
-          url,
-          {},
-          {
-            headers: getAuthHeaders(),
-            withCredentials: true,
-          }
-        );
-        if (response?.data?.data) {
-          return response.data.data;
-        }
-        if (response?.data?.total_DanhMucChung !== undefined) {
-          return response.data;
-        }
-      } catch {
-        // Tiếp tục thử URL tiếp theo
-      }
-    }
-  }
-
-  throw new Error("Không thể tải dữ liệu KPI danh mục dùng chung");
+  return response.data?.data ?? response.data;
 };
-

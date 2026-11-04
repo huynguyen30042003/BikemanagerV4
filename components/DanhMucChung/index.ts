@@ -6,3 +6,4 @@ export * from "./DanhMucChungSkeleton";
 export * from "./DanhMucChungTable";
 export * from "./CreateDanhMucChungSlideOver";
 export * from "./UpdateDanhMucChungSlideOver";
+export * from "./DanhMucChungClientView";

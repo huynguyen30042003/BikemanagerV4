@@ -13,15 +13,16 @@ import {
   DiaPhuongCapXaFilter,
   UpdateDiaPhuongCapXaPayload,
 } from "@/types/diaPhuongCapXa";
-import { revalidateTagAction } from "@/app/actions/revalidate";
 
 export const DIA_PHUONG_CAP_XA_KEYS = {
   all: ["diaPhuongCapXa"] as const,
+  lists: () => [...DIA_PHUONG_CAP_XA_KEYS.all, "list"] as const,
   list: (params?: object) =>
-    [...DIA_PHUONG_CAP_XA_KEYS.all, "list", params] as const,
+    [...DIA_PHUONG_CAP_XA_KEYS.lists(), params] as const,
+  details: () => [...DIA_PHUONG_CAP_XA_KEYS.all, "detail"] as const,
   detail: (id: number) =>
-    [...DIA_PHUONG_CAP_XA_KEYS.all, "detail", id] as const,
-  kpi: () => ["diaPhuongCapXaKPI"] as const,
+    [...DIA_PHUONG_CAP_XA_KEYS.details(), id] as const,
+  kpi: () => [...DIA_PHUONG_CAP_XA_KEYS.all, "kpi"] as const,
 };
 
 /**
@@ -31,7 +32,7 @@ export const useGetDiaPhuongCapXaKPI = () =>
   useQuery({
     queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi(),
     queryFn: () => getDiaPhuongCapXaKPIApi(),
-    staleTime: 1000 * 60 * 60, // 1 giờ
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
 
@@ -43,8 +44,9 @@ export const useGetDiaPhuongCapXa = (
     queryKey: DIA_PHUONG_CAP_XA_KEYS.list(params),
     queryFn: () => getDiaPhuongCapXaApi(params),
     enabled,
-    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
-    gcTime: 1000 * 60 * 60 * 48,
+    placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60,
     refetchOnWindowFocus: false,
   });
 
@@ -53,8 +55,7 @@ export const useGetDiaPhuongCapXaById = (id?: number) =>
     queryKey: DIA_PHUONG_CAP_XA_KEYS.detail(id ?? 0),
     queryFn: () => (id ? getDiaPhuongCapXaByIdApi(id) : null),
     enabled: typeof id === "number" && id > 0,
-    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
-    gcTime: 1000 * 60 * 60 * 48,
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
 
@@ -63,8 +64,7 @@ export const useCreateDiaPhuongCapXa = () => {
   return useMutation({
     mutationFn: (body: CreateDiaPhuongCapXaPayload) =>
       createDiaPhuongCapXaApi(body),
-    onSuccess: async () => {
-      await revalidateTagAction("dia-phuong-cap-xa");
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
@@ -77,8 +77,7 @@ export const useUpdateDiaPhuongCapXa = () => {
   return useMutation({
     mutationFn: (body: UpdateDiaPhuongCapXaPayload) =>
       updateDiaPhuongCapXaApi(body),
-    onSuccess: async (_data, vars) => {
-      await revalidateTagAction("dia-phuong-cap-xa");
+    onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
       qc.invalidateQueries({
         queryKey: DIA_PHUONG_CAP_XA_KEYS.detail(vars.XaID),
@@ -93,8 +92,7 @@ export const useDeleteDiaPhuongCapXa = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => deleteDiaPhuongCapXaApi(id),
-    onSuccess: async () => {
-      await revalidateTagAction("dia-phuong-cap-xa");
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });
@@ -106,8 +104,7 @@ export const useSyncDiaPhuongCapXa = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => syncDiaPhuongCapXaApi(),
-    onSuccess: async () => {
-      await revalidateTagAction("dia-phuong-cap-xa");
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.all });
       qc.invalidateQueries({ queryKey: DIA_PHUONG_CAP_XA_KEYS.kpi() });
       qc.invalidateQueries({ queryKey: ["diaDiemNavTabs"] });

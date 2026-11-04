@@ -17,8 +17,8 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Lấy danh sách xã/phường có phân trang và lọc theo TỉnhID (qua Next.js BFF Route Cache)
- * GET /api/dia-phuong-cap-xa
+ * Lấy danh sách xã/phường có phân trang và lọc theo TỉnhID
+ * POST /api/DiaPhuongCapXaApi/Gets
  */
 export const getDiaPhuongCapXaApi = async (
   filter: DiaPhuongCapXaFilter = {
@@ -27,54 +27,58 @@ export const getDiaPhuongCapXaApi = async (
     TuKhoa: "",
     TrangThai: null,
     TinhID: null,
-  }
+  },
 ) => {
-  const params = new URLSearchParams();
-  if (filter.TinhID !== undefined && filter.TinhID !== null) {
-    params.set("TinhID", String(filter.TinhID));
-  }
-  if (filter.TuKhoa) {
-    params.set("TuKhoa", filter.TuKhoa);
-  }
-  if (filter.PageIndex) {
-    params.set("PageIndex", String(filter.PageIndex));
-  }
-  if (filter.PageSize) {
-    params.set("PageSize", String(filter.PageSize));
-  }
-  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
-    params.set("TrangThai", String(filter.TrangThai));
-  }
+  const response = await api.post(
+    `${APP_URL}/DiaPhuongCapXaApi/Gets`,
+    {
+      TinhID: filter.TinhID ?? null,
+      TuKhoa: filter.TuKhoa ?? "",
+      PageIndex: filter.PageIndex ?? 1,
+      PageSize: filter.PageSize ?? 50,
+      TrangThai: filter.TrangThai ?? null,
+    },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
 
-  const response = await fetch(`/api/dia-phuong-cap-xa?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải danh mục xã/phường: ${response.statusText}`);
-  }
-  return response.json();
+  return response.data;
 };
 
 /**
- * Lấy thông tin chi tiết một xã/phường theo ID (qua Next.js BFF Route Cache)
- * GET /api/dia-phuong-cap-xa/[id]
+ * Lấy thông tin chi tiết một xã/phường theo ID
+ * POST /api/DiaPhuongCapXaApi/Get
  */
 export const getDiaPhuongCapXaByIdApi = async (id: number) => {
-  const response = await fetch(`/api/dia-phuong-cap-xa/${id}`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải chi tiết xã/phường ID ${id}: ${response.statusText}`);
-  }
-  return response.json();
+  const response = await api.post(
+    `${APP_URL}/DiaPhuongCapXaApi/Get`,
+    { Id: id },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data;
 };
 
 /**
- * Lấy dữ liệu thống kê KPI xã/phường (qua Next.js BFF Route Cache)
- * GET /api/dia-phuong-cap-xa/kpi
+ * Lấy dữ liệu thống kê KPI xã/phường
+ * POST /api/DiaPhuongCapXaApi/GetKPI
  */
 export const getDiaPhuongCapXaKPIApi = async (): Promise<DiaPhuongCapXaKPI> => {
-  const response = await fetch(`/api/dia-phuong-cap-xa/kpi`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải KPI xã/phường: ${response.statusText}`);
-  }
-  return response.json();
+  const response = await api.post(
+    `${APP_URL}/DiaPhuongCapXaApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data?.data ?? response.data;
 };
 
 /**
@@ -82,7 +86,7 @@ export const getDiaPhuongCapXaKPIApi = async (): Promise<DiaPhuongCapXaKPI> => {
  * POST /api/DiaPhuongCapXaApi/Add
  */
 export const createDiaPhuongCapXaApi = async (
-  payload: CreateDiaPhuongCapXaPayload
+  payload: CreateDiaPhuongCapXaPayload,
 ) => {
   const response = await api.post(
     `${APP_URL}/DiaPhuongCapXaApi/Add`,
@@ -90,7 +94,7 @@ export const createDiaPhuongCapXaApi = async (
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -101,7 +105,7 @@ export const createDiaPhuongCapXaApi = async (
  * PUT /api/DiaPhuongCapXaApi/Edit
  */
 export const updateDiaPhuongCapXaApi = async (
-  payload: UpdateDiaPhuongCapXaPayload
+  payload: UpdateDiaPhuongCapXaPayload,
 ) => {
   const response = await api.put(
     `${APP_URL}/DiaPhuongCapXaApi/Edit`,
@@ -109,7 +113,7 @@ export const updateDiaPhuongCapXaApi = async (
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -120,14 +124,11 @@ export const updateDiaPhuongCapXaApi = async (
  * DELETE /api/DiaPhuongCapXaApi/Delete?XaID={id}
  */
 export const deleteDiaPhuongCapXaApi = async (xaId: number) => {
-  const response = await api.delete(
-    `${APP_URL}/DiaPhuongCapXaApi/Delete`,
-    {
-      params: { XaID: xaId },
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.delete(`${APP_URL}/DiaPhuongCapXaApi/Delete`, {
+    params: { XaID: xaId },
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -143,7 +144,7 @@ export const syncDiaPhuongCapXaApi = async () => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;

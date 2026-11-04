@@ -94,45 +94,17 @@ export const chuyenQuyenSoHuuApi = async (payload: ChuyenQuyenSoHuuPayload) => {
 
 /**
  * Lấy số liệu thống kê KPI Lịch sử sở hữu phương tiện
- * POST /api/LichSuSoHuuPhuongTienApi/GetKPI hoặc GET /api/LichSuSoHuuPhuongTienApi/GetKPI
+ * POST /api/LichSuSoHuuPhuongTienApi/GetKPI
  */
 export const getLichSuSoHuuKPIApi = async (): Promise<LichSuSoHuuPhuongTienKPI> => {
-  try {
-    const response = await api.post(
-      `${APP_URL}/LichSuSoHuuPhuongTienApi/GetKPI`,
-      {},
-      {
-        headers: getAuthHeaders(),
-        withCredentials: true,
-      }
-    );
-    return response.data?.data ?? response.data;
-  } catch {
-    try {
-      const response = await api.get(`${APP_URL}/LichSuSoHuuPhuongTienApi/GetKPI`, {
-        headers: getAuthHeaders(),
-        withCredentials: true,
-      });
-      return response.data?.data ?? response.data;
-    } catch {
-      try {
-        const response = await api.post(
-          `${APP_URL}/LichSuSoHuuPhuongTienApi/KPI`,
-          {},
-          {
-            headers: getAuthHeaders(),
-            withCredentials: true,
-          }
-        );
-        return response.data?.data ?? response.data;
-      } catch {
-        const response = await api.get(`${APP_URL}/LichSuSoHuuPhuongTienApi/KPI`, {
-          headers: getAuthHeaders(),
-          withCredentials: true,
-        });
-        return response.data?.data ?? response.data;
-      }
+  const response = await api.post(
+    `${APP_URL}/LichSuSoHuuPhuongTienApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
     }
-  }
+  );
+  return response.data?.data ?? response.data;
 };
 

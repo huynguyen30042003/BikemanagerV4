@@ -17,57 +17,65 @@ const getAuthHeaders = () => {
 };
 
 /**
- * Lấy danh sách tỉnh/thành phố có tìm kiếm và phân trang (gọi qua Next.js Route Handler BFF)
- * GET /api/dia-phuong-cap-tinh
+ * Lấy danh sách tỉnh/thành phố có tìm kiếm và phân trang
+ * POST /api/DiaPhuongCapTinhApi/Gets
  */
 export const getDiaPhuongCapTinhApi = async (
-  filter: DiaPhuongCapTinhFilter = { PageIndex: 1, PageSize: 50, TuKhoa: "", TrangThai: null }
+  filter: DiaPhuongCapTinhFilter = {
+    PageIndex: 1,
+    PageSize: 50,
+    TuKhoa: "",
+    TrangThai: null,
+  },
 ) => {
-  const params = new URLSearchParams();
-  if (filter.TuKhoa) {
-    params.set("TuKhoa", filter.TuKhoa);
-  }
-  if (filter.PageIndex) {
-    params.set("PageIndex", String(filter.PageIndex));
-  }
-  if (filter.PageSize) {
-    params.set("PageSize", String(filter.PageSize));
-  }
-  if (filter.TrangThai !== undefined && filter.TrangThai !== null) {
-    params.set("TrangThai", String(filter.TrangThai));
-  }
+  const response = await api.post(
+    `${APP_URL}/DiaPhuongCapTinhApi/Gets`,
+    {
+      TuKhoa: filter.TuKhoa ?? "",
+      PageIndex: filter.PageIndex ?? 1,
+      PageSize: filter.PageSize ?? 50,
+      TrangThai: filter.TrangThai ?? null,
+    },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
 
-  const response = await fetch(`/api/dia-phuong-cap-tinh?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải danh mục tỉnh/thành phố: ${response.statusText}`);
-  }
-  return response.json();
+  return response.data;
 };
 
 /**
- * Lấy chi tiết thông tin một tỉnh/thành phố theo ID (gọi qua Next.js Route Handler BFF)
- * GET /api/dia-phuong-cap-tinh/[id]
+ * Lấy chi tiết thông tin một tỉnh/thành phố theo ID
+ * POST /api/DiaPhuongCapTinhApi/Get
  */
 export const getDiaPhuongCapTinhByIdApi = async (id: number) => {
-  const response = await fetch(`/api/dia-phuong-cap-tinh/${id}`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải chi tiết tỉnh/thành phố ID ${id}: ${response.statusText}`);
-  }
-  return response.json();
+  const response = await api.post(
+    `${APP_URL}/DiaPhuongCapTinhApi/Get`,
+    { Id: id },
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data;
 };
 
 /**
  * Thêm mới tỉnh/thành phố
  * POST /api/DiaPhuongCapTinhApi/Add
  */
-export const createDiaPhuongCapTinhApi = async (payload: CreateDiaPhuongCapTinhPayload) => {
+export const createDiaPhuongCapTinhApi = async (
+  payload: CreateDiaPhuongCapTinhPayload,
+) => {
   const response = await api.post(
     `${APP_URL}/DiaPhuongCapTinhApi/Add`,
     payload,
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -77,14 +85,16 @@ export const createDiaPhuongCapTinhApi = async (payload: CreateDiaPhuongCapTinhP
  * Cập nhật thông tin tỉnh/thành phố
  * PUT /api/DiaPhuongCapTinhApi/Edit
  */
-export const updateDiaPhuongCapTinhApi = async (payload: UpdateDiaPhuongCapTinhPayload) => {
+export const updateDiaPhuongCapTinhApi = async (
+  payload: UpdateDiaPhuongCapTinhPayload,
+) => {
   const response = await api.put(
     `${APP_URL}/DiaPhuongCapTinhApi/Edit`,
     payload,
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
@@ -95,14 +105,11 @@ export const updateDiaPhuongCapTinhApi = async (payload: UpdateDiaPhuongCapTinhP
  * DELETE /api/DiaPhuongCapTinhApi/Delete?TinhID={id}
  */
 export const deleteDiaPhuongCapTinhApi = async (tinhId: number) => {
-  const response = await api.delete(
-    `${APP_URL}/DiaPhuongCapTinhApi/Delete`,
-    {
-      params: { TinhID: tinhId },
-      headers: getAuthHeaders(),
-      withCredentials: true,
-    }
-  );
+  const response = await api.delete(`${APP_URL}/DiaPhuongCapTinhApi/Delete`, {
+    params: { TinhID: tinhId },
+    headers: getAuthHeaders(),
+    withCredentials: true,
+  });
 
   return response.data;
 };
@@ -118,20 +125,25 @@ export const syncDiaPhuongCapTinhApi = async () => {
     {
       headers: getAuthHeaders(),
       withCredentials: true,
-    }
+    },
   );
 
   return response.data;
 };
 
 /**
- * Lấy dữ liệu thống kê KPI tỉnh/thành phố (gọi qua Next.js Route Handler BFF)
- * GET /api/dia-phuong-cap-tinh/kpi
+ * Lấy dữ liệu thống kê KPI tỉnh/thành phố
+ * POST /api/DiaPhuongCapTinhApi/GetKPI
  */
 export const getDiaPhuongCapTinhKPIApi = async (): Promise<DiaPhuongCapTinhKPI> => {
-  const response = await fetch(`/api/dia-phuong-cap-tinh/kpi`);
-  if (!response.ok) {
-    throw new Error(`Lỗi tải KPI tỉnh/thành phố: ${response.statusText}`);
-  }
-  return response.json();
+  const response = await api.post(
+    `${APP_URL}/DiaPhuongCapTinhApi/GetKPI`,
+    {},
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    },
+  );
+
+  return response.data?.data ?? response.data;
 };
