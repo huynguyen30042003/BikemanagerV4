@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SP_HinhAnhSanPham } from "@/types/hinhAnhSanPham";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 export interface ProductImagesGalleryProps {
   items: SP_HinhAnhSanPham[];
@@ -90,9 +90,9 @@ export const ProductImagesGallery: React.FC<ProductImagesGalleryProps> = ({
             onClick={() => onZoom(img)}
             className="relative aspect-4/3 w-full bg-muted/40 overflow-hidden flex items-center justify-center cursor-pointer select-none"
           >
-            {img.duongDanAnh && getImageUrl(img.duongDanAnh) ? (
+            {img.duongDanAnh ? (
               <Image
-                src={getImageUrl(img.duongDanAnh)}
+                src={takeImage(img.duongDanAnh, 768, img.maxSize)}
                 alt={img.tieuDe || "Ảnh sản phẩm"}
                 width={320}
                 height={240}

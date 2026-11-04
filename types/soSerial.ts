@@ -37,6 +37,7 @@ export interface SP_SoSerial_HinhAnh {
   loaiAnhID: number; // 1: Số khung/máy/pin, 2: Bàn giao xe, 3: Ngoại quan lúc bán, 4: Lỗi bảo hành, 5: Sau sửa chữa
   tenLoaiAnh?: string;
   duongDanAnh: string;
+  maxSize?: number | null;
   tieuDe?: string | null;
   ghiChu?: string | null;
   nguoiTaoLap?: number | null;

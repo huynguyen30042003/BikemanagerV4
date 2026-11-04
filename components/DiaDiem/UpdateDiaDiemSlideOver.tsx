@@ -24,7 +24,7 @@ import { useUpdateDiaDiem } from "@/hooks/DiaDiem/useDiaDiemApi";
 import { diaDiemSchema, DiaDiemFormData } from "@/hooks/DiaDiem/useDiaDiem";
 import { useGetDiaPhuongCapXa } from "@/hooks/DiaPhuongCapXa/useDiaPhuongCapXaApi";
 import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 interface UpdateDiaDiemSlideOverProps {
   open: boolean;
@@ -502,7 +502,7 @@ export function UpdateDiaDiemSlideOver({
             /* Trường hợp 2: Có ảnh hiện tại từ hệ thống và chưa đánh dấu xóa */
             <div className="relative w-full h-44 rounded-xl overflow-hidden border border-border/80 bg-muted/40 group shadow-2xs">
               <Image
-                src={getImageUrl(data.anhDaiDien)}
+                src={takeImage(data.anhDaiDien, 768, data.maxSize)}
                 alt={data.tenDiaDiem || "Ảnh showroom"}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"

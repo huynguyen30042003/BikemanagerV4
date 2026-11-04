@@ -23,7 +23,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { KH_KhachHang } from "@/types/khachHang";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 import { toast } from "sonner";
 
 export interface CustomerCardProps {
@@ -51,8 +51,15 @@ export const CustomerCard = memo(function CustomerCard({
   };
 
   const isBusiness = customer.loaiKhachHang === 2;
-  const avatarUrl = customer.anhChanDung || customer.anhBieuTrung;
-  const fullAvatarUrl = avatarUrl ? getImageUrl(avatarUrl) : null;
+  const avatarPath = isBusiness
+    ? customer.anhBieuTuong || customer.anhChanDung
+    : customer.anhChanDung || customer.anhBieuTuong;
+  const avatarMaxSize = isBusiness
+    ? customer.maxSizeBieuTuong ?? customer.maxSizeChanDung
+    : customer.maxSizeChanDung ?? customer.maxSizeBieuTuong;
+  const fullAvatarUrl = avatarPath
+    ? takeImage(avatarPath, 480, avatarMaxSize)
+    : null;
 
   return (
     <motion.div

@@ -471,7 +471,7 @@ const isSafeUrl = (url: string | null) => {
 ### 10.3. Quy chuẩn Quản lý File Upload, `FormData` & Chống Rò rỉ Bộ nhớ (`ObjectURL`)
 
 1. **Đồng bộ 100% tên trường File giữa Interface & `FormData`**:
-   - Mọi trường tệp đính kèm trong `Create...Payload` / `Update...Payload` (ví dụ `fileAnhChanDung`, `fileAnhBieuTrung`) bắt buộc phải được khai báo tường minh trong `types/<feature>.ts` và được `formData.append(...)` đầy đủ trong `shared/api/<Feature>/index.ts`.
+   - Mọi trường tệp đính kèm trong `Create...Payload` / `Update...Payload` (ví dụ `fileAnhChanDung`, `fileAnhBieuTuonng`) bắt buộc phải được khai báo tường minh trong `types/<feature>.ts` và được `formData.append(...)` đầy đủ trong `shared/api/<Feature>/index.ts`.
 2. **Thu hồi bộ nhớ Preview Ảnh (`URL.revokeObjectURL`)**:
    - Khi sử dụng `URL.createObjectURL(file)` để hiển thị ảnh xem trước trong Modal/SlideOver, **bắt buộc** phải có `useEffect` cleanup giải phóng bộ nhớ khi thay đổi ảnh hoặc đóng Modal:
      ```tsx
@@ -620,11 +620,13 @@ interface UpdateSlideOverProps {
 ### 11.4. Quy chuẩn "Single Source of Truth" cho State Modal Cập nhật (`editingItem` Pattern & Conditional Mounting)
 
 - ❌ **CẤM DÙNG 2 STATE RỜI RẠC CHO MỘT MODAL SỬA**:
+
   ```tsx
   // ❌ SAI: Dễ quên đồng bộ, lệch pha dữ liệu, phải check rườm rà
   const [openEdit, setOpenEdit] = useState<boolean>(false);
   const [selectItem, setSelectItem] = useState<T | null>(null);
   ```
+
   - Dễ gây lỗi "modal mở nhưng chưa kịp set data" hoặc "modal đóng rồi nhưng data cũ vẫn treo trong bộ nhớ".
   - Phải kiểm tra 2 lần: `{openEdit && selectItem && <Update...SlideOver />}`.
 
@@ -758,15 +760,15 @@ Mỗi khi thêm một trang hoặc module mới (ví dụ: `/admin/reports` ho�
 
 Để đảm bảo hiệu năng cao nhất (chống Re-render), code sạch, dễ bảo trì và không bị phân mảnh file vụn vặt, toàn bộ hệ thống tuân thủ ma trận phân định sau:
 
-| Thành phần / Khối chức năng | Quy chuẩn Kiến trúc | Vị trí File | Lý do Kỹ thuật & Rationale |
-| :--- | :--- | :--- | :--- |
-| **Form Thêm mới / Cập nhật (SlideOver / Modal)** | **BẮT BUỘC TÁCH FILE RIÊNG** | `components/<Feature>/Create...SlideOver.tsx`<br/>`components/<Feature>/Update...SlideOver.tsx` | **Chống Re-render Trap (Mục 11)**: Cô lập toàn bộ form state (`formData`, `errors`, `onChange`). Tránh việc gõ phím làm re-render toàn bộ trang cha, KPI ribbon và Table. |
-| **Bảng dữ liệu chính (Data Table)** | **BẮT BUỘC TÁCH FILE RIÊNG** | `components/<Feature>/...Table.tsx` | Tách biệt logic render từng dòng, phân trang, skeleton loading, bọc container chống tràn ngang `overflow-x-auto min-w-[...]`. |
-| **Lưới thẻ Card (Showcase Grid)** | **BẮT BUỘC TÁCH FILE RIÊNG** | `components/<Feature>/...Grid.tsx` | Tách biệt logic animation `motion/react`, layout lưới co giãn responsive khi kích hoạt chế độ xem kép (Dual View Mode). |
-| **Dải thẻ KPI Ribbon** | **BẮT BUỘC TÁCH FILE RIÊNG** | `components/<Feature>/...KpiGrid.tsx` hoặc `...Ribbon.tsx` | Đóng gói mảng cấu hình thẻ render qua `.map()` và `useMemo`, nhận props metrics từ `page.tsx`. |
-| **Thanh Tab điều hướng con** | **BẮT BUỘC TÁCH FILE DÙNG CHUNG** | `components/Common/...NavTabs.tsx` | Kế thừa 100% từ component dùng chung `BaseNavTabs.tsx` (Mục 14.4), cấm viết lại HTML container hay thẻ `<Link>`. |
-| **Thanh Tiêu đề & Bộ lọc (`...FilterBar.tsx`)** | **GỘP CHUNG 1 FILE DUY NHẤT** (Co-location) | `components/<Feature>/...FilterBar.tsx` | **TUYỆT ĐỐI KHÔNG TÁCH NHỎ** thành `MobileFilterBar.tsx` & `DesktopFilterBar.tsx`. Cả 2 khối giao diện Mobile (`lg:hidden`) và Desktop (`hidden lg:flex`) **phải nằm chung trong cùng 1 file** để chia sẻ state tìm kiếm, props lọc, và định nghĩa `statusOptions`, `viewModeOptions`. |
-| **Màn hình Bán lẻ / POS Showroom đặc thù** | **LINH HOẠT THEO ĐỘ PHỨC TẠP** | `components/Sales/` hoặc `app/admin/sales/` | Nếu nghiệp vụ bán lẻ phức tạp (> 600 dòng), nên tách thành các khối: `SalesCatalog` (danh mục), `SalesCart` (giỏ hàng & thanh toán), `SalesFloatingBar` (thanh checkout mobile). |
+| Thành phần / Khối chức năng                      | Quy chuẩn Kiến trúc                         | Vị trí File                                                                                     | Lý do Kỹ thuật & Rationale                                                                                                                                                                                                                                                             |
+| :----------------------------------------------- | :------------------------------------------ | :---------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Form Thêm mới / Cập nhật (SlideOver / Modal)** | **BẮT BUỘC TÁCH FILE RIÊNG**                | `components/<Feature>/Create...SlideOver.tsx`<br/>`components/<Feature>/Update...SlideOver.tsx` | **Chống Re-render Trap (Mục 11)**: Cô lập toàn bộ form state (`formData`, `errors`, `onChange`). Tránh việc gõ phím làm re-render toàn bộ trang cha, KPI ribbon và Table.                                                                                                              |
+| **Bảng dữ liệu chính (Data Table)**              | **BẮT BUỘC TÁCH FILE RIÊNG**                | `components/<Feature>/...Table.tsx`                                                             | Tách biệt logic render từng dòng, phân trang, skeleton loading, bọc container chống tràn ngang `overflow-x-auto min-w-[...]`.                                                                                                                                                          |
+| **Lưới thẻ Card (Showcase Grid)**                | **BẮT BUỘC TÁCH FILE RIÊNG**                | `components/<Feature>/...Grid.tsx`                                                              | Tách biệt logic animation `motion/react`, layout lưới co giãn responsive khi kích hoạt chế độ xem kép (Dual View Mode).                                                                                                                                                                |
+| **Dải thẻ KPI Ribbon**                           | **BẮT BUỘC TÁCH FILE RIÊNG**                | `components/<Feature>/...KpiGrid.tsx` hoặc `...Ribbon.tsx`                                      | Đóng gói mảng cấu hình thẻ render qua `.map()` và `useMemo`, nhận props metrics từ `page.tsx`.                                                                                                                                                                                         |
+| **Thanh Tab điều hướng con**                     | **BẮT BUỘC TÁCH FILE DÙNG CHUNG**           | `components/Common/...NavTabs.tsx`                                                              | Kế thừa 100% từ component dùng chung `BaseNavTabs.tsx` (Mục 14.4), cấm viết lại HTML container hay thẻ `<Link>`.                                                                                                                                                                       |
+| **Thanh Tiêu đề & Bộ lọc (`...FilterBar.tsx`)**  | **GỘP CHUNG 1 FILE DUY NHẤT** (Co-location) | `components/<Feature>/...FilterBar.tsx`                                                         | **TUYỆT ĐỐI KHÔNG TÁCH NHỎ** thành `MobileFilterBar.tsx` & `DesktopFilterBar.tsx`. Cả 2 khối giao diện Mobile (`lg:hidden`) và Desktop (`hidden lg:flex`) **phải nằm chung trong cùng 1 file** để chia sẻ state tìm kiếm, props lọc, và định nghĩa `statusOptions`, `viewModeOptions`. |
+| **Màn hình Bán lẻ / POS Showroom đặc thù**       | **LINH HOẠT THEO ĐỘ PHỨC TẠP**              | `components/Sales/` hoặc `app/admin/sales/`                                                     | Nếu nghiệp vụ bán lẻ phức tạp (> 600 dòng), nên tách thành các khối: `SalesCatalog` (danh mục), `SalesCart` (giỏ hàng & thanh toán), `SalesFloatingBar` (thanh checkout mobile).                                                                                                       |
 
 #### 14.1.2. Trách nhiệm của "Trang Nhạc Trưởng" (`page.tsx`)
 
@@ -897,6 +899,7 @@ Tất cả các trang trong hệ thống phải đảm bảo trải nghiệm ho�
        5. **Huy hiệu số lượng (`renderBadge`)**: Tự động hiển thị badge số đếm (`text-[10px] px-1.5 py-0.2 rounded-full font-mono`) hoặc skeleton pulse (`w-5 h-3.5 rounded-full bg-muted/60 animate-pulse`) khi `isLoading = true`.
 
 2. **Giao diện Dữ liệu Chuẩn (`NavTabItem<T>`)**:
+
    ```typescript
    export interface NavTabItem<T extends string = string> {
      key: T;
@@ -945,7 +948,7 @@ Tất cả các trang trong hệ thống phải đảm bảo trải nghiệm ho�
 
 4. **Công thức tính tiền trả góp hàng tháng tự động**:
    - Số tiền góp hàng tháng (`SoTienTraHangThang`) được tính tự động từ: Số tiền vay (`SoTienVay`), kỳ hạn (`SoThangTraGop`), lãi suất (`LaiSuat`) và phí bảo hiểm (`PhiBaoHiemKhoanVay`).
-   - Khi chưa có khoản vay (`SoTienVay <= 0`), ô trả góp hàng tháng hiển thị rỗng kèm placeholder *"Tự động tính theo khoản vay..."*.
+   - Khi chưa có khoản vay (`SoTienVay <= 0`), ô trả góp hàng tháng hiển thị rỗng kèm placeholder _"Tự động tính theo khoản vay..."_.
 
 ---
 

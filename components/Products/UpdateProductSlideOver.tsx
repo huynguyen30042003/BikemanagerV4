@@ -18,7 +18,7 @@ import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { useUpdateSanPham } from "@/hooks/SanPham/useSanPhamApi";
 import { SP_SanPham, UpdateSanPhamPayload } from "@/types/sanPham";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 const sanPhamSchema = z.object({
   maSanPham: z.string().trim().min(1, "Vui lòng nhập mã sản phẩm"),
@@ -374,7 +374,7 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
                 />
               ) : !formData.XoaFile && existingAvatar ? (
                 <Image
-                  src={getImageUrl(existingAvatar)}
+                  src={takeImage(existingAvatar, 768, product?.maxSize)}
                   alt="Ảnh hiện tại"
                   width={64}
                   height={64}

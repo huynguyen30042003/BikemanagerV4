@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SP_HinhAnhSanPham } from "@/types/hinhAnhSanPham";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 export interface ProductImageViewerModalProps {
   image: SP_HinhAnhSanPham | null;
@@ -69,7 +69,7 @@ export const ProductImageViewerModal: React.FC<
 
   if (!image) return null;
 
-  const imgUrl = image.duongDanAnh ? getImageUrl(image.duongDanAnh) : null;
+  const imgUrl = image.duongDanAnh ? takeImage(image.duongDanAnh, null, image.maxSize) : null;
 
   // Xử lý vuốt trên điện thoại di động (Touch swipe)
   const handleTouchStart = (e: React.TouchEvent) => {

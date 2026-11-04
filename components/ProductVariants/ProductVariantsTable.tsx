@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
 import { Pagination } from "@/components/Common/Pagination";
 import { SP_BienTheSanPham } from "@/types/bienTheSanPham";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 function formatCurrency(val: number | null | undefined): string {
   if (val == null) return "0 đ";
@@ -77,9 +77,9 @@ export const ProductVariantsTable: React.FC<ProductVariantsTableProps> = ({
       render: (_v, row) => (
         <div className="flex items-center gap-3 py-1">
           <div className="w-10 h-10 rounded-xl bg-muted/60 border border-border/60 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
-            {row.hinhAnh && getImageUrl(row.hinhAnh) ? (
+            {row.hinhAnh ? (
               <Image
-                src={getImageUrl(row.hinhAnh)}
+                src={takeImage(row.hinhAnh, 480, row.maxSize)}
                 alt={row.tenBienThe}
                 width={40}
                 height={40}

@@ -424,7 +424,7 @@ DanTocID: 1
 GhiChu: Khách hàng mua xe trả góp
 TrangThai: true
 anhChanDung: (binary/image file - dành cho KH cá nhân)
-anhBieuTrung: (binary/image file - logo dành cho KH doanh nghiệp)
+anhBieuTuong: (binary/image file - logo dành cho KH doanh nghiệp)
 
 # Cập nhật thông tin khách hàng (Hỗ trợ upload ảnh chân dung / logo hoặc xóa ảnh qua formData)
 
@@ -440,7 +440,7 @@ XaID: 1
 MaDinhDanh: 001200001234
 TrangThai: true
 XoaAnhChanDung: false
-XoaAnhBieuTrung: false
+XoaAnhBieuTuong: false
 anhChanDung: (binary/image file)
 
 # Xóa khách hàng theo ID
@@ -1334,13 +1334,13 @@ POST {{base_url}}/api/DonNhapHangApi/AddLichSuThanhToan
 
 POST {{base_url}}/api/DonHangApi/GetSanPhamBanHang
 {
-  "KhoID": "90343865-b67b-400e-a4ab-23cecbc9953b",
-  "TuKhoa": "",
-  "DanhMucChiTietID": null,
-  "ChiLayConTon": true,
-  "QuanLyTheoSerial": null,
-  "PageIndex": 1,
-  "PageSize": 50
+"KhoID": "90343865-b67b-400e-a4ab-23cecbc9953b",
+"TuKhoa": "",
+"DanhMucChiTietID": null,
+"ChiLayConTon": true,
+"QuanLyTheoSerial": null,
+"PageIndex": 1,
+"PageSize": 50
 }
 
 # Lấy danh sách đơn hàng phân trang & lọc đa tiêu chí

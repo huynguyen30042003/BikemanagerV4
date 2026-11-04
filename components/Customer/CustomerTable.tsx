@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
 import { Pagination } from "@/components/Common/Pagination";
 import { KH_KhachHang } from "@/types/khachHang";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 import { toast } from "sonner";
 
 export interface CustomerTableProps {
@@ -94,67 +94,77 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         classNameHeader:
           "text-left text-xs font-semibold text-muted-foreground",
         classNameItem: "text-left",
-        render: (_v, row) => (
-          <div className="flex items-center gap-3 py-1">
-            {/* Avatar or Logo */}
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/20 font-bold overflow-hidden shadow-2xs">
-              {(row.anhChanDung || row.anhBieuTrung) &&
-              getImageUrl(row.anhChanDung || row.anhBieuTrung) ? (
-                <Image
-                  src={getImageUrl(row.anhChanDung || row.anhBieuTrung)}
-                  alt={row.tenKhachHang}
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover"
-                  unoptimized
-                />
-              ) : row.loaiKhachHang === 2 ? (
-                <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              ) : (
-                <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              )}
-            </div>
+        render: (_v, row) => {
+          const isBusiness = row.loaiKhachHang === 2;
+          const avatarPath = isBusiness ? row.anhBieuTuong : row.anhChanDung;
+          const avatarMaxSize = isBusiness
+            ? row.maxSizeBieuTuong
+            : row.maxSizeChanDung;
+          const avatarUrl = avatarPath
+            ? takeImage(avatarPath, 480, avatarMaxSize)
+            : null;
 
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <div className="flex items-center gap-2">
-                <span
-                  onClick={() => onEdit(row)}
-                  className="font-semibold text-foreground text-sm truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
-                >
-                  {row.tenKhachHang}
-                </span>
-                {row.loaiKhachHang === 2 ? (
-                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
-                    Doanh nghiệp
-                  </span>
+          return (
+            <div className="flex items-center gap-3 py-1">
+              {/* Avatar or Logo */}
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/20 font-bold overflow-hidden shadow-2xs">
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt={row.tenKhachHang}
+                    width={480}
+                    height={480}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                ) : isBusiness ? (
+                  <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 ) : (
-                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                    Cá nhân
-                  </span>
+                  <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 )}
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <a
-                  href={`tel:${row.dienThoai}`}
-                  className="flex items-center gap-1 font-mono text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
-                >
-                  <Phone className="w-3 h-3 shrink-0" />
-                  {row.dienThoai}
-                </a>
-                {row.hopThu && (
-                  <a
-                    href={`mailto:${row.hopThu}`}
-                    className="flex items-center gap-1 truncate max-w-[180px] hover:underline"
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    onClick={() => onEdit(row)}
+                    className="font-semibold text-foreground text-sm truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
                   >
-                    <Mail className="w-3 h-3 shrink-0" />
-                    {row.hopThu}
+                    {row.tenKhachHang}
+                  </span>
+                  {row.loaiKhachHang === 2 ? (
+                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
+                      Doanh nghiệp
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                      Cá nhân
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <a
+                    href={`tel:${row.dienThoai}`}
+                    className="flex items-center gap-1 font-mono text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                  >
+                    <Phone className="w-3 h-3 shrink-0" />
+                    {row.dienThoai}
                   </a>
-                )}
+                  {row.hopThu && (
+                    <a
+                      href={`mailto:${row.hopThu}`}
+                      className="flex items-center gap-1 truncate max-w-[180px] hover:underline"
+                    >
+                      <Mail className="w-3 h-3 shrink-0" />
+                      {row.hopThu}
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ),
+          );
+        },
       },
       {
         key: "maDinhDanh",

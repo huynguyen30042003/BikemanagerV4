@@ -47,8 +47,8 @@ export const useGetDiaDiem = (params: DiaDiemFilter) =>
   useQuery({
     queryKey: DIA_DIEM_KEYS.list(params),
     queryFn: () => getDiaDiemApi(params),
-    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
-    gcTime: 1000 * 60 * 60 * 48,
+    staleTime: 5000,
+    gcTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
 
@@ -57,8 +57,8 @@ export const useGetDiaDiemById = (id?: string) =>
     queryKey: DIA_DIEM_KEYS.detail(id ?? ""),
     queryFn: () => (id ? getDiaDiemByIdApi(id) : null),
     enabled: typeof id === "string" && id.length > 0,
-    staleTime: 1000 * 60 * 60 * 24, // 24 giờ
-    gcTime: 1000 * 60 * 60 * 48,
+    staleTime: 5000,
+    gcTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
 

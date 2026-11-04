@@ -19,7 +19,7 @@ import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { DatePickerInput } from "@/components/ui/DatePickerInput";
 import { KH_KhachHang, UpdateKhachHangPayload } from "@/types/khachHang";
 import { DM_DiaPhuongCapXa } from "@/types/diaPhuongCapXa";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 import {
   khachHangSchema,
   useUpdateKhachHang,
@@ -48,7 +48,7 @@ const INITIAL_UPDATE_DATA: UpdateKhachHangPayload = {
   TrangThai: true,
 
   XoaAnhChanDung: false,
-  XoaAnhBieuTrung: false,
+  XoaAnhBieuTuong: false,
 
   // Cá nhân
   MaDinhDanh: "",
@@ -68,8 +68,8 @@ const INITIAL_UPDATE_DATA: UpdateKhachHangPayload = {
   ToChucCapChaID: null,
   LoaiToChucID: null,
   TrangChu: "",
-  anhBieuTrung: null,
-  fileAnhBieuTrung: null,
+  anhBieuTuong: null,
+  fileAnhBieuTuong: null,
 };
 
 export function UpdateCustomerSlideOver({
@@ -122,7 +122,7 @@ export function UpdateCustomerSlideOver({
         TrangThai: customer.trangThai,
 
         XoaAnhChanDung: false,
-        XoaAnhBieuTrung: false,
+        XoaAnhBieuTuong: false,
 
         MaDinhDanh: customer.maDinhDanh || "",
         NgayCapMaDinhDanh: customer.ngayCapMaDinhDanh
@@ -142,8 +142,8 @@ export function UpdateCustomerSlideOver({
         ToChucCapChaID: customer.toChucCapChaID || null,
         LoaiToChucID: customer.loaiToChucID || null,
         TrangChu: customer.trangChu || "",
-        anhBieuTrung: customer.anhBieuTrung || null,
-        fileAnhBieuTrung: null,
+        anhBieuTuong: customer.anhBieuTuong || null,
+        fileAnhBieuTuong: null,
       });
       setErrors({});
       setAvatarPreview(null);
@@ -180,8 +180,8 @@ export function UpdateCustomerSlideOver({
     if (file) {
       setFormData((prev) => ({
         ...prev,
-        fileAnhBieuTrung: file,
-        XoaAnhBieuTrung: true,
+        fileAnhBieuTuong: file,
+        XoaAnhBieuTuong: true,
       }));
       setLogoPreview(URL.createObjectURL(file));
     }
@@ -199,8 +199,8 @@ export function UpdateCustomerSlideOver({
   const handleClearLogo = () => {
     setFormData((prev) => ({
       ...prev,
-      fileAnhBieuTrung: null,
-      XoaAnhBieuTrung: true,
+      fileAnhBieuTuong: null,
+      XoaAnhBieuTuong: true,
     }));
     setLogoPreview(null);
   };
@@ -238,7 +238,7 @@ export function UpdateCustomerSlideOver({
     avatarPreview || (!formData.XoaAnhChanDung && formData.anhChanDung),
   );
   const hasCurrentLogo = Boolean(
-    logoPreview || (!formData.XoaAnhBieuTrung && formData.anhBieuTrung),
+    logoPreview || (!formData.XoaAnhBieuTuong && formData.anhBieuTuong),
   );
 
   return (
@@ -383,7 +383,7 @@ export function UpdateCustomerSlideOver({
                       />
                     ) : !formData.XoaAnhChanDung && formData.anhChanDung ? (
                       <Image
-                        src={getImageUrl(String(formData.anhChanDung))}
+                        src={takeImage(String(formData.anhChanDung), 768, customer?.maxSizeChanDung)}
                         alt="Ảnh hiện tại"
                         width={64}
                         height={64}
@@ -467,9 +467,9 @@ export function UpdateCustomerSlideOver({
                         className="w-full h-full object-cover"
                         unoptimized
                       />
-                    ) : !formData.XoaAnhBieuTrung && formData.anhBieuTrung ? (
+                    ) : !formData.XoaAnhBieuTuong && formData.anhBieuTuong ? (
                       <Image
-                        src={getImageUrl(String(formData.anhBieuTrung))}
+                        src={takeImage(String(formData.anhBieuTuong), 768, customer?.maxSizeBieuTuong)}
                         alt="Logo hiện tại"
                         width={64}
                         height={64}

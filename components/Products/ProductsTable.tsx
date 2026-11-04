@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
 import { Pagination } from "@/components/Common/Pagination";
 import { SP_SanPham } from "@/types/sanPham";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 interface ProductsTableProps {
   items: SP_SanPham[];
@@ -60,7 +60,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
       classNameHeader: "text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => {
-        const avatarUrl = getImageUrl(row.anhDaiDien);
+        const avatarUrl = row.anhDaiDien ? takeImage(row.anhDaiDien, 480, row.maxSize) : null;
         return (
           <div className="flex items-center gap-3 py-1">
             <div className="w-11 h-11 rounded-lg bg-muted/60 border border-border/70 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">

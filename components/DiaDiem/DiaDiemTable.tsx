@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
 import { Pagination } from "@/components/Common/Pagination";
 import { DM_DiaDiem } from "@/types/diaDiem";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 export interface DiaDiemTableProps {
   items: DM_DiaDiem[];
@@ -116,7 +116,9 @@ export const DiaDiemTable: React.FC<DiaDiemTableProps> = ({
         "w-16 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => {
-        const imgUrl = getImageUrl(row.anhDaiDien);
+        const imgUrl = row.anhDaiDien
+          ? takeImage(row.anhDaiDien, 480, row.maxSize)
+          : "";
         return (
           <div className="flex justify-center">
             {imgUrl ? (

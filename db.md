@@ -129,7 +129,7 @@ public string TenKhachHang { get; set; } = string.Empty; // Họ tên hoặc Tê
     public Guid? ToChucCapChaID { get; set; } // Chi nhánh / Công ty mẹ
     public short? LoaiToChucID { get; set; } // FK DM_DanhMucChiTiet (TNHH, CP...)
     public string? TrangChu { get; set; } // Website
-    public string? AnhBieuTrung { get; set; } // Logo
+    public string? AnhBieuTuong { get; set; } // Logo
 
 }
 

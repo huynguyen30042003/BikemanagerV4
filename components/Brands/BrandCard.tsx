@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SP_ThuongHieu } from "@/types/thuongHieu";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 export interface BrandCardProps {
   brand: SP_ThuongHieu;
@@ -31,7 +31,7 @@ export const BrandCard = memo(function BrandCard({
   onDelete,
 }: BrandCardProps) {
   const shouldReduceMotion = useReducedMotion();
-  const logoUrl = getImageUrl(brand.duongDanLogo);
+  const logoUrl = brand.duongDanLogo ? takeImage(brand.duongDanLogo, 480, brand.maxSize) : null;
 
   return (
     <motion.div

@@ -10,6 +10,7 @@ export interface SP_SanPham {
   donViTinhID?: number | null;
   tenDonViTinh?: string | null;
   anhDaiDien?: string | null;
+  maxSize?: number | null;
   moTaNgan?: string | null;
   moTa?: string | null;
   thongSoKyThuatJson?: string | null;

@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Pagination } from "@/components/Common/Pagination";
 import { SP_SanPham } from "@/types/sanPham";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 interface ProductsGridProps {
   items: SP_SanPham[];
@@ -94,7 +94,7 @@ export const ProductsGrid: React.FC<ProductsGridProps> = ({
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {items.map((product, idx) => {
-          const avatarUrl = getImageUrl(product.anhDaiDien);
+          const avatarUrl = product.anhDaiDien ? takeImage(product.anhDaiDien, 480, product.maxSize) : null;
 
           return (
             <motion.div

@@ -55,7 +55,9 @@ export const getDiaDiemApi = async (
     params.set("TrangThai", String(filter.TrangThai));
   }
 
-  const response = await fetch(`/api/dia-diem?${params.toString()}`);
+  const response = await fetch(`/api/dia-diem?${params.toString()}`, {
+    cache: "no-store",
+  });
   if (!response.ok) {
     throw new Error(`Lỗi tải danh mục địa điểm: ${response.statusText}`);
   }
@@ -67,7 +69,9 @@ export const getDiaDiemApi = async (
  * GET /api/dia-diem/[id]
  */
 export const getDiaDiemByIdApi = async (id: string) => {
-  const response = await fetch(`/api/dia-diem/${id}`);
+  const response = await fetch(`/api/dia-diem/${id}`, {
+    cache: "no-store",
+  });
   if (!response.ok) {
     throw new Error(`Lỗi tải chi tiết địa điểm ID ${id}: ${response.statusText}`);
   }

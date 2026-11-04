@@ -123,11 +123,11 @@ export const createKhachHangApi = async (payload: CreateKhachHangPayload) => {
     if (payload.LoaiToChucID != null)
       formData.append("LoaiToChucID", String(payload.LoaiToChucID));
     if (payload.TrangChu) formData.append("TrangChu", payload.TrangChu);
-    if (payload.anhBieuTrung) {
-      formData.append("anhBieuTrung", payload.anhBieuTrung);
+    if (payload.anhBieuTuong) {
+      formData.append("anhBieuTuong", payload.anhBieuTuong);
     }
-    if (payload.fileAnhBieuTrung) {
-      formData.append("fileAnhBieuTrung", payload.fileAnhBieuTrung);
+    if (payload.fileAnhBieuTuong) {
+      formData.append("fileAnhBieuTuong", payload.fileAnhBieuTuong);
     }
   }
 
@@ -158,8 +158,8 @@ export const updateKhachHangApi = async (payload: UpdateKhachHangPayload) => {
 
   if (payload.XoaAnhChanDung != null)
     formData.append("XoaAnhChanDung", String(payload.XoaAnhChanDung));
-  if (payload.XoaAnhBieuTrung != null)
-    formData.append("XoaAnhBieuTrung", String(payload.XoaAnhBieuTrung));
+  if (payload.XoaAnhBieuTuong != null)
+    formData.append("XoaAnhBieuTuong", String(payload.XoaAnhBieuTuong));
 
   if (payload.LoaiKhachHang === 1) {
     if (payload.MaDinhDanh) formData.append("MaDinhDanh", payload.MaDinhDanh);
@@ -191,11 +191,11 @@ export const updateKhachHangApi = async (payload: UpdateKhachHangPayload) => {
     if (payload.LoaiToChucID != null)
       formData.append("LoaiToChucID", String(payload.LoaiToChucID));
     if (payload.TrangChu) formData.append("TrangChu", payload.TrangChu);
-    if (payload.anhBieuTrung) {
-      formData.append("anhBieuTrung", payload.anhBieuTrung);
+    if (payload.anhBieuTuong) {
+      formData.append("anhBieuTuong", payload.anhBieuTuong);
     }
-    if (payload.fileAnhBieuTrung) {
-      formData.append("fileAnhBieuTrung", payload.fileAnhBieuTrung);
+    if (payload.fileAnhBieuTuong) {
+      formData.append("fileAnhBieuTuong", payload.fileAnhBieuTuong);
     }
   }
 

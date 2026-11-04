@@ -108,7 +108,7 @@ export const ProductVariantsGrid: React.FC<ProductVariantsGridProps> = ({
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4"
       >
         {items.map((variant) => {
-          const imgUrl = variant.hinhAnh ? takeImage(variant.hinhAnh,null) : null;
+          const imgUrl = variant.hinhAnh ? takeImage(variant.hinhAnh, 480, variant.maxSize) : null;
 
           return (
             <Card

@@ -4,6 +4,7 @@ export interface SP_ThuongHieu {
   tenThuongHieu: string;
   duongDan: string;
   duongDanLogo?: string | null;
+  maxSize?: number | null;
   quocGiaID?: number | null;
   quocGia?: string | null;
   moTa?: string | null;

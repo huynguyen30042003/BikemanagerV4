@@ -425,7 +425,7 @@ export function SerialImagesSlideOver({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {filteredImages.map((img) => {
                 const badge = getLoaiBadge(img.loaiAnhID);
-                const imgUrl = takeImage(img.duongDanAnh, null);
+                const imgUrl = takeImage(img.duongDanAnh, 480, img.maxSize);
 
                 return (
                   <div
@@ -436,7 +436,7 @@ export function SerialImagesSlideOver({
                     <div
                       className="relative aspect-video bg-muted/30 cursor-pointer overflow-hidden"
                       onClick={() =>
-                        setPreviewModalImg(takeImage(img.duongDanAnh))
+                        setPreviewModalImg(takeImage(img.duongDanAnh, null, img.maxSize))
                       }
                     >
                       <Image

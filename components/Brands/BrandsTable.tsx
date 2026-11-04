@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
 import { Pagination } from "@/components/Common/Pagination";
 import { SP_ThuongHieu } from "@/types/thuongHieu";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 interface BrandsTableProps {
   items: SP_ThuongHieu[];
@@ -52,7 +52,7 @@ export const BrandsTable: React.FC<BrandsTableProps> = ({
       classNameHeader: "text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => {
-        const logoUrl = getImageUrl(row.duongDanLogo);
+        const logoUrl = row.duongDanLogo ? takeImage(row.duongDanLogo, 480, row.maxSize) : null;
         return (
           <div className="flex items-center gap-3 py-1">
             <div className="w-10 h-10 rounded-lg bg-muted/60 border border-border/70 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">

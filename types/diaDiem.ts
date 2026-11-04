@@ -13,6 +13,7 @@ export interface DM_DiaDiem {
   viDo?: number | null;
   diaChiSo?: string;
   anhDaiDien?: string;
+  maxSize?: number;
   trangThai?: boolean | null;
   // Bổ trợ hiển thị từ Backend (nếu có)
   tenTinh?: string | null;

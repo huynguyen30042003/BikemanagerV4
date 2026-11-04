@@ -20,6 +20,7 @@ export interface KH_KhachHang {
   quocTichID?: number | null;
   danTocID?: number | null;
   anhChanDung?: string | null;
+  maxSizeChanDung?: number | null;
 
   // Doanh nghiệp
   maSoThue?: string | null;
@@ -28,7 +29,8 @@ export interface KH_KhachHang {
   toChucCapChaID?: string | null;
   loaiToChucID?: number | null;
   trangChu?: string | null;
-  anhBieuTrung?: string | null;
+  anhBieuTuong?: string | null;
+  maxSizeBieuTuong?: number | null;
 
   ngayTao?: string;
   nguoiTao?: string;
@@ -72,14 +74,14 @@ export interface CreateKhachHangPayload {
   ToChucCapChaID?: string | null;
   LoaiToChucID?: number | null;
   TrangChu?: string;
-  anhBieuTrung?: File | string | null;
-  fileAnhBieuTrung?: File | string | null;
+  anhBieuTuong?: File | string | null;
+  fileAnhBieuTuong?: File | string | null;
 }
 
 export interface UpdateKhachHangPayload extends CreateKhachHangPayload {
   KhachHangID: string;
   XoaAnhChanDung?: boolean;
-  XoaAnhBieuTrung?: boolean;
+  XoaAnhBieuTuong?: boolean;
 }
 
 export interface KH_NavTabs {

@@ -12,7 +12,7 @@ import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
 import { useUpdateThuongHieu } from "@/hooks/ThuongHieu/useThuongHieuApi";
 import { SP_ThuongHieu, UpdateThuongHieuPayload } from "@/types/thuongHieu";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 const thuongHieuSchema = z.object({
   maThuongHieu: z.string().trim().min(1, "Vui lòng nhập mã thương hiệu"),
@@ -297,7 +297,7 @@ export const UpdateBrandSlideOver: React.FC<UpdateBrandSlideOverProps> = ({
                 />
               ) : !formData.XoaFile && existingLogo ? (
                 <Image
-                  src={getImageUrl(existingLogo)}
+                  src={takeImage(existingLogo, 768, brand?.maxSize)}
                   alt="Logo hiện tại"
                   width={64}
                   height={64}

@@ -15,7 +15,7 @@ import {
   SP_BienTheSanPham,
   UpdateBienThePayload,
 } from "@/types/bienTheSanPham";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 const bienTheSchema = z.object({
   sanPhamID: z.string().min(1, "Vui lòng chọn dòng sản phẩm cha"),
@@ -423,11 +423,9 @@ export const UpdateProductVariantSlideOver: React.FC<
                   className="w-full h-full object-cover"
                   unoptimized
                 />
-              ) : !formData.XoaFile &&
-                existingVariantImage &&
-                getImageUrl(existingVariantImage) ? (
+              ) : !formData.XoaFile && existingVariantImage ? (
                 <Image
-                  src={getImageUrl(existingVariantImage)}
+                  src={takeImage(existingVariantImage, 768, variant?.maxSize)}
                   alt="Ảnh hiện tại"
                   width={56}
                   height={56}

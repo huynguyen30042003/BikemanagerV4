@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DM_DiaDiem } from "@/types/diaDiem";
-import { getImageUrl } from "@/shared/constants/apiConstants";
+import { takeImage } from "@/utils";
 
 export interface DiaDiemCardProps {
   item: DM_DiaDiem;
@@ -50,7 +50,9 @@ export const DiaDiemCard = memo(function DiaDiemCard({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const imgUrl = getImageUrl(item.anhDaiDien);
+  const imgUrl = item.anhDaiDien
+    ? takeImage(item.anhDaiDien, 480, item.maxSize)
+    : "";
   const tName =
     item.tenTinh ||
     provinceMap.get(Number(item.tinhID)) ||

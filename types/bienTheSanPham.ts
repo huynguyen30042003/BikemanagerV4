@@ -9,6 +9,7 @@ export interface SP_BienTheSanPham {
   dungLuongPin?: string | null;
   congSuatDongCo?: string | null;
   hinhAnh?: string | null;
+  maxSize?: number | null;
   thuocTinhJson?: string | null;
   giaNhap: number;
   giaBan: number;

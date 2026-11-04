@@ -5,6 +5,7 @@ export interface SP_HinhAnhSanPham {
   bienTheSanPhamID?: string | null;
   tenBienThe?: string | null;
   duongDanAnh: string;
+  maxSize?: number | null;
   tieuDe?: string | null;
   thuTu: number;
   laAnhDaiDien: boolean;

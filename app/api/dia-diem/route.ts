@@ -10,7 +10,7 @@ const getCachedDiaDiem = (
   pageIndex: number,
   pageSize: number,
   trangThai: boolean | null,
-  token?: string
+  token?: string,
 ) =>
   unstable_cache(
     async () => {
@@ -50,7 +50,7 @@ const getCachedDiaDiem = (
     {
       revalidate: 86400, // 24 giờ
       tags: ["dia-diem", ...(tinhId ? [`dia-diem-tinh-${tinhId}`] : [])],
-    }
+    },
   )();
 
 export async function GET(req: NextRequest) {
@@ -63,7 +63,11 @@ export async function GET(req: NextRequest) {
     const pageSize = Number(searchParams.get("PageSize") ?? "20");
     const trangThaiParam = searchParams.get("TrangThai");
     const trangThai =
-      trangThaiParam === "true" ? true : trangThaiParam === "false" ? false : null;
+      trangThaiParam === "true"
+        ? true
+        : trangThaiParam === "false"
+          ? false
+          : null;
 
     const cookieStore = await cookies();
     const token = cookieStore.get("access_token")?.value;
@@ -75,7 +79,7 @@ export async function GET(req: NextRequest) {
       pageIndex,
       pageSize,
       trangThai,
-      token
+      token,
     );
     const duration = Math.round(performance.now() - startTime);
 
@@ -93,4 +97,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Lỗi kết nối máy chủ" }, { status: 500 });
   }
 }
-

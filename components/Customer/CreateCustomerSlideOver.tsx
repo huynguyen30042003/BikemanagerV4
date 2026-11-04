@@ -64,8 +64,8 @@ const INITIAL_FORM_DATA: CreateKhachHangPayload = {
   ToChucCapChaID: null,
   LoaiToChucID: null,
   TrangChu: "",
-  anhBieuTrung: null,
-  fileAnhBieuTrung: null,
+  anhBieuTuong: null,
+  fileAnhBieuTuong: null,
 };
 
 export function CreateCustomerSlideOver({
@@ -139,7 +139,7 @@ export function CreateCustomerSlideOver({
     if (file) {
       setFormData((prev) => ({
         ...prev,
-        fileAnhBieuTrung: file,
+        fileAnhBieuTuong: file,
       }));
       setLogoPreview(URL.createObjectURL(file));
     }
