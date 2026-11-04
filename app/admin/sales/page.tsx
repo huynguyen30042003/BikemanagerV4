@@ -204,6 +204,8 @@ function SalesContent() {
           quanLyTheoSerial: Boolean(v.quanLyTheoSerial),
           laPhuongTien: Boolean(v.laPhuongTien),
           soThangBaoHanh: v.soThangBaoHanh || 12,
+          anhDaiDien: v.anhDaiDien,
+          maxSize: v.maxSize,
           danhSachSerialKhaDung: v.danhSachSerialKhaDung || [],
           selectedSerials: initialSerials,
         },

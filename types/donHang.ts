@@ -249,5 +249,5 @@ export interface SP_SanPhamBanHang {
   laPhuongTien: boolean;
   totalItems?: number;
   danhSachSerialKhaDung: SerialKhaDungBanHang[];
+  maxSize?: number | null;
 }
-

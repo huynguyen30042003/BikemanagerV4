@@ -218,6 +218,7 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
         soLuongTon: v.soLuongTon ?? 0,
         soLuongKhaDung: v.soLuongKhaDung ?? 0,
         anhDaiDien: v.anhDaiDien,
+        maxSize: v.maxSize,
         danhSachSerialKhaDung: v.danhSachSerialKhaDung || [],
       }));
     }
@@ -239,6 +240,9 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
         tonKhoTaiKho?: number;
         tonKhaDungTaiKho?: number;
         tenKho?: string;
+        anhDaiDien?: string | null;
+        hinhAnh?: string | null;
+        maxSize?: number | null;
       }) => ({
         value: v.bienTheSanPhamID,
         label: `${v.tenBienThe} [${v.maSKU}]`,
@@ -264,6 +268,8 @@ export const useDonHang = (hookOptions?: UseDonHangOptions) => {
           v.soLuongTon ??
           0,
         tenKho: v.tenKho,
+        anhDaiDien: v.anhDaiDien || v.hinhAnh,
+        maxSize: v.maxSize,
         danhSachSerialKhaDung: [],
       }),
     );

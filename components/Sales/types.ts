@@ -28,6 +28,8 @@ export interface CartItem {
   laPhuongTien: boolean;
   soThangBaoHanh: number;
   ghiChu?: string;
+  anhDaiDien?: string | null;
+  maxSize?: number | null;
   danhSachSerialKhaDung?: SerialKhaDungBanHang[];
   selectedSerials?: SerialKhaDungBanHang[];
 }
@@ -53,6 +55,7 @@ export interface VariantItem {
   tenThuongHieu?: string;
   tenKho?: string;
   anhDaiDien?: string | null;
+  maxSize?: number | null;
   danhSachSerialKhaDung?: SerialKhaDungBanHang[];
 }
 
