@@ -55,11 +55,15 @@ export const useGetPhieuBaoHanhKPI = () => {
 };
 
 /* ===== Sổ bảo hành ===== */
-export const useGetBaoHanh = (filter: BaoHanhFilter = {}) => {
+export const useGetBaoHanh = (
+  filter: BaoHanhFilter = {},
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: BAO_HANH_KEYS.soBaoHanhList(filter),
     queryFn: () => getBaoHanhApi(filter),
     staleTime: 1000 * 30,
+    enabled: options?.enabled,
   });
 };
 

@@ -36,12 +36,16 @@ export const SO_SERIAL_QUERY_KEYS = {
   images: (serialId: string) => [...SO_SERIAL_QUERY_KEYS.all, "images", serialId] as const,
 };
 
-export const useGetSoSerial = (params: SoSerialFilter) => {
+export const useGetSoSerial = (
+  params: SoSerialFilter,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: SO_SERIAL_QUERY_KEYS.list(params),
     queryFn: () => getSoSerialApi(params),
     placeholderData: (prev) => prev,
     staleTime: 5000,
+    enabled: options?.enabled,
   });
 };
 

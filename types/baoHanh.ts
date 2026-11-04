@@ -115,32 +115,37 @@ export interface PhieuBaoHanhFilter {
   DiaDiemID?: string | null;
 }
 
+export interface CreateChiTietBaoHanhPayload {
+  LoaiXuLy: number; // 1: Sửa chữa/Cân chỉnh, 2: Đổi mới linh kiện/pin
+  BienTheSanPhamID?: string | null;
+  SoSerialCuID?: string | null;
+  SoSerialMoiID?: string | null;
+  SoLuong?: number;
+  DonGia?: number;
+  ChiPhiHangHoTro?: number;
+  ChiPhiKhachTra?: number;
+  GhiChu?: string | null;
+}
+
 export interface CreatePhieuBaoHanhPayload {
+  MaPhieuBaoHanh?: string;
   BaoHanhID: string;
-  KhachHangID: string;
-  SoSerialID: string;
+  KhachHangID?: string;
+  SoSerialID?: string;
   DiaDiemID: string;
+  NhanVienTiepNhanID?: number | null;
+  KyThuatVienID?: number | null;
   NgayTiepNhan?: string;
   NgayHenTra?: string | null;
   SoKmHienTai?: number | null;
   MoTaLoi: string;
   KetQuaKiemTra?: string | null;
   HuongXuLyID: number;
-  TrangThaiID: number;
+  TrangThaiID?: number;
   ChiPhiHangHoTro?: number;
   ChiPhiKhachTra?: number;
   GhiChu?: string | null;
-  ChiTiets?: Array<{
-    LoaiXuLy: number;
-    BienTheSanPhamID?: string | null;
-    SoSerialCuID?: string | null;
-    SoSerialMoiID?: string | null;
-    SoLuong: number;
-    DonGia: number;
-    ChiPhiHangHoTro: number;
-    ChiPhiKhachTra: number;
-    GhiChu?: string | null;
-  }>;
+  ChiTiets?: CreateChiTietBaoHanhPayload[];
 }
 
 export type { DV_ServiceNavTabs, ServiceNavTabsData } from "./suaChua";
