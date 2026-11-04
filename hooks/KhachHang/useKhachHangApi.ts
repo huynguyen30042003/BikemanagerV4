@@ -18,7 +18,8 @@ import {
 export const KHACH_HANG_QUERY_KEYS = {
   all: ["khachHang"] as const,
   lists: () => [...KHACH_HANG_QUERY_KEYS.all, "list"] as const,
-  list: (params: KhachHangFilter) => [...KHACH_HANG_QUERY_KEYS.lists(), params] as const,
+  list: (params: KhachHangFilter) =>
+    [...KHACH_HANG_QUERY_KEYS.lists(), params] as const,
   details: () => [...KHACH_HANG_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...KHACH_HANG_QUERY_KEYS.details(), id] as const,
   kpi: () => [...KHACH_HANG_QUERY_KEYS.all, "kpi"] as const,
@@ -47,7 +48,7 @@ export const useGetKhachHang = (params: KhachHangFilter) => {
     queryKey: KHACH_HANG_QUERY_KEYS.list(params),
     queryFn: () => getKhachHangApi(params),
     placeholderData: (prev) => prev,
-    staleTime: 5000,
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -63,11 +64,16 @@ export const useCreateKhachHang = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: CreateKhachHangPayload) => createKhachHangApi(payload),
+    mutationFn: (payload: CreateKhachHangPayload) =>
+      createKhachHangApi(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({
+        queryKey: KHACH_HANG_QUERY_KEYS.lists(),
+      });
       queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.kpi() });
-      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.navTabs() });
+      queryClient.invalidateQueries({
+        queryKey: KHACH_HANG_QUERY_KEYS.navTabs(),
+      });
       toast.success("Thêm mới hồ sơ khách hàng thành công!");
     },
     onError: (error: Error) => {
@@ -80,14 +86,19 @@ export const useUpdateKhachHang = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: UpdateKhachHangPayload) => updateKhachHangApi(payload),
+    mutationFn: (payload: UpdateKhachHangPayload) =>
+      updateKhachHangApi(payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({
+        queryKey: KHACH_HANG_QUERY_KEYS.lists(),
+      });
       queryClient.invalidateQueries({
         queryKey: KHACH_HANG_QUERY_KEYS.detail(variables.KhachHangID),
       });
       queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.kpi() });
-      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.navTabs() });
+      queryClient.invalidateQueries({
+        queryKey: KHACH_HANG_QUERY_KEYS.navTabs(),
+      });
       toast.success("Cập nhật thông tin khách hàng thành công!");
     },
     onError: (error: Error) => {
@@ -102,15 +113,20 @@ export const useDeleteKhachHang = () => {
   return useMutation({
     mutationFn: (id: string) => deleteKhachHangApi(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({
+        queryKey: KHACH_HANG_QUERY_KEYS.lists(),
+      });
       queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.kpi() });
-      queryClient.invalidateQueries({ queryKey: KHACH_HANG_QUERY_KEYS.navTabs() });
+      queryClient.invalidateQueries({
+        queryKey: KHACH_HANG_QUERY_KEYS.navTabs(),
+      });
       toast.success("Xóa hồ sơ khách hàng thành công!");
     },
     onError: (error: Error) => {
-      toast.error(error?.message || "Không thể xóa khách hàng. Có thể khách hàng đang có đơn hàng hoặc xe liên kết.");
+      toast.error(
+        error?.message ||
+          "Không thể xóa khách hàng. Có thể khách hàng đang có đơn hàng hoặc xe liên kết.",
+      );
     },
   });
 };
-
-

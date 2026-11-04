@@ -263,7 +263,8 @@ export const usePhieuSuaChuaHook = () => {
 
   const { data: dataCustomers } = useGetKhachHang({
     PageIndex: 1,
-    PageSize: 100,
+    PageSize: 10000,
+    TrangThai: true,
   });
   const customerOptions = useMemo(() => {
     const list = dataCustomers?.data ?? dataCustomers?.items ?? [];
@@ -633,7 +634,7 @@ export const usePhieuSuaChuaHook = () => {
   const handleDelete = async (ticket: SC_PhieuSuaChua) => {
     const isConfirmed = await confirm({
       title: "Xác nhận hủy phiếu sửa chữa",
-      description: `Bạn có chắc chắn muốn hủy phiếu tiếp nhận "${ticket.maPhieuSuaChua}" của khách hàng "${ticket.tenKhachHang || 'Khách lẻ'}"? Thao tác này sẽ hủy phiếu và hoàn kho các linh kiện phụ tùng liên quan.`,
+      description: `Bạn có chắc chắn muốn hủy phiếu tiếp nhận "${ticket.maPhieuSuaChua}" của khách hàng "${ticket.tenKhachHang || "Khách lẻ"}"? Thao tác này sẽ hủy phiếu và hoàn kho các linh kiện phụ tùng liên quan.`,
       confirmText: "Hủy phiếu ngay",
       variant: "danger",
     });

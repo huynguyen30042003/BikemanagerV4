@@ -37,7 +37,8 @@ export const useBaoHanhHook = () => {
 
   const { data: dataCustomers } = useGetKhachHang({
     PageIndex: 1,
-    PageSize: 100,
+    PageSize: 10000,
+    TrangThai: true,
   });
   const customerOptions = useMemo(() => {
     const list = dataCustomers?.data ?? dataCustomers?.items ?? [];

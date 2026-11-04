@@ -53,7 +53,7 @@ export function usePhuongTienKhachHang(initialKhachHangId?: string) {
   const { data: dataCustomers, isLoading: isLoadingCustomers } =
     useGetKhachHang({
       PageIndex: 1,
-      PageSize: 100,
+      PageSize: 10000,
       TrangThai: true,
     });
 

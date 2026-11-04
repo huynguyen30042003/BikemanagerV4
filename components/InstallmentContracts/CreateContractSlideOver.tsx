@@ -133,7 +133,8 @@ export const CreateContractSlideOver: React.FC<
   const { data: dataCustomers, isLoading: isLoadingCustomers } =
     useGetKhachHang({
       PageIndex: 1,
-      PageSize: 100,
+      PageSize: 10000,
+      TrangThai: true,
     });
 
   const customerOptions = useMemo(() => {
