@@ -1,5 +1,5 @@
 // Bike Manager V4 - Progressive Web App Service Worker
-const CACHE_VERSION = "bike-manager-v1";
+const CACHE_VERSION = "bike-manager-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
@@ -30,7 +30,12 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => key.startsWith("bike-manager-") && key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
+          .filter(
+            (key) =>
+              key.startsWith("bike-manager-") &&
+              key !== STATIC_CACHE &&
+              key !== DYNAMIC_CACHE,
+          )
           .map((key) => caches.delete(key)),
       );
     }),
@@ -48,8 +53,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. Không can thiệp vào các API routes hoặc backend server (để đảm bảo dữ liệu đơn hàng, kho xe luôn real-time)
+  // 2. Tuyệt đối không cache trên môi trường localhost / development hoặc các gói _next/static/chunks để tránh lỗi lệch chunk Turbopack HMR
   if (
+    url.hostname === "localhost" ||
+    url.hostname === "127.0.0.1" ||
+    url.pathname.startsWith("/_next/") ||
     url.pathname.startsWith("/api/") ||
     url.hostname.includes("api.nhithoi.io.vn") ||
     url.protocol.startsWith("chrome-extension")
@@ -62,7 +70,6 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
-          // Lưu bản sao trang vừa xem vào dynamic cache
           if (networkResponse && networkResponse.status === 200) {
             const responseClone = networkResponse.clone();
             caches.open(DYNAMIC_CACHE).then((cache) => {
@@ -72,12 +79,10 @@ self.addEventListener("fetch", (event) => {
           return networkResponse;
         })
         .catch(async () => {
-          // Khi offline, thử lấy trang từ cache
           const cachedPage = await caches.match(request);
           if (cachedPage) {
             return cachedPage;
           }
-          // Nếu trang chưa từng được cache, trả về trang offline.html
           const offlinePage = await caches.match("/offline.html");
           if (offlinePage) {
             return offlinePage;
@@ -91,9 +96,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 4. Static Assets (Scripts, CSS, Images, Icons, Fonts) -> Cache First, fallback to Network
+  // 4. Static Assets (Images, Icons, Fonts) -> Cache First, fallback to Network
   const isStaticAsset =
-    url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icons/") ||
     url.pathname.endsWith(".png") ||
     url.pathname.endsWith(".jpg") ||
@@ -119,7 +123,6 @@ self.addEventListener("fetch", (event) => {
             return networkResponse;
           })
           .catch(() => {
-            // Không tải được asset tĩnh
             return new Response("", { status: 408 });
           });
       }),
@@ -134,4 +137,3 @@ self.addEventListener("message", (event) => {
     self.skipWaiting();
   }
 });
-

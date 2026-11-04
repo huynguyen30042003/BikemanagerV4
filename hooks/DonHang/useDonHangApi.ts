@@ -69,7 +69,7 @@ export const useGetDonHangById = (id?: string | null, option?: boolean) => {
     queryKey: DON_HANG_KEYS.detail(id || ""),
     queryFn: () => getDonHangByIdApi(id || ""),
     enabled: option,
-    // staleTime: 1000 * 30,
+    staleTime: 1000 * 30,
   });
 };
 

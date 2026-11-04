@@ -11,7 +11,6 @@ import {
   Mail,
   MapPin,
   Bike,
-  Award,
   SquarePen,
   Trash2,
   Copy,
@@ -19,6 +18,7 @@ import {
   Briefcase,
   CreditCard,
   ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -119,13 +119,13 @@ export const CustomerCard = memo(function CustomerCard({
 
           {/* Customer Name & Code */}
           <div>
-            <h2
-              onClick={() => onEdit(customer)}
-              className="text-sm sm:text-base font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer line-clamp-1"
-              title={customer.tenKhachHang}
+            <Link
+              href={`/admin/customer/${customer.khachHangID}`}
+              className="text-sm sm:text-base font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer line-clamp-1 block"
+              title={`Xem chi tiết: ${customer.tenKhachHang}`}
             >
               {customer.tenKhachHang}
-            </h2>
+            </Link>
 
             {/* Mã KH click-to-copy */}
             <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
@@ -200,6 +200,15 @@ export const CustomerCard = memo(function CustomerCard({
         <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-1 text-xs">
           <div className="flex items-center gap-1">
             <Link
+              href={`/admin/customer/${customer.khachHangID}`}
+              title="Xem chi tiết hồ sơ, sản phẩm đã mua & sổ bảo hành"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-emerald-500/25 transition-colors"
+            >
+              <ShieldCheck className="w-3 h-3" />
+              <span>Hồ sơ & BH</span>
+            </Link>
+
+            <Link
               href={`/admin/customer/vehicles?khachHangId=${customer.khachHangID}`}
               title="Xem danh sách xe của khách hàng"
               className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-blue-500/20 transition-colors"
@@ -207,15 +216,6 @@ export const CustomerCard = memo(function CustomerCard({
               <Bike className="w-3 h-3" />
               <span>Xe</span>
               <ArrowRight className="w-2.5 h-2.5 opacity-60" />
-            </Link>
-
-            <Link
-              href="/admin/customer/statistics"
-              title="Xem xếp hạng & công nợ"
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-amber-500/20 transition-colors"
-            >
-              <Award className="w-3 h-3" />
-              <span>Hạng</span>
             </Link>
           </div>
 

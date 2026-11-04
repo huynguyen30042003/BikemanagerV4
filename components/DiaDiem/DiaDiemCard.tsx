@@ -162,9 +162,7 @@ export const DiaDiemCard = memo(function DiaDiemCard({
             {/* Specific Address */}
             <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-              <span className="line-clamp-2">
-                {item.diaChiSo || "Chưa cập nhật địa chỉ chi tiết"}
-              </span>
+              <span className="line-clamp-2">{item.diaChiSo || "-"}</span>
             </div>
 
             {/* GPS Coordinates with Direct Map Link */}

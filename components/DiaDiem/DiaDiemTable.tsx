@@ -225,7 +225,7 @@ export const DiaDiemTable: React.FC<DiaDiemTableProps> = ({
         <div className="flex flex-col gap-1 text-xs text-foreground max-w-xs">
           <div className="flex items-start gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-            <span className="line-clamp-2">{v || "Chưa cập nhật địa chỉ"}</span>
+            <span className="line-clamp-2">{v || "-"}</span>
           </div>
           {row.kinhDo != null && row.viDo != null && (
             <a

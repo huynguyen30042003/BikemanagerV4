@@ -17,6 +17,7 @@ import {
   Check,
   FolderOpen,
   Plus,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
@@ -126,12 +127,13 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
 
               <div className="flex flex-col gap-0.5 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span
-                    onClick={() => onEdit(row)}
+                  <Link
+                    href={`/admin/customer/${row.khachHangID}`}
                     className="font-semibold text-foreground text-sm truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                    title="Xem chi tiết hồ sơ, sản phẩm đã mua & sổ bảo hành"
                   >
                     {row.tenKhachHang}
-                  </span>
+                  </Link>
                   {row.loaiKhachHang === 2 ? (
                     <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
                       Doanh nghiệp
@@ -197,9 +199,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         render: (_v, row) => (
           <div className="flex items-start gap-1.5 py-0.5 text-xs text-muted-foreground max-w-xs">
             <MapPin className="w-3.5 h-3.5 text-muted-foreground/70 shrink-0 mt-0.5" />
-            <span className="line-clamp-2">
-              {row.diaChi || "Chưa cập nhật địa chỉ"}
-            </span>
+            <span className="line-clamp-2">{row.diaChi || "-"}</span>
           </div>
         ),
       },
@@ -230,10 +230,18 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         key: "function",
         title: "Thao tác",
         classNameHeader:
-          "text-center w-36 text-xs font-semibold text-muted-foreground",
+          "text-center w-44 text-xs font-semibold text-muted-foreground",
         classNameItem: "text-center",
         render: (_v, row) => (
           <div className="flex gap-1 justify-center items-center">
+            <Link
+              href={`/admin/customer/${row.khachHangID}`}
+              title="Xem chi tiết hồ sơ, sản phẩm đã mua & sổ bảo hành"
+              className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer active:scale-95"
+            >
+              <ShieldCheck className="w-4 h-4" />
+            </Link>
+
             <Link
               href={`/admin/customer/vehicles?khachHangId=${row.khachHangID}`}
               title="Xem danh sách xe của khách"

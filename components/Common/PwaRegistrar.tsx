@@ -14,65 +14,90 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function PwaRegistrar() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState<boolean>(false);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
 
   useEffect(() => {
-    // 1. Kiểm tra nếu app đã chạy ở chế độ standalone (đã cài đặt)
+    // 1. Trong môi trường Development / localhost: Hủy đăng ký Service Worker cũ & xóa Cache Storage để tránh lỗi Stale Chunk của Next.js Turbopack
+    if (
+      process.env.NODE_ENV === "development" ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          for (const key of keys) {
+            caches.delete(key);
+          }
+        });
+      }
+      return;
+    }
+
+    // 2. Kiểm tra nếu app đã chạy ở chế độ standalone (đã cài đặt)
     const isRunningStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+      (window.navigator as unknown as { standalone?: boolean }).standalone ===
+        true;
 
     if (isRunningStandalone) {
       setIsStandalone(true);
       return;
     }
 
-    // 2. Đăng ký Service Worker
+    // 3. Đăng ký Service Worker (Chỉ trên môi trường Production)
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then((registration) => {
-            // Kiểm tra cập nhật định kỳ
-            registration.onupdatefound = () => {
-              const installingWorker = registration.installing;
-              if (installingWorker) {
-                installingWorker.onstatechange = () => {
-                  if (
-                    installingWorker.state === "installed" &&
-                    navigator.serviceWorker.controller
-                  ) {
-                    console.log("[PWA] Phiên bản mới đã sẵn sàng. Tải lại để cập nhật.");
-                  }
-                };
-              }
-            };
-          })
-          .catch((err) => {
-            console.error("[PWA] Service Worker đăng ký thất bại:", err);
-          });
-      });
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) => {
+          registration.onupdatefound = () => {
+            const installingWorker = registration.installing;
+            if (installingWorker) {
+              installingWorker.onstatechange = () => {
+                if (
+                  installingWorker.state === "installed" &&
+                  navigator.serviceWorker.controller
+                ) {
+                  console.log(
+                    "[PWA] Phiên bản mới đã sẵn sàng. Tải lại để cập nhật.",
+                  );
+                }
+              };
+            }
+          };
+        })
+        .catch((err) => {
+          console.error("[PWA] Service Worker đăng ký thất bại:", err);
+        });
     }
 
-    // 3. Bắt sự kiện beforeinstallprompt (Chrome, Edge, Android)
+    // 4. Bắt sự kiện beforeinstallprompt (Chrome, Edge, Android)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
 
-      // Kiểm tra nếu người dùng chưa bấm từ chối trong vòng 7 ngày qua
       const dismissedTime = localStorage.getItem("pwa_install_dismissed");
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
-      if (!dismissedTime || Date.now() - parseInt(dismissedTime, 10) > sevenDays) {
+      if (
+        !dismissedTime ||
+        Date.now() - parseInt(dismissedTime, 10) > sevenDays
+      ) {
         setShowInstallBanner(true);
       }
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // 4. Bắt sự kiện khi app đã được cài đặt thành công
     const handleAppInstalled = () => {
       setShowInstallBanner(false);
       setDeferredPrompt(null);
@@ -83,7 +108,10 @@ export default function PwaRegistrar() {
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
@@ -132,7 +160,8 @@ export default function PwaRegistrar() {
             Cài đặt ứng dụng Bike Manager
           </h4>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
-            Cài về màn hình chính để mở nhanh, mượt mà và hoạt động toàn màn hình.
+            Cài về màn hình chính để mở nhanh, mượt mà và hoạt động toàn màn
+            hình.
           </p>
 
           <div className="mt-3 flex items-center gap-2">
@@ -163,4 +192,3 @@ export default function PwaRegistrar() {
     </div>
   );
 }
-
