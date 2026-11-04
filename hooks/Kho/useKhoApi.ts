@@ -112,7 +112,8 @@ export const useDeleteKho = () => {
     },
     onError: (error: Error) => {
       toast.error(
-        error?.message || "Không thể xóa kho hàng! Kho có thể đang chứa tồn kho.",
+        error?.message ||
+          "Không thể xóa kho hàng! Kho có thể đang chứa tồn kho.",
       );
     },
   });
