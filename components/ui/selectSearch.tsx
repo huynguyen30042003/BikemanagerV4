@@ -12,6 +12,33 @@ type SelectOption = {
 };
 
 /* =========================
+   Helper chuẩn hóa tiếng Việt không dấu
+========================= */
+
+function normalizeVietnameseText(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .trim();
+}
+
+function matchesSearchQuery(label: string, query: string): boolean {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return true;
+
+  const lowerLabel = label.toLowerCase();
+  const lowerQuery = trimmedQuery.toLowerCase();
+  if (lowerLabel.includes(lowerQuery)) return true;
+
+  return normalizeVietnameseText(label).includes(
+    normalizeVietnameseText(trimmedQuery),
+  );
+}
+
+/* =========================
    Hook click outside
 ========================= */
 
@@ -71,7 +98,7 @@ function SearchSelect({
   });
 
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(query.toLowerCase()),
+    matchesSearchQuery(option.label, query),
   );
 
   const selectedOption = options.find((option) => option.value === value);
@@ -226,7 +253,7 @@ function MultiSearchSelect({
   });
 
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(query.toLowerCase()),
+    matchesSearchQuery(option.label, query),
   );
 
   function toggleOption(optionValue: SelectValue) {
