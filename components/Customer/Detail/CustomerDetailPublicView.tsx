@@ -67,7 +67,7 @@ export function CustomerDetailPublicView({
           <User className="w-8 h-8" />
         </div>
         <h1 className="text-xl font-bold text-foreground">
-          Không tìm thấy thông tin khách hàng
+          Không tìm thấy thông tin khách hàng.
         </h1>
         <p className="text-xs text-muted-foreground">
           Mã hồ sơ khách hàng không tồn tại hoặc đã bị xóa khỏi hệ thống.
