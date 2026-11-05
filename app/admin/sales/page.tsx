@@ -116,8 +116,8 @@ function SalesContent() {
     return list;
   }, [variantOptions, filterText]);
 
-  // Thao tác giỏ hàng có kiểm tra tồn kho
-  const addToCart = (v: VariantItem) => {
+  // Thao tác giỏ hàng có kiểm tra tồn kho (hỗ trợ thêm thường hoặc thêm tặng kèm giá 0đ)
+  const addToCart = (v: VariantItem, asGift = false) => {
     const available = v.soLuongKhaDung ?? v.soLuongTon;
 
     // Kiểm tra hết hàng tại kho
@@ -126,22 +126,38 @@ function SalesContent() {
       return;
     }
 
-    setCart((prev) => {
-      const existing = prev.find((i) => i.bienTheSanPhamID === v.value);
-      if (existing) {
-        if (available !== undefined && existing.soLuong >= available) {
-          toast.warning(`Kho chỉ còn khả dụng ${available} sản phẩm!`);
-          return prev;
-        }
+    const cartKey = asGift ? `${v.value}_gift` : v.value;
 
-        toast.info(`Tăng số lượng: ${v.name}`);
+    setCart((prev) => {
+      // Tổng số lượng mặt hàng này đang có trong giỏ (tính cả quà tặng và mua)
+      const currentTotalQtyInCart = prev
+        .filter((i) => i.bienTheSanPhamID === v.value)
+        .reduce((sum, i) => sum + i.soLuong, 0);
+
+      if (available !== undefined && currentTotalQtyInCart >= available) {
+        toast.warning(`Kho chỉ còn khả dụng ${available} sản phẩm!`);
+        return prev;
+      }
+
+      const existing = prev.find(
+        (i) => (i.cartKey || i.bienTheSanPhamID) === cartKey,
+      );
+      if (existing) {
+        toast.info(
+          asGift
+            ? `Tăng số lượng quà tặng: ${v.name}`
+            : `Tăng số lượng: ${v.name}`,
+        );
         const nextQty = existing.soLuong + 1;
         let nextSelectedSerials = existing.selectedSerials || [];
         if (existing.quanLyTheoSerial) {
           const availableList = existing.danhSachSerialKhaDung || [];
+          const allSelectedSerialsAcrossCart = prev.flatMap(
+            (c) => c.selectedSerials || [],
+          );
           const unselected = availableList.filter(
             (s) =>
-              !nextSelectedSerials.some(
+              !allSelectedSerialsAcrossCart.some(
                 (cur) => cur.soSerialID === s.soSerialID,
               ),
           );
@@ -159,7 +175,7 @@ function SalesContent() {
         const thanhTien = donGia * nextQty - tienGiamGia + tienThueVAT;
 
         return prev.map((i) =>
-          i.bienTheSanPhamID === v.value
+          (i.cartKey || i.bienTheSanPhamID) === cartKey
             ? {
                 ...i,
                 soLuong: nextQty,
@@ -171,31 +187,49 @@ function SalesContent() {
         );
       }
 
-      toast.success(`Đã thêm vào giỏ: ${v.name}`);
-      const donGia = v.defaultPrice || 0;
-      const thueVAT = v.thueVAT || 0;
+      toast.success(
+        asGift
+          ? `Đã thêm quà tặng (0 đ): ${v.name}`
+          : `Đã thêm vào giỏ: ${v.name}`,
+      );
+      const giaGoc = v.defaultPrice || 0;
+      const donGia = asGift ? 0 : giaGoc;
+      const thueVAT = asGift ? 0 : v.thueVAT || 0;
       const tienGiamGia = 0;
       const tienThueVAT = Math.round(
         ((donGia * 1 - tienGiamGia) * thueVAT) / 100,
       );
       const thanhTien = donGia * 1 - tienGiamGia + tienThueVAT;
 
+      const allSelectedSerialsAcrossCart = prev.flatMap(
+        (c) => c.selectedSerials || [],
+      );
       const initialSerials =
         v.quanLyTheoSerial &&
         v.danhSachSerialKhaDung &&
         v.danhSachSerialKhaDung.length > 0
-          ? [v.danhSachSerialKhaDung[0]]
+          ? v.danhSachSerialKhaDung
+              .filter(
+                (s) =>
+                  !allSelectedSerialsAcrossCart.some(
+                    (c) => c.soSerialID === s.soSerialID,
+                  ),
+              )
+              .slice(0, 1)
           : [];
 
       return [
         ...prev,
         {
           id: crypto.randomUUID(),
+          cartKey,
           bienTheSanPhamID: v.value,
           sku: v.sku || "",
           tenBienThe: v.tenBienThe || v.name || "",
           tenSanPham: v.tenSanPham || v.name || "",
+          giaGoc,
           donGia,
+          isGift: asGift,
           soLuong: 1,
           tienGiamGia,
           thueVAT,
@@ -204,6 +238,7 @@ function SalesContent() {
           quanLyTheoSerial: Boolean(v.quanLyTheoSerial),
           laPhuongTien: Boolean(v.laPhuongTien),
           soThangBaoHanh: v.soThangBaoHanh || 12,
+          ghiChu: asGift ? "Hàng tặng kèm" : "",
           anhDaiDien: v.anhDaiDien,
           maxSize: v.maxSize,
           danhSachSerialKhaDung: v.danhSachSerialKhaDung || [],
@@ -213,21 +248,25 @@ function SalesContent() {
     });
   };
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = (key: string, delta: number) => {
     setCart((prev) =>
       prev
         .map((i) => {
-          if (i.bienTheSanPhamID === id) {
+          if ((i.cartKey || i.bienTheSanPhamID) === key) {
             const itemInWarehouse = (variantOptions as VariantItem[]).find(
-              (w) => w.value === id,
+              (w) => w.value === i.bienTheSanPhamID,
             );
             const available =
               itemInWarehouse?.soLuongKhaDung ?? itemInWarehouse?.soLuongTon;
 
+            const totalItemCountInCart = prev
+              .filter((item) => item.bienTheSanPhamID === i.bienTheSanPhamID)
+              .reduce((sum, item) => sum + item.soLuong, 0);
+
             if (
               delta > 0 &&
               available !== undefined &&
-              i.soLuong + delta > available
+              totalItemCountInCart + delta > available
             ) {
               toast.warning(`Kho chỉ còn khả dụng ${available} sản phẩm!`);
               return i;
@@ -238,11 +277,10 @@ function SalesContent() {
             if (i.quanLyTheoSerial) {
               if (delta > 0) {
                 const availableList = i.danhSachSerialKhaDung || [];
+                const allSelected = prev.flatMap((c) => c.selectedSerials || []);
                 const unselected = availableList.filter(
                   (s) =>
-                    !nextSelectedSerials.some(
-                      (cur) => cur.soSerialID === s.soSerialID,
-                    ),
+                    !allSelected.some((cur) => cur.soSerialID === s.soSerialID),
                 );
                 if (unselected.length > 0) {
                   nextSelectedSerials = [...nextSelectedSerials, unselected[0]];
@@ -275,13 +313,13 @@ function SalesContent() {
   };
 
   const handleSelectSerial = (
-    bienTheSanPhamID: string,
+    key: string,
     slotIdx: number,
     serial: SerialKhaDungBanHang,
   ) => {
     setCart((prev) =>
       prev.map((item) => {
-        if (item.bienTheSanPhamID !== bienTheSanPhamID) return item;
+        if ((item.cartKey || item.bienTheSanPhamID) !== key) return item;
         const updated = [...(item.selectedSerials || [])];
         updated[slotIdx] = serial;
         return {
@@ -292,8 +330,80 @@ function SalesContent() {
     );
   };
 
-  const removeFromCart = (id: string) => {
-    setCart((prev) => prev.filter((i) => i.bienTheSanPhamID !== id));
+  const removeFromCart = (key: string) => {
+    setCart((prev) =>
+      prev.filter((i) => (i.cartKey || i.bienTheSanPhamID) !== key),
+    );
+  };
+
+  const updatePrice = (key: string, newPrice: number) => {
+    setCart((prev) =>
+      prev.map((i) => {
+        if ((i.cartKey || i.bienTheSanPhamID) !== key) return i;
+
+        const donGia = Math.max(0, newPrice);
+        const isGift = donGia === 0;
+        const thueVAT = isGift ? 0 : i.thueVAT || 0;
+        const tienGiamGia = i.tienGiamGia || 0;
+        const tienThueVAT = Math.round(
+          ((donGia * i.soLuong - tienGiamGia) * thueVAT) / 100,
+        );
+        const thanhTien = donGia * i.soLuong - tienGiamGia + tienThueVAT;
+
+        let ghiChu = i.ghiChu || "";
+        if (isGift && !ghiChu.includes("Hàng tặng kèm")) {
+          ghiChu = ghiChu ? `${ghiChu} - Hàng tặng kèm` : "Hàng tặng kèm";
+        }
+
+        return {
+          ...i,
+          donGia,
+          isGift,
+          thueVAT,
+          tienThueVAT,
+          thanhTien,
+          ghiChu,
+        };
+      }),
+    );
+    toast.success("Đã cập nhật giá bán thành công!");
+  };
+
+  const toggleGift = (key: string) => {
+    setCart((prev) =>
+      prev.map((i) => {
+        if ((i.cartKey || i.bienTheSanPhamID) !== key) return i;
+
+        const nextIsGift = !i.isGift;
+        const donGia = nextIsGift ? 0 : i.giaGoc || 0;
+        const thueVAT = nextIsGift ? 0 : i.thueVAT || 0;
+        const tienGiamGia = 0;
+        const tienThueVAT = Math.round(
+          ((donGia * i.soLuong - tienGiamGia) * thueVAT) / 100,
+        );
+        const thanhTien = donGia * i.soLuong - tienGiamGia + tienThueVAT;
+
+        let ghiChu = i.ghiChu || "";
+        if (nextIsGift) {
+          ghiChu = ghiChu ? `${ghiChu} - Hàng tặng kèm` : "Hàng tặng kèm";
+          toast.info(`Đã chuyển sang hàng tặng kèm (0 đ): ${i.tenBienThe}`);
+        } else {
+          ghiChu = ghiChu.replace(/-?\s*Hàng tặng kèm/g, "").trim();
+          toast.info(`Đã khôi phục giá niêm yết: ${i.tenBienThe}`);
+        }
+
+        return {
+          ...i,
+          isGift: nextIsGift,
+          donGia,
+          tienGiamGia,
+          thueVAT,
+          tienThueVAT,
+          thanhTien,
+          ghiChu,
+        };
+      }),
+    );
   };
 
   const handleClearCart = async () => {
@@ -545,6 +655,8 @@ function SalesContent() {
           onUpdateQuantity={updateQuantity}
           onRemoveFromCart={removeFromCart}
           onClearCart={() => setCart([])}
+          onUpdatePrice={updatePrice}
+          onToggleGift={toggleGift}
           onSelectSerial={handleSelectSerial}
           subTotal={subTotal}
           discountAmount={discountAmount}

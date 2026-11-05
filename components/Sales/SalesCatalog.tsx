@@ -12,6 +12,7 @@ import {
   Plus,
   AlertCircle,
   ShoppingBag,
+  Gift,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -53,7 +54,7 @@ interface SalesCatalogProps {
   filteredVariants: VariantItem[];
   isLoadingVariants: boolean;
   cart: CartItem[];
-  onAddToCart: (item: VariantItem) => void;
+  onAddToCart: (item: VariantItem, asGift?: boolean) => void;
 }
 
 export const SalesCatalog: React.FC<SalesCatalogProps> = ({
@@ -282,27 +283,51 @@ export const SalesCatalog: React.FC<SalesCatalogProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                      <span className="font-mono text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
+                    <div className="flex items-center justify-between pt-2 border-t border-border/50 gap-1">
+                      <span className="font-mono text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 truncate">
                         {formatCurrency(v.defaultPrice)}
                       </span>
 
-                      <button
-                        type="button"
-                        disabled={isOutOfStock}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!isOutOfStock) onAddToCart(v);
-                        }}
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                          isOutOfStock
-                            ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
-                            : "bg-blue-500/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white active:scale-95 cursor-pointer shadow-2xs"
-                        }`}
-                        title={isOutOfStock ? "Hết hàng" : "Thêm vào giỏ"}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          disabled={isOutOfStock}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isOutOfStock) onAddToCart(v, true);
+                          }}
+                          className={`h-7 px-2 rounded-lg flex items-center gap-1 text-[11px] font-medium transition-all ${
+                            isOutOfStock
+                              ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
+                              : "bg-purple-500/10 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300 hover:bg-purple-600 hover:text-white active:scale-95 cursor-pointer shadow-2xs"
+                          }`}
+                          title={
+                            isOutOfStock
+                              ? "Hết hàng"
+                              : "Thêm vào đơn làm quà tặng kèm (0 đ)"
+                          }
+                        >
+                          <Gift className="w-3.5 h-3.5" />
+                          <span>Tặng</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isOutOfStock}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isOutOfStock) onAddToCart(v, false);
+                          }}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                            isOutOfStock
+                              ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
+                              : "bg-blue-500/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 hover:bg-blue-600 hover:text-white active:scale-95 cursor-pointer shadow-2xs"
+                          }`}
+                          title={isOutOfStock ? "Hết hàng" : "Thêm vào giỏ"}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

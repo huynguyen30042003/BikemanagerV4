@@ -11,6 +11,7 @@ import {
   Trash2,
   Boxes,
   ImageIcon,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Column, Table } from "@/components/ui/Table";
@@ -60,10 +61,15 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
       classNameHeader: "text-left text-xs font-semibold text-muted-foreground",
       classNameItem: "text-left",
       render: (_v, row) => {
-        const avatarUrl = row.anhDaiDien ? takeImage(row.anhDaiDien, 480, row.maxSize) : null;
+        const avatarUrl = row.anhDaiDien
+          ? takeImage(row.anhDaiDien, 480, row.maxSize)
+          : null;
         return (
           <div className="flex items-center gap-3 py-1">
-            <div className="w-11 h-11 rounded-lg bg-muted/60 border border-border/70 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+            <Link
+              href={`/admin/products/${row.sanPhamID}`}
+              className="w-11 h-11 rounded-lg bg-muted/60 border border-border/70 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs"
+            >
               {avatarUrl ? (
                 <Image
                   src={avatarUrl}
@@ -78,11 +84,14 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
               ) : (
                 <Package className="w-5 h-5 text-muted-foreground/60" />
               )}
-            </div>
+            </Link>
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="font-semibold text-foreground text-sm truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <Link
+                href={`/admin/products/${row.sanPhamID}`}
+                className="font-semibold text-foreground text-sm truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
                 {row.tenSanPham}
-              </span>
+              </Link>
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <span className="font-mono">slug: /{row.duongDan}</span>
                 <span>•</span>
@@ -175,10 +184,18 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
       key: "function",
       title: "Thao tác",
       classNameHeader:
-        "w-32 text-center text-xs font-semibold text-muted-foreground",
+        "w-40 text-center text-xs font-semibold text-muted-foreground",
       classNameItem: "text-center",
       render: (_v, row) => (
         <div className="flex gap-1 justify-center items-center">
+          <Link
+            href={`/admin/products/${row.sanPhamID}`}
+            title="Xem chi tiết hồ sơ xe, biến thể và thông số"
+            className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 dark:hover:text-blue-400 rounded-lg transition-colors cursor-pointer"
+          >
+            <Eye className="w-4 h-4" />
+          </Link>
+
           <Link
             href={`/admin/product-variants?productId=${row.sanPhamID}`}
             title="Quản lý biến thể màu sắc và dung lượng pin"

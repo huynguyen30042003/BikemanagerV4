@@ -78,7 +78,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
   // Form state
   const [khoId, setKhoId] = useState<string>(selectedKhoId || "");
   const [bienTheId, setBienTheId] = useState<string>(presetVariantId || "");
-  const [soLuong, setSoLuong] = useState<number>(1);
+  const [soLuong, setSoLuong] = useState<number | "">(1);
   const [donGiaVon, setDonGiaVon] = useState<number>(0);
   const [viTriLuuTru, setViTriLuuTru] = useState<string>("");
   const [ghiChu, setGhiChu] = useState<string>("");
@@ -130,9 +130,10 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
       if (selectedVariant.quanLyTheoSerial) {
         // Ensure serial rows match soLuong
         setSerials((prev) => {
-          if (prev.length === soLuong) return prev;
+          const currentCount = typeof soLuong === "number" ? soLuong : 1;
+          if (prev.length === currentCount) return prev;
           const updated = [...prev];
-          while (updated.length < soLuong) {
+          while (updated.length < currentCount) {
             updated.push({
               MaSerial: "",
               SoKhung: "",
@@ -142,7 +143,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
               ViTriLuuTru: viTriLuuTru || "",
             });
           }
-          return updated.slice(0, soLuong);
+          return updated.slice(0, currentCount);
         });
       } else {
         setSerials([]);
@@ -151,7 +152,11 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
   }, [selectedVariant]);
 
   // Handle changes in SoLuong for serial-managed item
-  const handleSoLuongChange = (newCount: number) => {
+  const handleSoLuongChange = (newCount: number | "") => {
+    if (newCount === "") {
+      setSoLuong("");
+      return;
+    }
     const validCount = Math.max(1, newCount);
     setSoLuong(validCount);
 
@@ -186,7 +191,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
         ViTriLuuTru: viTriLuuTru || "",
       },
     ]);
-    setSoLuong((prev) => prev + 1);
+    setSoLuong((prev) => (typeof prev === "number" ? prev + 1 : 2));
   };
 
   // Remove individual serial row
@@ -198,7 +203,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
       return;
     }
     setSerials((prev) => prev.filter((_, i) => i !== index));
-    setSoLuong((prev) => Math.max(1, prev - 1));
+    setSoLuong((prev) => (typeof prev === "number" ? Math.max(1, prev - 1) : 1));
   };
 
   // Update field in serial row
@@ -293,15 +298,16 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
       return;
     }
 
-    if (soLuong <= 0) {
+    const numericSoLuong = typeof soLuong === "number" ? soLuong : 0;
+    if (numericSoLuong <= 0) {
       toast.error("Số lượng bổ sung vào kho phải lớn hơn 0!");
       return;
     }
 
     if (isSerialManaged) {
-      if (serials.length !== soLuong) {
+      if (serials.length !== numericSoLuong) {
         toast.error(
-          `Số lượng mã Serial (${serials.length}) không khớp với số lượng nhập kho (${soLuong})!`,
+          `Số lượng mã Serial (${serials.length}) không khớp với số lượng nhập kho (${numericSoLuong})!`,
         );
         return;
       }
@@ -315,7 +321,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
       title: "Xác nhận nhập tồn kho đầu kỳ",
       variant: "info",
       confirmText: "Xác nhận nhập kho",
-      description: `Bạn có chắc chắn muốn ghi nhận nhập tồn kho đầu kỳ cho "${variantName}" (+${soLuong} chiếc/kiện) vào "${khoLabel}" với đơn giá vốn ${formatCurrency(donGiaVon)}${
+      description: `Bạn có chắc chắn muốn ghi nhận nhập tồn kho đầu kỳ cho "${variantName}" (+${numericSoLuong} chiếc/kiện) vào "${khoLabel}" với đơn giá vốn ${formatCurrency(donGiaVon)}${
         isSerialManaged ? ` kèm ${serials.length} mã Serial/Khung` : ""
       }? Hệ thống sẽ trực tiếp cập nhật số dư khả dụng và ghi thẻ kho ban đầu.`,
     });
@@ -325,7 +331,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
     const payload: KHO_TonKho_NhapTonDauKy_Request = {
       KhoID: khoId,
       BienTheSanPhamID: bienTheId,
-      SoLuong: soLuong,
+      SoLuong: numericSoLuong,
       DonGiaVon: donGiaVon > 0 ? donGiaVon : null,
       SoLuongToiThieu: soLuongToiThieu,
       ViTriLuuTru: viTriLuuTru || null,
@@ -480,9 +486,21 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
                 type="number"
                 min={1}
                 value={soLuong}
-                onChange={(e) =>
-                  handleSoLuongChange(parseInt(e.target.value) || 1)
-                }
+                placeholder="1"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "") {
+                    handleSoLuongChange("");
+                  } else {
+                    const num = parseInt(val, 10);
+                    handleSoLuongChange(isNaN(num) ? "" : num);
+                  }
+                }}
+                onBlur={() => {
+                  if (soLuong === "" || soLuong < 1) {
+                    handleSoLuongChange(1);
+                  }
+                }}
                 className="text-xs font-mono font-bold h-9 bg-background"
               />
             </div>
@@ -585,7 +603,7 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
                       Yêu cầu nhập đầy đủ mã Serial duy nhất tương ứng với số
-                      lượng {soLuong} chiếc
+                      lượng {soLuong || 0} chiếc
                     </p>
                   </div>
                 </div>
@@ -774,9 +792,9 @@ export const OpeningStockFormCard: React.FC<OpeningStockFormCardProps> = ({
               <span>
                 Tổng giá trị vốn đợt nhập:{" "}
                 <strong className="text-foreground font-mono">
-                  {formatCurrency((donGiaVon || 0) * soLuong)}
+                  {formatCurrency((donGiaVon || 0) * (Number(soLuong) || 0))}
                 </strong>{" "}
-                ({soLuong} đơn vị)
+                ({Number(soLuong) || 0} đơn vị)
               </span>
             </div>
 

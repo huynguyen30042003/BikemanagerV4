@@ -156,59 +156,59 @@ export function MobileSidebarAdmin() {
   return (
     <>
       {/* 1. Sticky Mobile Top Header Bar (chỉ hiện trên màn hình nhỏ < 1024px) */}
-      <header className="lg:hidden sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border/80 h-14 sm:h-15 flex items-center justify-between px-3.5 sm:px-4 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          {/* Nút mở Hamburger */}
+      <header className="lg:hidden sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border/80 h-16 sm:h-18 flex items-center justify-between px-4 sm:px-5 shadow-2xs">
+        <div className="flex items-center gap-3">
+          {/* Nút mở Hamburger - Kích thước lớn 44px+ dễ chạm ngón tay */}
           <button
             type="button"
             onClick={() => setIsOpen(true)}
             aria-label="Mở menu điều hướng"
-            className="w-9 h-9 rounded-xl border border-border/80 bg-background/80 hover:bg-muted text-foreground flex items-center justify-center transition-transform active:scale-90 cursor-pointer shadow-2xs"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border border-border/80 bg-background/90 hover:bg-muted text-foreground flex items-center justify-center transition-transform active:scale-95 cursor-pointer shadow-2xs"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-6 h-6" />
           </button>
 
           {/* Logo Brand */}
           <Link
             href="/admin"
-            className="flex items-center gap-2 group cursor-pointer"
+            className="flex items-center gap-2.5 group cursor-pointer"
             aria-label="Bảng điều khiển quản trị"
             title="Bike Manager Platform"
           >
-            <div className="w-8 h-8 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
               <Image
                 src={logo}
                 alt="Bike Manager Logo"
-                width={32}
-                height={32}
+                width={40}
+                height={40}
                 priority
                 className="h-full w-auto object-contain"
               />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm sm:text-base tracking-tight text-foreground">
+              <span className="font-bold text-base sm:text-lg tracking-tight text-foreground">
                 Bike Manager
               </span>
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/25">
+              <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/25">
                 V4
               </span>
             </div>
           </Link>
         </div>
 
-        {/* User Avatar Chip ở góc phải Topbar */}
+        {/* User Avatar Chip ở góc phải Topbar - Cỡ lớn dễ nhấn */}
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 p-1 rounded-xl bg-muted/60 hover:bg-muted border border-border/70 transition-colors cursor-pointer group"
+          className="flex items-center gap-2.5 p-1.5 sm:p-2 rounded-xl bg-muted/60 hover:bg-muted border border-border/70 transition-colors cursor-pointer group"
           title={`Đang đăng nhập: ${displayName}`}
         >
-          <span className="text-xs font-semibold text-foreground max-w-[100px] truncate hidden xs:inline-block">
+          <span className="text-xs sm:text-sm font-semibold text-foreground max-w-[120px] truncate hidden xs:inline-block">
             {displayName.split(" ").slice(-1)[0]}
           </span>
-          <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-2xs relative">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-bold text-xs sm:text-sm flex items-center justify-center shadow-2xs relative shrink-0">
             {userInitials}
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-background" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-background" />
           </div>
         </button>
       </header>
@@ -223,69 +223,69 @@ export function MobileSidebarAdmin() {
             aria-hidden="true"
           />
 
-          {/* Khung nội dung Sidebar cuộn từ cạnh trái */}
+          {/* Khung nội dung Sidebar cuộn từ cạnh trái (Rộng rãi 88vw - max 380px, to rõ cho điện thoại) */}
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Menu quản trị di động"
-            className="relative z-50 w-[85vw] max-w-[320px] xs:max-w-[340px] h-full bg-card border-r border-border/80 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 ease-out select-none"
+            className="relative z-50 w-[88vw] max-w-[380px] sm:max-w-[420px] h-full bg-card border-r border-border/80 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 ease-out select-none"
           >
             {/* Header trong Drawer */}
-            <div className="h-15 px-4 border-b border-border/80 flex items-center justify-between shrink-0 bg-muted/20">
+            <div className="h-18 px-5 border-b border-border/80 flex items-center justify-between shrink-0 bg-muted/20">
               <Link
                 href="/admin"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-3"
               >
-                <div className="w-9 h-9 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 flex items-center justify-center shrink-0">
                   <Image
                     src={logo}
                     alt="Bike Manager Logo"
-                    width={36}
-                    height={36}
+                    width={40}
+                    height={40}
                     priority
                     className="h-full w-auto object-contain"
                   />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-base tracking-tight text-foreground">
+                    <span className="font-bold text-lg tracking-tight text-foreground">
                       Bike Manager
                     </span>
-                    <span className="text-[10px] font-mono font-bold px-1 py-0.2 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">
+                    <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">
                       V4
                     </span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground font-medium">
+                  <p className="text-xs text-muted-foreground font-medium">
                     Hệ thống Quản trị & Kinh doanh
                   </p>
                 </div>
               </Link>
 
-              {/* Nút đóng X */}
+              {/* Nút đóng X - Kích thước lớn 44px dễ chạm */}
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
+                className="w-11 h-11 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
                 title="Đóng menu"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Thông tin User & Vai trò */}
-            <div className="p-3 border-b border-border/70 bg-muted/30">
-              <div className="p-2.5 rounded-xl bg-background border border-border/80 shadow-2xs flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-sm flex items-center justify-center shadow-xs shrink-0">
+            {/* Thông tin User & Vai trò - Thẻ hiển thị rộng rãi, avatar lớn */}
+            <div className="p-4 border-b border-border/70 bg-muted/30">
+              <div className="p-3.5 rounded-2xl bg-background border border-border/80 shadow-2xs flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-base flex items-center justify-center shadow-xs shrink-0">
                   {userInitials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-foreground truncate">
+                  <p className="text-sm sm:text-base font-bold text-foreground truncate leading-snug">
                     {displayName}
                   </p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <ShieldCheck className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
-                    <span className="text-[10px] text-muted-foreground font-medium truncate">
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <span className="text-xs text-muted-foreground font-medium truncate">
                       {formatRoleLabel(activeRole)}
                     </span>
                   </div>
@@ -293,15 +293,15 @@ export function MobileSidebarAdmin() {
               </div>
             </div>
 
-            {/* Danh sách Menu điều hướng cuộn mượt mà */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-4 no-scrollbar">
+            {/* Danh sách Menu điều hướng cuộn mượt mà (Kích thước nút to 48px, chữ to 15px, icon 20px) */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-5 no-scrollbar">
               {filteredSections.map((section, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="px-2 py-1 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                <div key={idx} className="space-y-1.5">
+                  <div className="px-3 py-1.5 text-xs font-bold text-muted-foreground/80 uppercase tracking-wider">
                     {section.label}
                   </div>
 
-                  <div className="space-y-0.5">
+                  <div className="space-y-1">
                     {section.groups.map((group) => {
                       const Icon = group.icon;
                       const hasItems = group.items && group.items.length > 0;
@@ -319,44 +319,44 @@ export function MobileSidebarAdmin() {
                             key={group.title}
                             href={group.href}
                             onClick={() => setIsOpen(false)}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            className={`flex items-center gap-3.5 px-4 py-3 min-h-[48px] rounded-xl text-sm sm:text-base font-medium transition-all active:scale-[0.98] ${
                               isGroupActive
-                                ? "bg-blue-600 text-white font-semibold shadow-xs"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                                ? "bg-blue-600 text-white font-semibold shadow-sm"
+                                : "text-foreground/80 hover:text-foreground hover:bg-muted/80"
                             }`}
                           >
-                            <Icon className="w-4 h-4 shrink-0" />
+                            <Icon className="w-5 h-5 shrink-0" />
                             <span className="truncate">{group.title}</span>
                           </Link>
                         );
                       }
 
                       return (
-                        <div key={group.title} className="space-y-0.5">
-                          {/* Accordion Header */}
+                        <div key={group.title} className="space-y-1">
+                          {/* Accordion Header - Bấm mở menu con */}
                           <button
                             type="button"
                             onClick={() => toggleGroup(group.title)}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                            className={`w-full flex items-center justify-between px-4 py-3 min-h-[48px] rounded-xl text-sm sm:text-base font-medium transition-all active:scale-[0.98] cursor-pointer ${
                               isGroupActive
                                 ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold border border-blue-500/20"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                                : "text-foreground/80 hover:text-foreground hover:bg-muted/80"
                             }`}
                           >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <Icon className="w-4 h-4 shrink-0" />
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              <Icon className="w-5 h-5 shrink-0" />
                               <span className="truncate">{group.title}</span>
                             </div>
                             <ChevronDown
-                              className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
+                              className={`w-4 h-4 transition-transform duration-200 shrink-0 ${
                                 isExpanded ? "rotate-180" : ""
                               }`}
                             />
                           </button>
 
-                          {/* Accordion Submenu Items */}
+                          {/* Accordion Submenu Items - Nút 44px to rõ, dễ chạm chính xác bằng ngón tay */}
                           {isExpanded && (
-                            <div className="pl-6 pr-1 py-1 space-y-0.5 border-l-2 border-border/60 ml-4 my-1">
+                            <div className="pl-4 pr-1 py-1.5 space-y-1 border-l-2 border-border/80 ml-5 my-1.5">
                               {group.items!.map((subItem) => {
                                 const SubIcon = subItem.icon;
                                 const isSubActive = pathname === subItem.href;
@@ -366,13 +366,13 @@ export function MobileSidebarAdmin() {
                                     key={subItem.title}
                                     href={subItem.href}
                                     onClick={() => setIsOpen(false)}
-                                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    className={`flex items-center gap-3 px-3.5 py-2.5 min-h-[44px] rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
                                       isSubActive
                                         ? "bg-blue-600 text-white font-semibold shadow-2xs"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
                                     }`}
                                   >
-                                    <SubIcon className="w-3.5 h-3.5 shrink-0" />
+                                    <SubIcon className="w-4 h-4 shrink-0" />
                                     <span className="truncate">
                                       {subItem.title}
                                     </span>
@@ -389,25 +389,25 @@ export function MobileSidebarAdmin() {
               ))}
             </div>
 
-            {/* Footer trong Drawer: Nút Đăng xuất */}
-            <div className="p-3 border-t border-border/80 bg-muted/20 shrink-0 space-y-2">
+            {/* Footer trong Drawer: Nút Đăng xuất to rõ (h-12) và hỗ trợ iOS safe-area */}
+            <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-border/80 bg-muted/20 shrink-0 space-y-2.5">
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="w-full flex items-center justify-center gap-2 h-9 px-3 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 hover:border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium transition-all active:scale-98 cursor-pointer shadow-2xs"
+                className="w-full flex items-center justify-center gap-2.5 h-12 px-4 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/15 text-rose-600 dark:text-rose-400 text-sm font-semibold transition-all active:scale-[0.98] cursor-pointer shadow-2xs"
               >
                 {isLoggingOut ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <RefreshCw className="w-4 h-4 animate-spin" />
                 ) : (
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-4 h-4" />
                 )}
                 <span>
                   {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất tài khoản"}
                 </span>
               </button>
 
-              <div className="text-[10px] text-center text-muted-foreground/60 font-mono">
+              <div className="text-xs text-center text-muted-foreground/60 font-mono">
                 Bike Manager • v4.2 Mobile
               </div>
             </div>

@@ -15,10 +15,13 @@ import { SerialKhaDungBanHang } from "@/types/donHang";
 export interface CartItem {
   id: string; // ChiTietDonHangID
   bienTheSanPhamID: string;
+  cartKey: string; // Khóa định danh trong giỏ hàng (phân biệt hàng bán vs hàng tặng kèm)
   sku: string;
   tenBienThe: string;
   tenSanPham?: string;
-  donGia: number;
+  giaGoc: number; // Giá niêm yết ban đầu từ hệ thống
+  donGia: number; // Giá bán thực tế áp dụng (có thể chỉnh sửa trực tiếp)
+  isGift: boolean; // Đánh dấu hàng tặng kèm (giá = 0)
   soLuong: number;
   tienGiamGia?: number;
   thueVAT?: number;

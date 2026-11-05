@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Boxes,
   ImageIcon,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -94,7 +95,9 @@ export const ProductsGrid: React.FC<ProductsGridProps> = ({
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {items.map((product, idx) => {
-          const avatarUrl = product.anhDaiDien ? takeImage(product.anhDaiDien, 480, product.maxSize) : null;
+          const avatarUrl = product.anhDaiDien
+            ? takeImage(product.anhDaiDien, 480, product.maxSize)
+            : null;
 
           return (
             <motion.div
@@ -127,7 +130,10 @@ export const ProductsGrid: React.FC<ProductsGridProps> = ({
                 </div>
 
                 {/* Image Canvas Showcase */}
-                <div className="relative aspect-16/10 w-full bg-muted/30 flex items-center justify-center overflow-hidden border-b border-border/40">
+                <Link
+                  href={`/admin/products/${product.sanPhamID}`}
+                  className="relative aspect-16/10 w-full bg-muted/30 flex items-center justify-center overflow-hidden border-b border-border/40"
+                >
                   {avatarUrl ? (
                     <Image
                       src={avatarUrl}
@@ -169,14 +175,16 @@ export const ProductsGrid: React.FC<ProductsGridProps> = ({
                       </span>
                     </div>
                   )}
-                </div>
+                </Link>
 
                 {/* Info Body */}
                 <div className="p-3.5 flex-1 flex flex-col justify-between space-y-3">
                   <div>
-                    <h3 className="font-bold text-base text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
-                      {product.tenSanPham}
-                    </h3>
+                    <Link href={`/admin/products/${product.sanPhamID}`}>
+                      <h3 className="font-bold text-base text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
+                        {product.tenSanPham}
+                      </h3>
+                    </Link>
 
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       {product.tenThuongHieu && (
@@ -219,6 +227,15 @@ export const ProductsGrid: React.FC<ProductsGridProps> = ({
                   {/* Action Links & Buttons */}
                   <div className="pt-3 border-t border-border/60 flex items-center justify-between gap-1">
                     <div className="flex items-center gap-1">
+                      <Link
+                        href={`/admin/products/${product.sanPhamID}`}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline py-1 px-1.5 rounded hover:bg-blue-500/10 transition-colors"
+                        title="Xem chi tiết hồ sơ xe, biến thể và thông số"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Chi tiết</span>
+                      </Link>
+
                       <Link
                         href={`/admin/product-variants?productId=${product.sanPhamID}`}
                         className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline py-1 px-1.5 rounded hover:bg-indigo-500/10 transition-colors"

@@ -17,6 +17,10 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  Gift,
+  SquarePen,
+  Check,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,8 +48,10 @@ interface SalesCartProps {
   onUpdateQuantity: (id: string, delta: number) => void;
   onRemoveFromCart: (id: string) => void;
   onClearCart: () => void;
+  onUpdatePrice?: (id: string, newPrice: number) => void;
+  onToggleGift?: (id: string) => void;
   onSelectSerial?: (
-    bienTheSanPhamID: string,
+    cartKey: string,
     slotIdx: number,
     serial: SerialKhaDungBanHang,
   ) => void;
@@ -99,6 +105,8 @@ export const SalesCart: React.FC<SalesCartProps> = ({
   onUpdateQuantity,
   onRemoveFromCart,
   onClearCart,
+  onUpdatePrice,
+  onToggleGift,
   onSelectSerial,
   subTotal,
   discountAmount,
@@ -129,6 +137,19 @@ export const SalesCart: React.FC<SalesCartProps> = ({
   onCheckout,
 }) => {
   const [showDeliveryInfo, setShowDeliveryInfo] = React.useState(false);
+  const [editingPriceKey, setEditingPriceKey] = React.useState<string | null>(
+    null,
+  );
+  const [tempPrice, setTempPrice] = React.useState<string>("");
+
+  const handleSavePrice = (key: string) => {
+    const rawDigits = tempPrice.replace(/\D/g, "");
+    const num = Math.max(0, parseInt(rawDigits) || 0);
+    if (onUpdatePrice) {
+      onUpdatePrice(key, num);
+    }
+    setEditingPriceKey(null);
+  };
 
   return (
     <div
@@ -179,7 +200,7 @@ export const SalesCart: React.FC<SalesCartProps> = ({
             )}
           </div>
 
-          <div className="space-y-2 max-h-[260px] scrollbar-thin pr-1">
+          <div className="space-y-2 scrollbar-thin pr-1">
             {cart.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground text-xs flex flex-col items-center justify-center">
                 <ShoppingCart className="w-10 h-10 text-muted-foreground/30 mb-2" />
@@ -191,136 +212,249 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                 </p>
               </div>
             ) : (
-              cart.map((item) => (
-                <div
-                  key={item.bienTheSanPhamID}
-                  className="p-2.5 rounded-xl border border-border/70 bg-background/90 flex flex-col gap-2 text-xs"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0 pr-1">
-                      <p className="font-semibold text-foreground truncate">
-                        {item.tenBienThe}
-                      </p>
-                      <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
-                        <span>{formatCurrency(item.donGia)}</span>
-                        {item.thueVAT ? (
-                          <span className="text-[10px] text-muted-foreground">
-                            (VAT {item.thueVAT}%)
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
+              cart.map((item) => {
+                const itemKey = item.cartKey || item.bienTheSanPhamID;
+                const isPriceModified =
+                  item.giaGoc !== undefined && item.giaGoc !== item.donGia;
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() =>
-                          onUpdateQuantity(item.bienTheSanPhamID, -1)
-                        }
-                        className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <span className="w-6 text-center font-mono font-bold text-xs">
-                        {item.soLuong}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() =>
-                          onUpdateQuantity(item.bienTheSanPhamID, 1)
-                        }
-                        className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onRemoveFromCart(item.bienTheSanPhamID)}
-                        className="text-rose-500 hover:text-rose-700 hover:bg-rose-500/10 h-7 w-7 rounded-lg cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
+                return (
+                  <div
+                    key={itemKey}
+                    className="p-2.5 rounded-xl border border-border/70 bg-background/90 flex flex-col gap-2 text-xs"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0 pr-1 space-y-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-semibold text-foreground truncate max-w-[180px] sm:max-w-[260px]">
+                            {item.tenBienThe}
+                          </p>
+                          {item.isGift ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                              <Gift className="w-3 h-3" />
+                              Tặng kèm
+                            </span>
+                          ) : isPriceModified ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                              Đã sửa giá
+                            </span>
+                          ) : null}
+                        </div>
 
-                    <span className="font-mono font-bold text-foreground text-right w-24 shrink-0 text-xs sm:text-sm">
-                      {formatCurrency(item.thanhTien)}
-                    </span>
-                  </div>
-
-                  {/* Chọn số khung / serial khả dụng */}
-                  {item.quanLyTheoSerial && (
-                    <div className="pt-2 border-t border-dashed border-border/80 space-y-1.5 w-full">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                          <Barcode className="w-3.5 h-3.5" />
-                          Số khung / Serial ({item.selectedSerials?.length || 0}
-                          /{item.soLuong}):
-                        </span>
-                        {(!item.selectedSerials ||
-                          item.selectedSerials.length < item.soLuong) && (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                            Chưa chọn đủ serial
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="space-y-1.5">
-                        {Array.from({ length: item.soLuong }).map(
-                          (_, slotIdx) => {
-                            const curSerial = item.selectedSerials?.[slotIdx];
-                            const availableOptions = (
-                              item.danhSachSerialKhaDung || []
-                            ).map((s) => ({
-                              value: s.soSerialID,
-                              label: `Khung: ${s.soKhung || s.maSerial} ${
-                                s.soMay ? `- Máy: ${s.soMay}` : ""
-                              } ${s.viTriLuuTru ? `[${s.viTriLuuTru}]` : ""}`,
-                            }));
-
-                            return (
-                              <div
-                                key={slotIdx}
-                                className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-lg border border-border/60 text-[11px]"
-                              >
-                                <span className="text-[10px] font-mono text-muted-foreground w-12 shrink-0">
-                                  Xe #{slotIdx + 1}:
+                        {/* Hàng hiển thị & Chỉnh sửa giá bán / Tặng kèm */}
+                        {editingPriceKey === itemKey ? (
+                          <div className="flex items-center gap-1 pt-0.5 font-sans">
+                            <span className="text-[10px] text-muted-foreground">
+                              Giá bán:
+                            </span>
+                            <input
+                              type="text"
+                              value={tempPrice}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/\D/g, "");
+                                setTempPrice(
+                                  raw
+                                    ? Number(raw).toLocaleString("vi-VN")
+                                    : "",
+                                );
+                              }}
+                              className="w-28 h-6 px-1.5 rounded border border-blue-500 bg-background font-mono text-xs text-foreground focus:outline-none"
+                              autoFocus
+                              placeholder="0"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSavePrice(itemKey);
+                                if (e.key === "Escape")
+                                  setEditingPriceKey(null);
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleSavePrice(itemKey)}
+                              className="h-6 w-6 text-emerald-600 hover:bg-emerald-500/10 cursor-pointer"
+                              title="Lưu giá bán"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setEditingPriceKey(null)}
+                              className="h-6 w-6 text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                              title="Hủy"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 font-sans flex-wrap">
+                            <span className="font-mono font-semibold text-foreground">
+                              {formatCurrency(item.donGia)}
+                            </span>
+                            {!item.isGift &&
+                              item.giaGoc !== undefined &&
+                              item.giaGoc !== item.donGia && (
+                                <span className="line-through font-mono text-[10px] text-muted-foreground/80">
+                                  {formatCurrency(item.giaGoc)}
                                 </span>
-                                <div className="flex-1 min-w-0">
-                                  <SearchSelect
-                                    placeholder="Chọn số khung / serial khả dụng..."
-                                    options={availableOptions}
-                                    value={curSerial?.soSerialID || ""}
-                                    onChange={(val) => {
-                                      const picked =
-                                        item.danhSachSerialKhaDung?.find(
-                                          (s) => s.soSerialID === val,
-                                        );
-                                      if (picked && onSelectSerial) {
-                                        onSelectSerial(
-                                          item.bienTheSanPhamID,
-                                          slotIdx,
-                                          picked,
-                                        );
-                                      }
-                                    }}
-                                    height={8}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          },
+                              )}
+                            {item.thueVAT ? (
+                              <span className="text-[10px] text-muted-foreground">
+                                (VAT {item.thueVAT}%)
+                              </span>
+                            ) : null}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingPriceKey(itemKey);
+                                setTempPrice(
+                                  item.donGia
+                                    ? item.donGia.toLocaleString("vi-VN")
+                                    : "",
+                                );
+                              }}
+                              className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-0.5 ml-1 font-medium cursor-pointer"
+                              title="Chỉnh sửa đơn giá sản phẩm / xe"
+                            >
+                              <SquarePen className="w-3 h-3" />
+                              <span>Sửa giá</span>
+                            </button>
+
+                            {onToggleGift && (
+                              <button
+                                type="button"
+                                onClick={() => onToggleGift(itemKey)}
+                                className={`text-[11px] inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded cursor-pointer transition-colors ${
+                                  item.isGift
+                                    ? "bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold border border-purple-500/30"
+                                    : "text-muted-foreground hover:text-purple-600 hover:bg-purple-500/10 border border-transparent"
+                                }`}
+                                title={
+                                  item.isGift
+                                    ? "Bỏ tặng kèm, khôi phục giá gốc"
+                                    : "Đặt làm quà tặng kèm (Giá 0 đ)"
+                                }
+                              >
+                                <Gift className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                                <span>
+                                  {item.isGift ? "Bỏ tặng" : "Tặng (0đ)"}
+                                </span>
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onUpdateQuantity(itemKey, -1)}
+                          className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-6 text-center font-mono font-bold text-xs">
+                          {item.soLuong}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onUpdateQuantity(itemKey, 1)}
+                          className="h-7 w-7 rounded-lg cursor-pointer shadow-2xs"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onRemoveFromCart(itemKey)}
+                          className="text-rose-500 hover:text-rose-700 hover:bg-rose-500/10 h-7 w-7 rounded-lg cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+
+                      <span className="font-mono font-bold text-foreground text-right w-24 shrink-0 text-xs sm:text-sm">
+                        {formatCurrency(item.thanhTien)}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))
+
+                    {/* Chọn số khung / serial khả dụng */}
+                    {item.quanLyTheoSerial && (
+                      <div className="pt-2 border-t border-dashed border-border/80 space-y-1.5 w-full">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                            <Barcode className="w-3.5 h-3.5" />
+                            Số khung / Serial (
+                            {item.selectedSerials?.length || 0}/{item.soLuong}
+                            ):
+                          </span>
+                          {(!item.selectedSerials ||
+                            item.selectedSerials.length < item.soLuong) && (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                              Chưa chọn đủ serial
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {Array.from({ length: item.soLuong }).map(
+                            (_, slotIdx) => {
+                              const curSerial = item.selectedSerials?.[slotIdx];
+                              const availableOptions = (
+                                item.danhSachSerialKhaDung || []
+                              ).map((s) => ({
+                                value: s.soSerialID,
+                                label: `Khung: ${s.soKhung || s.maSerial} ${
+                                  s.soMay ? `- Máy: ${s.soMay}` : ""
+                                } ${s.viTriLuuTru ? `[${s.viTriLuuTru}]` : ""}`,
+                              }));
+
+                              return (
+                                <div
+                                  key={slotIdx}
+                                  className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-lg border border-border/60 text-[11px]"
+                                >
+                                  <span className="text-[10px] font-mono text-muted-foreground w-12 shrink-0">
+                                    Xe #{slotIdx + 1}:
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <SearchSelect
+                                      placeholder="Chọn số khung / serial khả dụng..."
+                                      options={availableOptions}
+                                      value={curSerial?.soSerialID || ""}
+                                      onChange={(val) => {
+                                        const picked =
+                                          item.danhSachSerialKhaDung?.find(
+                                            (s) => s.soSerialID === val,
+                                          );
+                                        if (picked && onSelectSerial) {
+                                          onSelectSerial(
+                                            itemKey,
+                                            slotIdx,
+                                            picked,
+                                          );
+                                        }
+                                      }}
+                                      height={8}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            },
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -334,19 +468,24 @@ export const SalesCart: React.FC<SalesCartProps> = ({
             </span>
           </div>
 
-          {/* Phụ phí & Giảm giá */}
+          {/* Phụ phí & Giảm giá (định dạng 000.000 có dấu phân cách hàng nghìn) */}
           <div className="grid grid-cols-3 gap-2 pt-1">
             <div>
               <label className="block text-[10px] uppercase font-semibold text-muted-foreground mb-1">
                 Giảm giá (đ)
               </label>
               <Input
-                type="number"
-                min={0}
-                value={discountAmount || ""}
-                onChange={(e) =>
-                  onDiscountChange(parseInt(e.target.value) || 0)
+                type="text"
+                inputMode="numeric"
+                value={
+                  discountAmount
+                    ? Number(discountAmount).toLocaleString("vi-VN")
+                    : ""
                 }
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, "");
+                  onDiscountChange(raw ? parseInt(raw, 10) : 0);
+                }}
                 placeholder="0"
                 className="h-8 text-xs font-mono"
               />
@@ -356,12 +495,15 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                 Phí giao xe (đ)
               </label>
               <Input
-                type="number"
-                min={0}
-                value={deliveryFee || ""}
-                onChange={(e) =>
-                  onDeliveryFeeChange(parseInt(e.target.value) || 0)
+                type="text"
+                inputMode="numeric"
+                value={
+                  deliveryFee ? Number(deliveryFee).toLocaleString("vi-VN") : ""
                 }
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, "");
+                  onDeliveryFeeChange(raw ? parseInt(raw, 10) : 0);
+                }}
                 placeholder="0"
                 className="h-8 text-xs font-mono"
               />
@@ -371,12 +513,17 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                 Phí biển số (đ)
               </label>
               <Input
-                type="number"
-                min={0}
-                value={registrationFee || ""}
-                onChange={(e) =>
-                  onRegistrationFeeChange(parseInt(e.target.value) || 0)
+                type="text"
+                inputMode="numeric"
+                value={
+                  registrationFee
+                    ? Number(registrationFee).toLocaleString("vi-VN")
+                    : ""
                 }
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, "");
+                  onRegistrationFeeChange(raw ? parseInt(raw, 10) : 0);
+                }}
                 placeholder="0"
                 className="h-8 text-xs font-mono"
               />

@@ -15,6 +15,7 @@ import {
   CreateSanPhamPayload,
   SanPhamFilter,
   SanPhamKPI,
+  SP_SanPhamDetail,
   UpdateSanPhamPayload,
 } from "@/types/sanPham";
 
@@ -59,10 +60,14 @@ export const useGetSanPhamKPI = () => {
 };
 
 export const useGetSanPhamById = (id?: string) => {
-  return useQuery({
+  return useQuery<SP_SanPhamDetail | null>({
     queryKey: SAN_PHAM_QUERY_KEYS.detail(id || ""),
-    queryFn: () => getSanPhamByIdApi(id!),
+    queryFn: async () => {
+      const res = await getSanPhamByIdApi(id!);
+      return (res?.data ?? res ?? null) as SP_SanPhamDetail | null;
+    },
     enabled: !!id,
+    staleTime: 10000,
   });
 };
 

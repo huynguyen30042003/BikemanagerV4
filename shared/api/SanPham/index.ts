@@ -85,10 +85,11 @@ export const createSanPhamApi = async (payload: CreateSanPhamPayload) => {
   formData.append("DuongDan", payload.DuongDan);
   if (payload.DonViTinhID != null)
     formData.append("DonViTinhID", String(payload.DonViTinhID));
-  if (payload.MoTaNgan) formData.append("MoTaNgan", payload.MoTaNgan);
-  if (payload.MoTa) formData.append("MoTa", payload.MoTa);
-  if (payload.ThongSoKyThuatJson)
-    formData.append("ThongSoKyThuatJson", payload.ThongSoKyThuatJson);
+  if (payload.MoTaNgan !== undefined)
+    formData.append("MoTaNgan", payload.MoTaNgan ?? "");
+  if (payload.MoTa !== undefined) formData.append("MoTa", payload.MoTa ?? "");
+  if (payload.ThongSoKyThuatJson !== undefined)
+    formData.append("ThongSoKyThuatJson", payload.ThongSoKyThuatJson ?? "");
   formData.append(
     "SoThangBaoHanhMacDinh",
     String(payload.SoThangBaoHanhMacDinh ?? 12),
@@ -123,10 +124,11 @@ export const updateSanPhamApi = async (payload: UpdateSanPhamPayload) => {
   formData.append("DuongDan", payload.DuongDan);
   if (payload.DonViTinhID != null)
     formData.append("DonViTinhID", String(payload.DonViTinhID));
-  if (payload.MoTaNgan) formData.append("MoTaNgan", payload.MoTaNgan);
-  if (payload.MoTa) formData.append("MoTa", payload.MoTa);
-  if (payload.ThongSoKyThuatJson)
-    formData.append("ThongSoKyThuatJson", payload.ThongSoKyThuatJson);
+  if (payload.MoTaNgan !== undefined)
+    formData.append("MoTaNgan", payload.MoTaNgan ?? "");
+  if (payload.MoTa !== undefined) formData.append("MoTa", payload.MoTa ?? "");
+  if (payload.ThongSoKyThuatJson !== undefined)
+    formData.append("ThongSoKyThuatJson", payload.ThongSoKyThuatJson ?? "");
   formData.append(
     "SoThangBaoHanhMacDinh",
     String(payload.SoThangBaoHanhMacDinh ?? 12),
@@ -134,7 +136,7 @@ export const updateSanPhamApi = async (payload: UpdateSanPhamPayload) => {
   formData.append("LaPhuongTien", String(payload.LaPhuongTien));
   formData.append("DaXuatBan", String(payload.DaXuatBan));
   formData.append("TrangThai", String(payload.TrangThai));
-  formData.append("AnhDaiDien", String(payload.AnhDaiDien));
+  formData.append("AnhDaiDien", payload.AnhDaiDien ?? "");
   if (payload.XoaFile != null)
     formData.append("XoaFile", String(payload.XoaFile));
 

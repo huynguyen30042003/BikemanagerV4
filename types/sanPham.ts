@@ -1,3 +1,8 @@
+import { SP_BienTheSanPham } from "./bienTheSanPham";
+import { SP_HinhAnhSanPham } from "./hinhAnhSanPham";
+import { SP_SoSerial } from "./soSerial";
+import { SP_ThuongHieu } from "./thuongHieu";
+
 export interface SP_SanPham {
   sanPhamID: string;
   danhMucChiTietID: number;
@@ -21,6 +26,26 @@ export interface SP_SanPham {
   soBienThe?: number;
   ngayTao?: string;
   nguoiTao?: string;
+}
+
+/**
+ * Dữ liệu trả về từ POST /api/SanPhamApi/Get (Chi tiết sản phẩm / xe)
+ * Bao gồm thông tin gốc sản phẩm, thương hiệu, danh sách biến thể, hình ảnh và danh sách số serial hiện có
+ */
+export interface SP_SanPhamDetail extends SP_SanPham {
+  // Thông tin Thương hiệu phẳng (nếu join trực tiếp) hoặc object lồng nhau
+  maThuongHieu?: string | null;
+  duongDanThuongHieu?: string | null;
+  logoThuongHieu?: string | null;
+  maxSizeLogo?: number | null;
+  quocGiaThuongHieu?: string | null;
+  moTaThuongHieu?: string | null;
+  thuongHieu?: SP_ThuongHieu | null;
+
+  // Danh sách dữ liệu con đi kèm của sản phẩm / xe
+  bienThes?: SP_BienTheSanPham[];
+  hinhAnhs?: SP_HinhAnhSanPham[];
+  soSerials?: SP_SoSerial[];
 }
 
 export interface SanPhamFilter {

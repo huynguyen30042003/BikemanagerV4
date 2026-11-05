@@ -10,14 +10,22 @@ import {
   AlertCircle,
   RefreshCw,
   Package,
+  Plus,
+  Trash2,
+  Cpu,
+  Code2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SearchSelect, SelectOption } from "@/components/ui/selectSearch";
 import { SlideOver } from "@/components/ui/SlideOver";
-import { useUpdateSanPham } from "@/hooks/SanPham/useSanPhamApi";
+import {
+  useGetSanPhamById,
+  useUpdateSanPham,
+} from "@/hooks/SanPham/useSanPhamApi";
 import { SP_SanPham, UpdateSanPhamPayload } from "@/types/sanPham";
+import { parseJsonSpecs } from "@/components/Products/Detail/ProductDetailUtils";
 import { takeImage } from "@/utils";
 
 const sanPhamSchema = z.object({
@@ -28,6 +36,33 @@ const sanPhamSchema = z.object({
     .number()
     .min(1, "Vui lòng chọn ngành hàng / danh mục chi tiết"),
 });
+
+interface SpecKeyValueRow {
+  id: string;
+  label: string;
+  value: string;
+}
+
+const toSlug = (text: string): string =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
+const serializeSpecRows = (rows: SpecKeyValueRow[]): string => {
+  const validEntries = rows.filter((r) => r.label.trim() !== "");
+  if (validEntries.length === 0) return "";
+  const obj: Record<string, string> = {};
+  validEntries.forEach((r) => {
+    obj[r.label.trim()] = r.value.trim();
+  });
+  return JSON.stringify(obj);
+};
 
 interface UpdateProductSlideOverProps {
   open: boolean;
@@ -54,6 +89,13 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
   isLoadingDonViTinh = false,
   onSuccess,
 }) => {
+  // Lấy đầy đủ chi tiết sản phẩm (MoTa, ThongSoKyThuatJson) khi mở Modal (Lazy Query chuẩn AGENTS.md)
+  const { data: fullProductDetail } = useGetSanPhamById(
+    open && product?.sanPhamID ? product.sanPhamID : undefined,
+  );
+
+  const sourceProduct = fullProductDetail ?? product;
+
   const [formData, setFormData] = useState<UpdateSanPhamPayload>({
     SanPhamID: "",
     MaSanPham: "",
@@ -69,53 +111,123 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
     LaPhuongTien: false,
     DaXuatBan: true,
     TrangThai: true,
+    AnhDaiDien: "",
     XoaFile: false,
     file: null,
   });
 
+  const [specRows, setSpecRows] = useState<SpecKeyValueRow[]>([]);
+  const [rawJsonMode, setRawJsonMode] = useState<boolean>(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const updateMutation = useUpdateSanPham();
 
   useEffect(() => {
-    if (open && product) {
+    if (open && sourceProduct) {
+      const initialSpecJson = sourceProduct.thongSoKyThuatJson || "";
+      const parsed = parseJsonSpecs(initialSpecJson);
+
       setFormData({
-        SanPhamID: product.sanPhamID,
-        MaSanPham: product.maSanPham,
-        TenSanPham: product.tenSanPham,
-        DanhMucChiTietID: product.danhMucChiTietID,
-        ThuongHieuID: product.thuongHieuID,
-        DuongDan: product.duongDan,
-        DonViTinhID: product.donViTinhID || null,
-        MoTaNgan: product.moTaNgan || "",
-        MoTa: product.moTa || "",
-        ThongSoKyThuatJson: product.thongSoKyThuatJson || "",
-        SoThangBaoHanhMacDinh: product.soThangBaoHanhMacDinh ?? 12,
-        LaPhuongTien: product.laPhuongTien ?? false,
-        DaXuatBan: product.daXuatBan ?? true,
-        TrangThai: product.trangThai,
-        AnhDaiDien: product.anhDaiDien || "",
+        SanPhamID: sourceProduct.sanPhamID,
+        MaSanPham: sourceProduct.maSanPham || "",
+        TenSanPham: sourceProduct.tenSanPham || "",
+        DanhMucChiTietID: sourceProduct.danhMucChiTietID || 0,
+        ThuongHieuID: sourceProduct.thuongHieuID || "",
+        DuongDan: sourceProduct.duongDan || "",
+        DonViTinhID: sourceProduct.donViTinhID ?? null,
+        MoTaNgan: sourceProduct.moTaNgan || "",
+        MoTa: sourceProduct.moTa || "",
+        ThongSoKyThuatJson: initialSpecJson,
+        SoThangBaoHanhMacDinh: sourceProduct.soThangBaoHanhMacDinh ?? 12,
+        LaPhuongTien: sourceProduct.laPhuongTien ?? false,
+        DaXuatBan: sourceProduct.daXuatBan ?? true,
+        TrangThai: sourceProduct.trangThai ?? true,
+        AnhDaiDien: sourceProduct.anhDaiDien || "",
         XoaFile: false,
         file: null,
       });
-      setAvatarPreview(null);
+
+      setSpecRows(
+        parsed.map((item, idx) => ({
+          id: `row-${idx}-${Date.now()}`,
+          label: item.label,
+          value: item.value === "-" ? "" : item.value,
+        })),
+      );
+      setAvatarPreview((prevUrl) => {
+        if (prevUrl) URL.revokeObjectURL(prevUrl);
+        return null;
+      });
       setErrors({});
     }
-  }, [open, product]);
+  }, [open, sourceProduct]);
 
-  const existingAvatar = product?.anhDaiDien;
+  // Chống rò rỉ bộ nhớ ObjectURL khi unmount
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
+
+  const existingAvatar = sourceProduct?.anhDaiDien;
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
       setFormData((prev) => ({ ...prev, file, XoaFile: true }));
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
   const handleClearAvatar = () => {
-    setFormData((prev) => ({ ...prev, file: null, XoaFile: true }));
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    setFormData((prev) => ({
+      ...prev,
+      file: null,
+      XoaFile: true,
+      AnhDaiDien: "",
+    }));
     setAvatarPreview(null);
+  };
+
+  const handleAddSpecRow = () => {
+    setSpecRows((prev) => [
+      ...prev,
+      { id: `spec-${Date.now()}-${prev.length}`, label: "", value: "" },
+    ]);
+  };
+
+  const handleUpdateSpecRow = (
+    id: string,
+    field: "label" | "value",
+    val: string,
+  ) => {
+    setSpecRows((prev) => {
+      const next = prev.map((r) => (r.id === id ? { ...r, [field]: val } : r));
+      setFormData((f) => ({
+        ...f,
+        ThongSoKyThuatJson: serializeSpecRows(next),
+      }));
+      return next;
+    });
+  };
+
+  const handleRemoveSpecRow = (id: string) => {
+    setSpecRows((prev) => {
+      const next = prev.filter((r) => r.id !== id);
+      setFormData((f) => ({
+        ...f,
+        ThongSoKyThuatJson: serializeSpecRows(next),
+      }));
+      return next;
+    });
   };
 
   const handleSubmit = async () => {
@@ -127,8 +239,21 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
         danhMucChiTietID: Number(formData.DanhMucChiTietID),
       });
 
+      const finalSlug =
+        formData.DuongDan.trim() ||
+        toSlug(formData.TenSanPham) ||
+        toSlug(formData.MaSanPham);
+
+      const finalSpecsJson = rawJsonMode
+        ? formData.ThongSoKyThuatJson || ""
+        : serializeSpecRows(specRows);
+
       setErrors({});
-      await updateMutation.mutateAsync(formData);
+      await updateMutation.mutateAsync({
+        ...formData,
+        DuongDan: finalSlug,
+        ThongSoKyThuatJson: finalSpecsJson,
+      });
       onClose();
       if (onSuccess) {
         onSuccess();
@@ -152,7 +277,7 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
       open={open}
       onClose={onClose}
       title={`Chỉnh sửa Sản phẩm: ${formData.TenSanPham}`}
-      description="Cập nhật thông tin thông số và thiết lập kinh doanh"
+      description="Cập nhật thông tin định danh, mô tả chi tiết, thông số kỹ thuật và thiết lập kinh doanh"
       icon={SquarePen}
       footer={
         <div className="flex items-center gap-2 w-full">
@@ -286,9 +411,23 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
 
         {/* Đường dẫn Slug */}
         <div className="col-span-2 flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
-            Đường dẫn Slug URL
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+              Đường dẫn Slug URL
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  DuongDan: toSlug(prev.TenSanPham || prev.MaSanPham),
+                }))
+              }
+              className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+            >
+              Tạo tự động từ tên SP
+            </button>
+          </div>
           <Input
             value={formData.DuongDan}
             onChange={(e) =>
@@ -344,16 +483,139 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
         {/* Mô tả ngắn */}
         <div className="col-span-2 flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
-            Mô tả ngắn
+            Mô tả ngắn (Hiển thị thẻ sản phẩm)
           </label>
           <Input
             value={formData.MoTaNgan || ""}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, MoTaNgan: e.target.value }))
             }
-            placeholder="Mô tả..."
+            placeholder="Tóm tắt ngắn gọn đặc điểm nổi bật của dòng xe..."
             className="rounded-lg bg-background"
           />
+        </div>
+
+        {/* Mô tả chi tiết (MoTa) - Bổ sung trường bị thiếu */}
+        <div className="col-span-2 flex flex-col gap-1.5">
+          <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+            Mô tả chi tiết & Đặc điểm nổi bật
+          </label>
+          <textarea
+            rows={4}
+            value={formData.MoTa || ""}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, MoTa: e.target.value }))
+            }
+            placeholder="Nhập bài viết giới thiệu chi tiết về thiết kế, khả năng vận hành, công nghệ pin và chính sách bảo hành..."
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+          />
+        </div>
+
+        {/* Thông số kỹ thuật (ThongSoKyThuatJson) - Bổ sung trường bị thiếu */}
+        <div className="col-span-2 flex flex-col gap-2 p-3.5 rounded-xl border border-border/80 bg-muted/15">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <Cpu className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                Bảng thông số kỹ thuật ({specRows.length})
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (rawJsonMode) {
+                    const parsed = parseJsonSpecs(formData.ThongSoKyThuatJson);
+                    setSpecRows(
+                      parsed.map((item, idx) => ({
+                        id: `row-${idx}-${Date.now()}`,
+                        label: item.label,
+                        value: item.value === "-" ? "" : item.value,
+                      })),
+                    );
+                  } else {
+                    setFormData((prev) => ({
+                      ...prev,
+                      ThongSoKyThuatJson: serializeSpecRows(specRows),
+                    }));
+                  }
+                  setRawJsonMode((prev) => !prev);
+                }}
+                className="h-7 px-2 text-[11px] rounded-lg cursor-pointer"
+              >
+                <Code2 className="w-3 h-3 mr-1" />
+                <span>{rawJsonMode ? "Nhập theo dòng" : "Sửa JSON thuần"}</span>
+              </Button>
+
+              {!rawJsonMode && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAddSpecRow}
+                  className="h-7 px-2.5 text-[11px] rounded-lg bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  <span>Thêm thông số</span>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {rawJsonMode ? (
+            <textarea
+              rows={4}
+              value={formData.ThongSoKyThuatJson || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  ThongSoKyThuatJson: e.target.value,
+                }))
+              }
+              placeholder='{"Động cơ": "1500W", "Tốc độ tối đa": "70 km/h", "Quãng đường": "203 km/lần sạc"}'
+              className="w-full font-mono rounded-lg border border-input bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+            />
+          ) : specRows.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2">
+              Chưa có thông số kỹ thuật. Bấm <strong>+ Thêm thông số</strong> để
+              khai báo Động cơ, Tốc độ tối đa, Quãng đường, Trọng lượng...
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              {specRows.map((row) => (
+                <div key={row.id} className="flex items-center gap-2">
+                  <Input
+                    value={row.label}
+                    onChange={(e) =>
+                      handleUpdateSpecRow(row.id, "label", e.target.value)
+                    }
+                    placeholder="Tên thông số (VD: Động cơ)"
+                    className="h-8 text-xs bg-background flex-1"
+                  />
+                  <Input
+                    value={row.value}
+                    onChange={(e) =>
+                      handleUpdateSpecRow(row.id, "value", e.target.value)
+                    }
+                    placeholder="Giá trị (VD: 1500W - Chống nước IP67)"
+                    className="h-8 text-xs bg-background flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => handleRemoveSpecRow(row.id)}
+                    className="h-8 w-8 text-rose-600 hover:bg-rose-500/10 shrink-0 cursor-pointer"
+                    title="Xóa dòng thông số"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Cập nhật ảnh đại diện */}
@@ -374,7 +636,7 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
                 />
               ) : !formData.XoaFile && existingAvatar ? (
                 <Image
-                  src={takeImage(existingAvatar, 768, product?.maxSize)}
+                  src={takeImage(existingAvatar, 768, sourceProduct?.maxSize)}
                   alt="Ảnh hiện tại"
                   width={64}
                   height={64}
@@ -399,6 +661,7 @@ export const UpdateProductSlideOver: React.FC<UpdateProductSlideOverProps> = ({
                 </label>
                 {(avatarPreview || (!formData.XoaFile && existingAvatar)) && (
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={handleClearAvatar}
