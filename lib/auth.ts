@@ -3,7 +3,9 @@ import { APP_URL } from "@/shared/constants/apiConstants";
 /**
  * Kiểm tra đường dẫn redirect nội bộ an toàn (Chống Open Redirect Vulnerability)
  */
-export function isSafeRedirectUrl(url: string | null | undefined): url is string {
+export function isSafeRedirectUrl(
+  url: string | null | undefined,
+): url is string {
   if (!url) return false;
   // Chặn protocol-relative, backslash (\), và open redirect vector
   if (!url.startsWith("/") || url.startsWith("//") || url.startsWith("/\\")) {
@@ -62,13 +64,14 @@ export interface SaveTokenPayload {
 }
 
 /**
- * Lưu Access Token, Refresh Token (nếu có) và mốc hết hạn vào Cookie (Tuyệt đối không lưu vào localStorage)
+ * Lưu Access Token, mốc hết hạn và cờ phiên vào Cookie
+ * LƯU Ý: Refresh Token được Backend (api.nhithoi.io.vn) tự động quản lý qua HttpOnly Cookie (SameSite=None, Secure).
+ * Frontend KHÔNG lưu thêm cookie refresh_token ở client để tránh trùng lặp 2 cookie và đảm bảo bảo mật chống XSS.
  */
 export function setAuthTokens(payload?: SaveTokenPayload | null): void {
   if (typeof document === "undefined" || !payload) return;
 
   const accessToken = payload.access_token;
-  const refreshToken = payload.refresh_token;
   const expiresIn = payload.expires_in ?? 3600;
   const isSecure =
     typeof window !== "undefined" && window.location.protocol === "https:";
@@ -81,16 +84,16 @@ export function setAuthTokens(payload?: SaveTokenPayload | null): void {
       accessToken,
     )}; path=/; max-age=${expiresIn}; SameSite=Lax${secureAttr}`;
     document.cookie = `expires_at=${expiresAtMs}; path=/; max-age=${expiresIn}; SameSite=Lax${secureAttr}`;
-  }
 
-  if (refreshToken && refreshToken !== "undefined" && refreshToken !== "null") {
-    const refreshMaxAge = payload.remember
+    // Lưu cờ phiên làm việc để Next.js Middleware (proxy.ts) nhận diện phiên khi access_token hết hạn
+    const sessionMaxAge = payload.remember
       ? 60 * 60 * 24 * 30 // 30 ngày nếu chọn Ghi nhớ phiên
       : 60 * 60 * 24 * 7; // 7 ngày mặc định
-    document.cookie = `refresh_token=${encodeURIComponent(
-      refreshToken,
-    )}; path=/; max-age=${refreshMaxAge}; SameSite=Lax${secureAttr}`;
+    document.cookie = `has_session=1; path=/; max-age=${sessionMaxAge}; SameSite=Lax${secureAttr}`;
   }
+
+  // Tự động xóa cookie refresh_token cũ ở domain Frontend nếu từng bị lưu trùng
+  document.cookie = `refresh_token=; path=/; max-age=0; SameSite=Lax${secureAttr}`;
 }
 
 /**
@@ -98,9 +101,12 @@ export function setAuthTokens(payload?: SaveTokenPayload | null): void {
  */
 export function clearAuthTokens(): void {
   if (typeof document !== "undefined") {
-    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
-    document.cookie = "refresh_token=; path=/; max-age=0; SameSite=Lax";
-    document.cookie = "expires_at=; path=/; max-age=0; SameSite=Lax";
+    const isSecure = window.location.protocol === "https:";
+    const secureAttr = isSecure ? "; Secure" : "";
+    document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${secureAttr}`;
+    document.cookie = `refresh_token=; path=/; max-age=0; SameSite=Lax${secureAttr}`;
+    document.cookie = `expires_at=; path=/; max-age=0; SameSite=Lax${secureAttr}`;
+    document.cookie = `has_session=; path=/; max-age=0; SameSite=Lax${secureAttr}`;
   }
 }
 
@@ -155,6 +161,7 @@ export function hasAuthSession(): boolean {
   return (
     Boolean(getAccessToken()) ||
     Boolean(getRefreshToken()) ||
+    /(?:^|;\s*)has_session=1/.test(document.cookie) ||
     /(?:^|;\s*)expires_at=([^;]+)/.test(document.cookie)
   );
 }
@@ -274,7 +281,9 @@ function base64UrlDecode(input: string): string {
 /**
  * Giải mã JWT Token lấy phần Payload (Trả về null nếu là Opaque Data Protection Token CfDJ8...)
  */
-export function decodeJwt<T = Record<string, unknown>>(token?: string | null): T | null {
+export function decodeJwt<T = Record<string, unknown>>(
+  token?: string | null,
+): T | null {
   const jwt = token ?? getAccessToken();
   if (!jwt || !jwt.includes(".")) {
     return null;
@@ -356,7 +365,9 @@ export function getUserRoles(token?: string | null): string[] {
   if (foundRoles.length === 0 && typeof payload.scope === "string") {
     const scopes = payload.scope.split(" ").map((s: string) => s.trim());
     const roleCandidates = scopes.filter((s: string) =>
-      ["admin", "administrator", "manager", "staff", "user"].includes(s.toLowerCase()),
+      ["admin", "administrator", "manager", "staff", "user"].includes(
+        s.toLowerCase(),
+      ),
     );
     foundRoles.push(...roleCandidates);
   }

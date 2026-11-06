@@ -56,6 +56,7 @@ export function proxy(req: NextRequest) {
 
   const accessToken = req.cookies.get("access_token")?.value;
   const refreshToken = req.cookies.get("refresh_token")?.value;
+  const hasSession = req.cookies.get("has_session")?.value === "1";
 
   const hasActiveAccessToken = Boolean(
     accessToken &&
@@ -65,10 +66,11 @@ export function proxy(req: NextRequest) {
   );
 
   const hasRefreshSession = Boolean(
-    refreshToken &&
+    (refreshToken &&
       refreshToken !== "undefined" &&
       refreshToken !== "null" &&
-      refreshToken.trim().length >= 10,
+      refreshToken.trim().length >= 10) ||
+      hasSession,
   );
 
   const hasAnySession = hasActiveAccessToken || hasRefreshSession;
