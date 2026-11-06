@@ -72,40 +72,6 @@ export const ProductSerialsTable: React.FC<ProductSerialsTableProps> = ({
 }) => {
   const columns: Column<SP_SoSerial>[] = [
     {
-      key: "maSerial",
-      title: "Mã Serial & Định danh",
-      classNameHeader:
-        "w-60 text-left text-xs font-semibold text-muted-foreground",
-      classNameItem: "text-left",
-      render: (_v, row) => (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
-              {row.maSerial}
-            </span>
-            {row.maQR && (
-              <span
-                title={`Mã QR: ${row.maQR}`}
-                className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/60"
-              >
-                <QrCode className="w-3 h-3" /> QR
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Calendar className="w-3 h-3 text-muted-foreground/60" />
-            <span>SX: {formatDate(row.ngaySanXuat)}</span>
-            {row.ngayNhap && (
-              <>
-                <span>•</span>
-                <span>Nhập: {formatDate(row.ngayNhap)}</span>
-              </>
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
       key: "tenBienThe",
       title: "Sản phẩm / Biến thể",
       classNameHeader:

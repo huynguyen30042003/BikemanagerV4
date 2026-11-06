@@ -165,7 +165,7 @@ export const SalesCatalog: React.FC<SalesCatalogProps> = ({
         </div>
 
         {/* Product Variant Grid from Biến Thể Sản Phẩm (kèm số lượng tồn) */}
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 max-h-[640px] overflow-y-auto p-1 scrollbar-thin">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 max-h-none overflow-visible lg:max-h-[640px] lg:overflow-y-auto p-1 scrollbar-thin">
           {isLoadingVariants ? (
             Array.from({ length: 6 }).map((_, i) => (
               <Card
@@ -283,8 +283,8 @@ export const SalesCatalog: React.FC<SalesCatalogProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border/50 gap-1">
-                      <span className="font-mono text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 truncate">
+                    <div className="flex items-center justify-between pt-2 border-t border-border/50 gap-1 min-w-0">
+                      <span className="font-mono text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 truncate min-w-0">
                         {formatCurrency(v.defaultPrice)}
                       </span>
 
@@ -296,7 +296,7 @@ export const SalesCatalog: React.FC<SalesCatalogProps> = ({
                             e.stopPropagation();
                             if (!isOutOfStock) onAddToCart(v, true);
                           }}
-                          className={`h-7 px-2 rounded-lg flex items-center gap-1 text-[11px] font-medium transition-all ${
+                          className={`h-7 px-1.5 sm:px-2 rounded-lg flex items-center gap-1 text-[10px] sm:text-[11px] font-medium transition-all ${
                             isOutOfStock
                               ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
                               : "bg-purple-500/10 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300 hover:bg-purple-600 hover:text-white active:scale-95 cursor-pointer shadow-2xs"

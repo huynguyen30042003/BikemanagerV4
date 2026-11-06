@@ -40,7 +40,7 @@ export const Table = <T,>({
         <thead className="bg-thead h-10 text-muted-foreground">
           <tr>
             {showIndex && (
-              <th className="px-2 py-1 text-center text-muted-foreground border-b font-semibold w-12">
+              <th className="px-2 py-1 text-[12px] text-center text-muted-foreground border-b font-semibold w-12">
                 Stt
               </th>
             )}
@@ -59,7 +59,7 @@ export const Table = <T,>({
           {data?.map((row, rowIndex) => (
             <tr key={rowIndex} className="hover:bg-muted/50 transition-colors">
               {showIndex && (
-                <td className="px-2 py-1 border-b text-center">
+                <td className="px-2 py-1 text-[12px] border-b text-center">
                   {startIndex + rowIndex + 1}
                 </td>
               )}

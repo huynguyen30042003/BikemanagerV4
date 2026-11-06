@@ -152,23 +152,27 @@ export const ProductSerialsGrid: React.FC<ProductSerialsGridProps> = ({
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                      {serial.maSerial}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleCopy(serial.maSerial, serial.soSerialID)
-                      }
-                      title="Sao chép mã Serial"
-                      className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
-                    >
-                      {copiedId === serial.soSerialID ? (
-                        <Check className="w-3 h-3 text-emerald-600" />
-                      ) : (
-                        <Copy className="w-3 h-3" />
-                      )}
-                    </button>
+                    {serial.maSerial && (
+                      <>
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                          {serial.maSerial}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCopy(serial.maSerial, serial.soSerialID)
+                          }
+                          title="Sao chép mã Serial"
+                          className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
+                        >
+                          {copiedId === serial.soSerialID ? (
+                            <Check className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      </>
+                    )}
                     {serial.maQR && (
                       <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/60">
                         <QrCode className="w-2.5 h-2.5" /> QR

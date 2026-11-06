@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   ShoppingCart,
   Clock,
   CheckCircle2,
   DollarSign,
+  Eye,
+  EyeOff,
   LucideIcon,
 } from "lucide-react";
 import { KpiRibbon, KpiItem, KpiTone } from "@/components/Common/KpiRibbon";
@@ -40,6 +42,7 @@ interface RawKpiDef {
   compact?: boolean;
   isActive?: boolean;
   onClick?: () => void;
+  headerAction?: React.ReactNode;
 }
 
 export const OrdersKpiGrid: React.FC<OrdersKpiGridProps> = ({
@@ -53,6 +56,36 @@ export const OrdersKpiGrid: React.FC<OrdersKpiGridProps> = ({
   isLoadingKPI = false,
   isLoading = false,
 }) => {
+  // Trạng thái hiển thị doanh thu (lưu cấu hình vào localStorage)
+  const [showRevenue, setShowRevenue] = useState<boolean>(true);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("BM_SHOW_REVENUE");
+      if (saved !== null) {
+        setShowRevenue(saved === "true");
+      }
+    } catch {
+      // Safe fallback khi chạy môi trường không hỗ trợ localStorage
+    }
+  }, []);
+
+  const toggleRevenueVisibility = useCallback(
+    (e?: React.MouseEvent | React.KeyboardEvent) => {
+      e?.stopPropagation();
+      setShowRevenue((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem("BM_SHOW_REVENUE", String(next));
+        } catch {
+          // ignore localStorage error
+        }
+        return next;
+      });
+    },
+    []
+  );
+
   // 1. Cấu hình định nghĩa 4 thẻ KPI Đơn hàng
   const kpiDefinitions: RawKpiDef[] = useMemo(
     () => [
@@ -91,11 +124,36 @@ export const OrdersKpiGrid: React.FC<OrdersKpiGridProps> = ({
       {
         id: "revenue",
         title: "Doanh thu tích lũy",
-        subtext: "Giá trị tiền hàng thực tế",
-        value: formatCurrency(totalRevenue),
+        subtext: showRevenue
+          ? "Giá trị tiền hàng thực tế"
+          : "Đã ẩn số tiền doanh thu",
+        value: showRevenue ? (
+          formatCurrency(totalRevenue)
+        ) : (
+          <span className="tracking-widest font-mono text-muted-foreground/80 select-none">
+            ••••••••
+          </span>
+        ),
         icon: DollarSign,
         tone: "indigo",
         compact: true,
+        headerAction: (
+          <button
+            type="button"
+            onClick={toggleRevenueVisibility}
+            className="p-1 -my-1 rounded-md text-muted-foreground/80 hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            title={showRevenue ? "Ẩn số tiền doanh thu" : "Hiện số tiền doanh thu"}
+            aria-label={
+              showRevenue ? "Ẩn số tiền doanh thu" : "Hiện số tiền doanh thu"
+            }
+          >
+            {showRevenue ? (
+              <Eye className="w-3.5 h-3.5" />
+            ) : (
+              <EyeOff className="w-3.5 h-3.5" />
+            )}
+          </button>
+        ),
       },
     ],
     [
@@ -106,6 +164,8 @@ export const OrdersKpiGrid: React.FC<OrdersKpiGridProps> = ({
       statusFilter,
       onResetFilters,
       onFilterStatus,
+      showRevenue,
+      toggleRevenueVisibility,
     ]
   );
 
@@ -121,6 +181,7 @@ export const OrdersKpiGrid: React.FC<OrdersKpiGridProps> = ({
         compact: kpi.compact,
         isActive: kpi.isActive,
         onClick: kpi.onClick,
+        headerAction: kpi.headerAction,
       })),
     [kpiDefinitions]
   );

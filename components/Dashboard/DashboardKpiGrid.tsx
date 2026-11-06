@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   DollarSign,
@@ -10,6 +10,8 @@ import {
   Truck,
   Users,
   ChevronRight,
+  Eye,
+  EyeOff,
   LucideIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -28,6 +30,7 @@ interface KpiCardConfig {
   valueColorClass?: string;
   subText: React.ReactNode;
   footer: React.ReactNode;
+  headerAction?: React.ReactNode;
 }
 
 interface DashboardKpiGridProps {
@@ -36,6 +39,36 @@ interface DashboardKpiGridProps {
 }
 
 export function DashboardKpiGrid({ kpi, isLoading }: DashboardKpiGridProps) {
+  // Trạng thái hiển thị doanh thu (đồng bộ qua localStorage với các màn hình khác)
+  const [showRevenue, setShowRevenue] = useState<boolean>(true);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("BM_SHOW_REVENUE");
+      if (saved !== null) {
+        setShowRevenue(saved === "true");
+      }
+    } catch {
+      // Safe fallback
+    }
+  }, []);
+
+  const toggleRevenueVisibility = useCallback(
+    (e?: React.MouseEvent | React.KeyboardEvent) => {
+      e?.stopPropagation();
+      setShowRevenue((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem("BM_SHOW_REVENUE", String(next));
+        } catch {
+          // ignore error
+        }
+        return next;
+      });
+    },
+    []
+  );
+
   // Cấu hình danh sách 6 KPI Cards để render qua hàm .map()
   const kpiCards: KpiCardConfig[] = useMemo(
     () => [
@@ -46,20 +79,56 @@ export function DashboardKpiGrid({ kpi, isLoading }: DashboardKpiGridProps) {
         iconBgClass: "bg-blue-500/10",
         iconColorClass: "text-blue-600 dark:text-blue-400",
         gradientClass: "from-card to-blue-500/5 hover:border-blue-500/30",
-        value: formatCurrency(kpi?.tongDoanhThu),
+        value: showRevenue ? (
+          formatCurrency(kpi?.tongDoanhThu)
+        ) : (
+          <span className="tracking-widest font-mono text-muted-foreground/80 select-none">
+            ••••••••
+          </span>
+        ),
         valueColorClass: "text-foreground",
         subText: (
           <span>
             Hôm nay:{" "}
-            <strong className="text-emerald-600 dark:text-emerald-400">
-              {formatCurrency(kpi?.doanhThuHomNay)}
-            </strong>
+            {showRevenue ? (
+              <strong className="text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(kpi?.doanhThuHomNay)}
+              </strong>
+            ) : (
+              <strong className="text-emerald-600 dark:text-emerald-400 font-mono tracking-wider select-none">
+                ••••••
+              </strong>
+            )}
           </span>
         ),
         footer: (
           <div className="w-full flex items-center justify-between">
-            <span className="truncate">Tháng này: {formatCurrency(kpi?.doanhThuThangNay)}</span>
+            <span className="truncate">
+              Tháng này:{" "}
+              {showRevenue ? (
+                formatCurrency(kpi?.doanhThuThangNay)
+              ) : (
+                <span className="font-mono tracking-wider select-none">••••••</span>
+              )}
+            </span>
           </div>
+        ),
+        headerAction: (
+          <button
+            type="button"
+            onClick={toggleRevenueVisibility}
+            className="p-0.5 rounded-md text-muted-foreground/80 hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
+            title={showRevenue ? "Ẩn số tiền doanh thu" : "Hiện số tiền doanh thu"}
+            aria-label={
+              showRevenue ? "Ẩn số tiền doanh thu" : "Hiện số tiền doanh thu"
+            }
+          >
+            {showRevenue ? (
+              <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            ) : (
+              <EyeOff className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            )}
+          </button>
         ),
       },
       {
@@ -215,7 +284,7 @@ export function DashboardKpiGrid({ kpi, isLoading }: DashboardKpiGridProps) {
         ),
       },
     ],
-    [kpi]
+    [kpi, showRevenue, toggleRevenueVisibility]
   );
 
   if (isLoading) {
@@ -240,9 +309,12 @@ export function DashboardKpiGrid({ kpi, isLoading }: DashboardKpiGridProps) {
           >
             <div>
               <div className="flex items-center justify-between mb-1 sm:mb-2 gap-1">
-                <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate mr-1">
-                  {card.title}
-                </span>
+                <div className="flex items-center gap-1.5 min-w-0 mr-1">
+                  <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                    {card.title}
+                  </span>
+                  {card.headerAction}
+                </div>
                 <div
                   className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${card.iconBgClass} ${card.iconColorClass}`}
                 >

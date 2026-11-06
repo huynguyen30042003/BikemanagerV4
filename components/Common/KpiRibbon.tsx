@@ -28,6 +28,8 @@ export interface KpiItem {
   isActive?: boolean;
   /** Custom class cho viền / background khi đang active */
   activeBorderClass?: string;
+  /** Nút hoặc hành động bổ sung ở phần tiêu đề (ví dụ: nút mắt ẩn/hiện doanh thu) */
+  headerAction?: React.ReactNode;
 }
 
 const TONE: Record<KpiTone, { value: string; icon: string }> = {
@@ -119,9 +121,20 @@ export function KpiRibbon({ items, isLoading, className }: KpiRibbonProps) {
             }
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-muted-foreground truncate">
-                {item.title}
-              </span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-xs font-medium text-muted-foreground truncate">
+                  {item.title}
+                </span>
+                {item.headerAction && (
+                  <div
+                    className="inline-flex items-center shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    {item.headerAction}
+                  </div>
+                )}
+              </div>
               <div
                 className={cn(
                   "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
