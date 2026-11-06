@@ -896,7 +896,7 @@ export default function SiderBarAdmin() {
             </button>
 
             {/* Flyout Card on Hover */}
-            <div className="absolute left-full bottom-0 ml-3 w-60 p-3 rounded-2xl bg-card border border-border shadow-xl backdrop-blur-md opacity-0 pointer-events-none group-hover/user:opacity-100 group-hover/user:pointer-events-auto transition-all duration-200 z-50">
+            <div className="absolute left-full bottom-0 w-60 p-3 rounded-2xl bg-card border border-border shadow-xl backdrop-blur-md opacity-0 pointer-events-none group-hover/user:opacity-100 group-hover/user:pointer-events-auto transition-all duration-200 z-50">
               <div className="flex items-center gap-3 pb-2.5 border-b border-border/60">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 text-white font-bold text-xs flex items-center justify-center shrink-0">
                   {userInitials}
