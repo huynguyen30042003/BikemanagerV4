@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
@@ -82,6 +82,9 @@ export function CreateCustomerSlideOver({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  // Ref tham chiếu trực tiếp vào ô input Tên khách hàng / Tên doanh nghiệp
+  const tenKhachHangInputRef = useRef<HTMLInputElement>(null);
+  const soDienThoaiRef = useRef<HTMLInputElement>(null);
 
   // Chỉ gọi API xã/phường khi SlideOver đang mở và đã chọn Tỉnh/Thành
   const { data: dataXa, isLoading: isLoadingXa } = useGetDiaPhuongCapXa(
@@ -101,13 +104,18 @@ export function CreateCustomerSlideOver({
     }));
   }, [dataXa]);
 
-  // Reset form khi mở modal và dọn dẹp Object URL chống rò rỉ bộ nhớ
+  // Reset form và tự động focus vào Tên khách hàng khi mở modal
   useEffect(() => {
     if (open) {
       setFormData(INITIAL_FORM_DATA);
       setErrors({});
       setAvatarPreview(null);
       setLogoPreview(null);
+
+      const timer = setTimeout(() => {
+        tenKhachHangInputRef.current?.focus();
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [open]);
 
@@ -161,6 +169,9 @@ export function CreateCustomerSlideOver({
       });
       setErrors(fieldErrors);
       toast.error("Vui lòng kiểm tra lại các trường bắt buộc!");
+      if (fieldErrors.tenKhachHang) {
+        tenKhachHangInputRef.current?.focus();
+      }
       return;
     }
 
@@ -209,9 +220,10 @@ export function CreateCustomerSlideOver({
         <div className="p-1 rounded-xl bg-muted/60 border border-border/60 flex gap-1">
           <button
             type="button"
-            onClick={() =>
-              setFormData((prev) => ({ ...prev, LoaiKhachHang: 1 }))
-            }
+            onClick={() => {
+              setFormData((prev) => ({ ...prev, LoaiKhachHang: 1 }));
+              tenKhachHangInputRef.current?.focus();
+            }}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               formData.LoaiKhachHang === 1
                 ? "bg-background text-blue-600 dark:text-blue-400 shadow-xs border border-border/50"
@@ -223,9 +235,10 @@ export function CreateCustomerSlideOver({
           </button>
           <button
             type="button"
-            onClick={() =>
-              setFormData((prev) => ({ ...prev, LoaiKhachHang: 2 }))
-            }
+            onClick={() => {
+              setFormData((prev) => ({ ...prev, LoaiKhachHang: 2 }));
+              tenKhachHangInputRef.current?.focus();
+            }}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               formData.LoaiKhachHang === 2
                 ? "bg-background text-indigo-600 dark:text-indigo-400 shadow-xs border border-border/50"
@@ -246,6 +259,7 @@ export function CreateCustomerSlideOver({
               <span className="text-red-500">*</span>
             </label>
             <Input
+              ref={tenKhachHangInputRef}
               value={formData.TenKhachHang}
               onChange={(e) =>
                 setFormData((prev) => ({
@@ -259,6 +273,14 @@ export function CreateCustomerSlideOver({
                   : "Ví dụ: Công ty TNHH Vận Tải Xanh"
               }
               className={`rounded-lg ${errors.tenKhachHang ? "border-red-500" : ""}`}
+              onKeyDown={(e) => {
+                if (e.key == "Enter") {
+                  const timer = setTimeout(() => {
+                    soDienThoaiRef.current?.focus();
+                  }, 150);
+                  return () => clearTimeout(timer);
+                }
+              }}
             />
             {errors.tenKhachHang && (
               <p className="text-xs text-red-600 flex items-center gap-1">
@@ -273,6 +295,7 @@ export function CreateCustomerSlideOver({
               Số điện thoại (dùng Zalo) <span className="text-red-500">*</span>
             </label>
             <Input
+              ref={soDienThoaiRef}
               value={formData.DienThoai}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, DienThoai: e.target.value }))
