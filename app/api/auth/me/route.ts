@@ -1,4 +1,6 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+if (process.env.NODE_ENV !== "production") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
 
 import { APP_URL } from "@/shared/constants/apiConstants";
 import { cookies } from "next/headers";
@@ -11,8 +13,16 @@ interface RefreshedResult {
 }
 
 function clearCookiesOnResponse(res: NextResponse): NextResponse {
-  res.cookies.set("access_token", "", { path: "/", maxAge: 0, sameSite: "lax" });
-  res.cookies.set("refresh_token", "", { path: "/", maxAge: 0, sameSite: "lax" });
+  res.cookies.set("access_token", "", {
+    path: "/",
+    maxAge: 0,
+    sameSite: "lax",
+  });
+  res.cookies.set("refresh_token", "", {
+    path: "/",
+    maxAge: 0,
+    sameSite: "lax",
+  });
   res.cookies.set("expires_at", "", { path: "/", maxAge: 0, sameSite: "lax" });
   return res;
 }
@@ -33,16 +43,18 @@ function extractRefreshTokenFromSetCookie(response: Response): string | null {
 function isTokenNonEmpty(token: string | undefined | null): token is string {
   return Boolean(
     token &&
-      token !== "undefined" &&
-      token !== "null" &&
-      token.trim().length >= 10,
+    token !== "undefined" &&
+    token !== "null" &&
+    token.trim().length >= 10,
   );
 }
 
 /**
  * Gọi refresh token trực tiếp sang backend khi access_token bị thiếu hoặc hết hạn
  */
-async function attemptRefreshToken(refreshToken: string): Promise<RefreshedResult | null> {
+async function attemptRefreshToken(
+  refreshToken: string,
+): Promise<RefreshedResult | null> {
   try {
     const refreshRes = await fetch(`${APP_URL}/auth/refresh`, {
       method: "POST",
@@ -120,7 +132,10 @@ export async function GET(req: NextRequest) {
         },
       });
     } catch (fetchErr) {
-      console.warn("[API_AUTH_ME_FETCH_WARN] Không thể kết nối backend:", fetchErr);
+      console.warn(
+        "[API_AUTH_ME_FETCH_WARN] Không thể kết nối backend:",
+        fetchErr,
+      );
       return NextResponse.json(
         { message: "Không thể kết nối đến máy chủ xác thực" },
         { status: 502 },
@@ -162,9 +177,11 @@ export async function GET(req: NextRequest) {
 
     // 5. Nếu đã tự động làm mới token thành công, đồng bộ lại Cookie và Header cho trình duyệt
     if (refreshedInfo) {
+      const isProduction = process.env.NODE_ENV === "production";
+
       nextResponse.cookies.set("access_token", refreshedInfo.accessToken, {
         httpOnly: false,
-        secure: false,
+        secure: isProduction,
         sameSite: "lax",
         path: "/",
         maxAge: refreshedInfo.expiresIn,
@@ -174,7 +191,7 @@ export async function GET(req: NextRequest) {
         String(Date.now() + refreshedInfo.expiresIn * 1000),
         {
           httpOnly: false,
-          secure: false,
+          secure: isProduction,
           sameSite: "lax",
           path: "/",
           maxAge: refreshedInfo.expiresIn,
@@ -187,7 +204,7 @@ export async function GET(req: NextRequest) {
         const refreshMaxAge = 60 * 60 * 24 * 7; // 7 ngày
         nextResponse.cookies.set("refresh_token", refreshedInfo.refreshToken, {
           httpOnly: true,
-          secure: false,
+          secure: isProduction,
           sameSite: "lax",
           path: "/",
           maxAge: refreshMaxAge,

@@ -1,8 +1,25 @@
 /**
+ * Danh sách toàn bộ các vai trò nhân viên / quản trị viên hợp lệ của hệ thống
+ */
+export const ALL_STAFF_ROLES = [
+  "Administrator",
+  "AdminAccess",
+  "SaleAccess",
+  "ProductAccess",
+  "OrderAccess",
+  "PurchaseAccess",
+  "WarehouseAccess",
+  "TechnicalAccess",
+];
+
+/**
  * Cấu hình phân quyền truy cập cho từng đường dẫn (Route Permissions)
  * Khóa là tiền tố đường dẫn, giá trị là mảng các vai trò được phép truy cập.
  */
 export const ROUTE_PERMISSIONS: Record<string, string[]> = {
+  // Trang chủ quản trị (Dashboard tổng quan) - Yêu cầu bất kỳ vai trò nhân viên hợp lệ nào
+  "/admin": ALL_STAFF_ROLES,
+
   // 1. Hệ thống (Chỉ Administrator / AdminAccess)
   "/admin/danhMucChung": ["Administrator"],
   "/admin/danhMucChiTiet": ["Administrator"],
@@ -18,7 +35,12 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/admin/product-variants": ["Administrator", "AdminAccess", "ProductAccess"],
   "/admin/product-images": ["Administrator", "AdminAccess", "ProductAccess"],
   "/admin/product-serials": ["Administrator", "AdminAccess", "ProductAccess"],
-  "/admin/orders": ["Administrator", "AdminAccess", "OrderAccess", "SaleAccess"],
+  "/admin/orders": [
+    "Administrator",
+    "AdminAccess",
+    "OrderAccess",
+    "SaleAccess",
+  ],
   "/admin/sales": ["Administrator", "AdminAccess", "SaleAccess"],
 
   // 3. Vận hành & Kho
@@ -33,27 +55,55 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/admin/stock-audits": ["Administrator", "AdminAccess", "WarehouseAccess"],
 
   // 4. Kỹ thuật & Bảo hành
-  "/admin/warranties": ["Administrator", "AdminAccess", "TechnicalAccess", "SaleAccess"],
+  "/admin/warranties": [
+    "Administrator",
+    "AdminAccess",
+    "TechnicalAccess",
+    "SaleAccess",
+  ],
   "/admin/warranty-claims": ["Administrator", "AdminAccess", "TechnicalAccess"],
   "/admin/repair-tickets": ["Administrator", "AdminAccess", "TechnicalAccess"],
   "/admin/repair-services": ["Administrator", "AdminAccess", "TechnicalAccess"],
 };
 
 /**
- * Tìm các quyền yêu cầu cho một pathname cụ thể
+ * Tìm các quyền yêu cầu cho một pathname cụ thể.
+ * Áp dụng chuẩn hóa URL và nguyên tắc Phòng thủ chiều sâu (Default Deny).
  */
 export function getRequiredRolesForPath(pathname: string): string[] | null {
-  // 1. Khớp chính xác
-  if (ROUTE_PERMISSIONS[pathname]) {
-    return ROUTE_PERMISSIONS[pathname];
+  if (!pathname) return null;
+
+  // 1. Chuẩn hóa path: bỏ duplicate slashes và trailing slash (chống bypass qua /admin//products hoặc /admin/products/)
+  const cleanPath = pathname.replace(/\/+/g, "/").replace(/\/+$/, "") || "/";
+  const lowerPath = cleanPath.toLowerCase();
+
+  // 2. Khớp chính xác (không phân biệt hoa thường)
+  const exactKey = Object.keys(ROUTE_PERMISSIONS).find(
+    (route) => route.toLowerCase() === lowerPath,
+  );
+  if (exactKey) {
+    return ROUTE_PERMISSIONS[exactKey];
   }
 
-  // 2. Khớp tiền tố (prefix) dài nhất theo segment (ví dụ /admin/products/123 -> /admin/products)
+  // 3. Khớp tiền tố (prefix) dài nhất theo segment (ví dụ /admin/products/123 -> /admin/products)
   const matchedRoute = Object.keys(ROUTE_PERMISSIONS)
-    .filter((route) => pathname === route || pathname.startsWith(`${route}/`))
+    .filter((route) => {
+      const lowerRoute = route.toLowerCase();
+      return lowerPath === lowerRoute || lowerPath.startsWith(`${lowerRoute}/`);
+    })
     .sort((a, b) => b.length - a.length)[0];
 
-  return matchedRoute ? ROUTE_PERMISSIONS[matchedRoute] : null;
+  if (matchedRoute) {
+    return ROUTE_PERMISSIONS[matchedRoute];
+  }
+
+  // 4. Nguyên tắc phòng thủ chiều sâu (Default Deny):
+  // Bất kỳ route nào thuộc /admin/* mà chưa khai báo quyền cụ thể -> mặc định yêu cầu Administrator
+  if (lowerPath === "/admin" || lowerPath.startsWith("/admin/")) {
+    return ["Administrator", "AdminAccess"];
+  }
+
+  return null;
 }
 
 /**

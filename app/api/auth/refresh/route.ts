@@ -1,4 +1,6 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+if (process.env.NODE_ENV !== "production") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
 
 import { APP_URL } from "@/shared/constants/apiConstants";
 import { cookies } from "next/headers";
@@ -90,10 +92,12 @@ export async function POST(req: NextRequest) {
       token_type: data.token_type ?? "Bearer",
     });
 
+    const isProduction = process.env.NODE_ENV === "production";
+
     // 1. Cập nhật cookie access_token (httpOnly: false để client JS đọc được)
     res.cookies.set("access_token", newAccessToken, {
       httpOnly: false,
-      secure: false,
+      secure: isProduction,
       sameSite: "lax",
       path: "/",
       maxAge: expiresIn,
@@ -102,7 +106,7 @@ export async function POST(req: NextRequest) {
     // 2. Cập nhật cookie expires_at
     res.cookies.set("expires_at", String(Date.now() + expiresIn * 1000), {
       httpOnly: false,
-      secure: false,
+      secure: isProduction,
       sameSite: "lax",
       path: "/",
       maxAge: expiresIn,
@@ -113,7 +117,7 @@ export async function POST(req: NextRequest) {
       const refreshMaxAge = 60 * 60 * 24 * 7; // 7 ngày
       res.cookies.set("refresh_token", newRefreshToken, {
         httpOnly: true,
-        secure: false,
+        secure: isProduction,
         sameSite: "lax",
         path: "/",
         maxAge: refreshMaxAge,

@@ -1,4 +1,6 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+if (process.env.NODE_ENV !== "production") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
 
 import { APP_URL } from "@/shared/constants/apiConstants";
 import { NextRequest, NextResponse } from "next/server";
@@ -66,10 +68,12 @@ export async function POST(req: NextRequest) {
       token_type: data.token_type ?? "Bearer",
     });
 
+    const isProduction = process.env.NODE_ENV === "production";
+
     // 1. Lưu cookie access_token (httpOnly: false để client JS đọc được từ Cookie và đính kèm Authorization header)
     nextResponse.cookies.set("access_token", accessToken, {
       httpOnly: false,
-      secure: false,
+      secure: isProduction,
       sameSite: "lax",
       path: "/",
       maxAge: expiresIn,
@@ -81,7 +85,7 @@ export async function POST(req: NextRequest) {
       String(Date.now() + expiresIn * 1000),
       {
         httpOnly: false,
-        secure: false,
+        secure: isProduction,
         sameSite: "lax",
         path: "/",
         maxAge: expiresIn,
@@ -95,7 +99,7 @@ export async function POST(req: NextRequest) {
         : 60 * 60 * 24 * 7; // 7 ngày mặc định
       nextResponse.cookies.set("refresh_token", rawRefreshToken, {
         httpOnly: true,
-        secure: false,
+        secure: isProduction,
         sameSite: "lax",
         path: "/",
         maxAge: refreshMaxAge,

@@ -2,11 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 
 function isSafeCallbackUrl(url: string | null): url is string {
   if (!url) return false;
-  return (
-    url.startsWith("/") &&
-    !url.startsWith("//") &&
-    !url.startsWith("/login")
-  );
+  // Chặn protocol-relative, backslash (\), và open redirect vector
+  if (!url.startsWith("/") || url.startsWith("//") || url.startsWith("/\\")) {
+    return false;
+  }
+  // Chặn redirect lặp vào /login hoặc /forbidden
+  if (url.startsWith("/login") || url.startsWith("/forbidden")) {
+    return false;
+  }
+  try {
+    const parsed = new URL(url, "http://localhost");
+    return (
+      parsed.origin === "http://localhost" &&
+      parsed.pathname.startsWith("/") &&
+      !parsed.pathname.startsWith("//")
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function proxy(req: NextRequest) {
