@@ -1,7 +1,6 @@
-import axios from "axios";
 import { APP_URL } from "../constants/apiConstants";
 import api from "./index";
-import { getAccessToken, setAuthTokens } from "@/lib/auth";
+import { getAccessToken, logoutFromBackend } from "@/lib/auth";
 import {
   UserProfile,
   AuthLoginResponse,
@@ -10,6 +9,7 @@ import {
 export interface LoginPayload {
   username: string;
   password: string;
+  remember?: boolean;
 }
 
 export interface LoginResponse {
@@ -32,11 +32,24 @@ export interface RegisterResponse {
 }
 
 /**
- * Đăng nhập hệ thống (BFF proxy -> Next.js Route Handler để thiết lập Cookie an toàn)
+ * Đăng nhập trực tiếp vào Backend API (${APP_URL}/auth/login)
  */
 export const loginApi = async (data: LoginPayload): Promise<AuthLoginResponse> => {
-  const response = await axios.post<AuthLoginResponse>("/api/auth/login", data);
+  const response = await api.post<AuthLoginResponse>(
+    `${APP_URL}/auth/login`,
+    {
+      username: data.username,
+      password: data.password,
+    },
+    {
+      withCredentials: true,
+    },
+  );
   return response.data;
+};
+
+export const logoutApi = async (): Promise<void> => {
+  await logoutFromBackend();
 };
 
 export const registerApi = async (payload: RegisterPayload) => {
@@ -55,9 +68,12 @@ export const registerApi = async (payload: RegisterPayload) => {
   return response.data;
 };
 
+/**
+ * Lấy thông tin user trực tiếp từ Backend API (${APP_URL}/auth/me)
+ */
 export const getUserInfo = async (): Promise<UserProfile> => {
   const token = getAccessToken();
-  const response = await axios.get<UserProfile>("/api/auth/me", {
+  const response = await api.get<UserProfile>(`${APP_URL}/auth/me`, {
     headers: token
       ? {
           Authorization: `Bearer ${token}`,
@@ -65,16 +81,6 @@ export const getUserInfo = async (): Promise<UserProfile> => {
       : {},
     withCredentials: true,
   });
-
-  // Đồng bộ lại Cookie nếu Route Handler /api/auth/me vừa tự động refresh token
-  const refreshedAccessToken = response.headers["x-access-token"];
-  if (typeof refreshedAccessToken === "string" && refreshedAccessToken) {
-    const refreshedExpiresIn = Number(response.headers["x-expires-in"] || 3600);
-    setAuthTokens({
-      access_token: refreshedAccessToken,
-      expires_in: refreshedExpiresIn,
-    });
-  }
 
   return response.data;
 };

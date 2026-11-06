@@ -3,6 +3,7 @@ import {
   clearAuthTokens,
   isAccessTokenExpired,
   refreshAccessToken,
+  logoutFromBackend,
 } from "./auth";
 
 export async function apiFetch(
@@ -41,15 +42,7 @@ export async function apiFetch(
   }
 
   if (response.status === 401) {
-    clearAuthTokens();
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch {
-      // Bỏ qua lỗi mạng khi dọn cookie
-    }
+    await logoutFromBackend();
 
     if (typeof window !== "undefined") {
       const currentPath = window.location.pathname + window.location.search;

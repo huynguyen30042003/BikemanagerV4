@@ -6,6 +6,7 @@ import {
   clearAuthTokens,
   isAccessTokenExpired,
   refreshAccessToken,
+  logoutFromBackend,
 } from "@/lib/auth";
 import { create } from "zustand";
 
@@ -108,10 +109,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           }
           clearAuthTokens();
           if (typeof window !== "undefined") {
-            fetch("/api/auth/logout", {
-              method: "POST",
-              credentials: "include",
-            }).catch(() => {});
+            logoutFromBackend().catch(() => {});
           }
         }
 

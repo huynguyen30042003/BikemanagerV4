@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useAuthStore } from "@/store/useAuthStore";
 import { setAuthTokens, isSafeRedirectUrl } from "@/lib/auth";
+import { APP_URL } from "@/shared/constants/apiConstants";
 import { motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import {
@@ -85,10 +86,10 @@ function LoginFormContent() {
     }
   };
 
-  // Xử lý Đăng nhập (Username + Password)
+  // Xử lý Đăng nhập trực tiếp vào Backend API (Username + Password)
   const handleLogin = async (req: LoginForm) => {
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${APP_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +98,6 @@ function LoginFormContent() {
         body: JSON.stringify({
           username: req.username,
           password: req.password,
-          remember: req.remember,
         }),
       });
 
@@ -125,10 +125,13 @@ function LoginFormContent() {
         return;
       }
 
-      // Lưu Access Token vào Cookie (Refresh Token được server bảo mật bằng HttpOnly Cookie, tuyệt đối không lưu localStorage)
-      setAuthTokens(data);
+      // Lưu Access Token & Refresh Token vào Cookie
+      setAuthTokens({
+        ...data,
+        remember: req.remember,
+      });
 
-      // Ép buộc làm mới thông tin người dùng vào In-Memory Zustand store qua /api/auth/me
+      // Ép buộc làm mới thông tin người dùng vào In-Memory Zustand store trực tiếp từ BE (/auth/me)
       try {
         await useAuthStore.getState().fetchUser(true);
       } catch (err) {

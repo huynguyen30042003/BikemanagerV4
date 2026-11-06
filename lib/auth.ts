@@ -1,3 +1,5 @@
+import { APP_URL } from "@/shared/constants/apiConstants";
+
 /**
  * Kiểm tra đường dẫn redirect nội bộ an toàn (Chống Open Redirect Vulnerability)
  */
@@ -56,25 +58,38 @@ export interface SaveTokenPayload {
   access_token?: string | null;
   refresh_token?: string | null;
   expires_in?: number | null;
+  remember?: boolean;
 }
 
 /**
- * Lưu Access Token và mốc hết hạn vào Cookie (Tuyệt đối không lưu vào localStorage)
- * Refresh Token được quản lý hoàn toàn bằng HttpOnly Cookie từ Server Route Handler
+ * Lưu Access Token, Refresh Token (nếu có) và mốc hết hạn vào Cookie (Tuyệt đối không lưu vào localStorage)
  */
 export function setAuthTokens(payload?: SaveTokenPayload | null): void {
   if (typeof document === "undefined" || !payload) return;
 
   const accessToken = payload.access_token;
+  const refreshToken = payload.refresh_token;
   const expiresIn = payload.expires_in ?? 3600;
+  const isSecure =
+    typeof window !== "undefined" && window.location.protocol === "https:";
+  const secureAttr = isSecure ? "; Secure" : "";
 
   if (accessToken && accessToken !== "undefined" && accessToken !== "null") {
     const expiresAtMs = Date.now() + expiresIn * 1000;
 
     document.cookie = `access_token=${encodeURIComponent(
       accessToken,
-    )}; path=/; max-age=${expiresIn}; SameSite=Lax`;
-    document.cookie = `expires_at=${expiresAtMs}; path=/; max-age=${expiresIn}; SameSite=Lax`;
+    )}; path=/; max-age=${expiresIn}; SameSite=Lax${secureAttr}`;
+    document.cookie = `expires_at=${expiresAtMs}; path=/; max-age=${expiresIn}; SameSite=Lax${secureAttr}`;
+  }
+
+  if (refreshToken && refreshToken !== "undefined" && refreshToken !== "null") {
+    const refreshMaxAge = payload.remember
+      ? 60 * 60 * 24 * 30 // 30 ngày nếu chọn Ghi nhớ phiên
+      : 60 * 60 * 24 * 7; // 7 ngày mặc định
+    document.cookie = `refresh_token=${encodeURIComponent(
+      refreshToken,
+    )}; path=/; max-age=${refreshMaxAge}; SameSite=Lax${secureAttr}`;
   }
 }
 
@@ -86,6 +101,26 @@ export function clearAuthTokens(): void {
     document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
     document.cookie = "refresh_token=; path=/; max-age=0; SameSite=Lax";
     document.cookie = "expires_at=; path=/; max-age=0; SameSite=Lax";
+  }
+}
+
+/**
+ * Gọi trực tiếp API đăng xuất lên Backend và xóa sạch Auth Cookies
+ */
+export async function logoutFromBackend(): Promise<void> {
+  const token = getAccessToken();
+  clearAuthTokens();
+
+  try {
+    await fetch(`${APP_URL}/auth/logout`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+    });
+  } catch {
+    // Bỏ qua lỗi mạng khi đăng xuất
   }
 }
 
@@ -128,7 +163,7 @@ export function hasAuthSession(): boolean {
 let inFlightRefreshPromise: Promise<string | null> | null = null;
 
 /**
- * Gọi API refresh token (tự động đính kèm HttpOnly refresh_token cookie qua credentials: "include")
+ * Gọi trực tiếp API refresh token từ Backend (${APP_URL}/auth/refresh)
  */
 export async function refreshAccessToken(): Promise<string | null> {
   if (inFlightRefreshPromise) {
@@ -137,12 +172,16 @@ export async function refreshAccessToken(): Promise<string | null> {
 
   inFlightRefreshPromise = (async () => {
     try {
-      const res = await fetch("/api/auth/refresh", {
+      const refreshToken = getRefreshToken();
+      const res = await fetch(`${APP_URL}/auth/refresh`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
+        body: JSON.stringify(
+          refreshToken ? { refresh_token: refreshToken } : {},
+        ),
       });
 
       if (!res.ok) {

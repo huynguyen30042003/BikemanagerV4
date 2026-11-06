@@ -9,6 +9,7 @@ import {
   isAccessTokenExpired,
   refreshAccessToken,
   clearAuthTokens,
+  logoutFromBackend,
 } from "@/lib/auth";
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -39,21 +40,13 @@ class Api {
 
   /**
    * Refresh Token dùng chung 1 Promise Singleton từ lib/auth
-   * Chống gọi lặp lại /api/auth/refresh nhiều lần khi có nhiều API đồng thời
+   * Chống gọi lặp lại /auth/refresh nhiều lần khi có nhiều API đồng thời
    */
   private async refreshToken(): Promise<string> {
     const newAccessToken = await refreshAccessToken();
     if (!newAccessToken) {
-      clearAuthTokens();
+      await logoutFromBackend();
       if (typeof window !== "undefined") {
-        try {
-          await fetch("/api/auth/logout", {
-            method: "POST",
-            credentials: "include",
-          });
-        } catch {
-          // Bỏ qua lỗi mạng
-        }
         const currentPath = window.location.pathname + window.location.search;
         if (!window.location.pathname.startsWith("/login")) {
           window.location.href = `/login?callbackUrl=${encodeURIComponent(currentPath)}`;

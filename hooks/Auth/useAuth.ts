@@ -12,6 +12,7 @@ import {
   UserTokenInfo,
   setAuthTokens,
   clearAuthTokens,
+  logoutFromBackend,
   isSafeRedirectUrl,
   hasAuthSession,
 } from "@/lib/auth";
@@ -47,17 +48,14 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
 
   return async (redirectUrl?: string) => {
-    clearUser();
-    queryClient.clear();
-
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await logoutFromBackend();
     } catch (e) {
       console.error("[LOGOUT ERROR]", e);
     }
+
+    clearUser();
+    queryClient.clear();
 
     const targetUrl =
       redirectUrl &&
