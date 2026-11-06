@@ -12,6 +12,39 @@ interface RefreshedResult {
   expiresIn: number;
 }
 
+// ============================================================================
+// BỘ NHỚ ĐỆM TẠM THỜI TẠI TẦNG NEXT.JS BFF (Giúp F5 trả về trong 2ms thay vì 500ms)
+// ============================================================================
+interface CachedMeEntry {
+  data: unknown;
+  expiresAt: number;
+}
+
+const ME_CACHE_TTL_MS = 2 * 60 * 1000; // Cache 2 phút cho mỗi access_token hợp lệ
+const MAX_CACHE_SIZE = 500;
+const meResponseCache = new Map<string, CachedMeEntry>();
+
+function getCachedMe(token: string): unknown | null {
+  const entry = meResponseCache.get(token);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    meResponseCache.delete(token);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCachedMe(token: string, data: unknown): void {
+  if (meResponseCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = meResponseCache.keys().next().value;
+    if (firstKey) meResponseCache.delete(firstKey);
+  }
+  meResponseCache.set(token, {
+    data,
+    expiresAt: Date.now() + ME_CACHE_TTL_MS,
+  });
+}
+
 function clearCookiesOnResponse(res: NextResponse): NextResponse {
   res.cookies.set("access_token", "", {
     path: "/",
@@ -63,6 +96,7 @@ async function attemptRefreshToken(
         Cookie: `refresh_token=${refreshToken}`,
       },
       body: JSON.stringify({ refresh_token: refreshToken }),
+      cache: "no-store",
     });
 
     if (!refreshRes.ok) return null;
@@ -104,7 +138,15 @@ export async function GET(req: NextRequest) {
 
     let refreshedInfo: RefreshedResult | null = null;
 
-    // 1. Nếu chưa có access_token hợp lệ (hỗ trợ cả Data Protection token CfDJ8... và JWT), thử refresh nếu có refresh_token
+    // 0. FAST PATH: Nếu đã có token hợp lệ và đã có sẵn trong bộ nhớ đệm Next.js -> Trả về ngay trong 2ms!
+    if (isTokenNonEmpty(token)) {
+      const cachedData = getCachedMe(token);
+      if (cachedData) {
+        return NextResponse.json(cachedData);
+      }
+    }
+
+    // 1. Nếu chưa có access_token hợp lệ, thử refresh nếu có refresh_token
     if (!isTokenNonEmpty(token) && refreshToken) {
       refreshedInfo = await attemptRefreshToken(refreshToken);
       if (refreshedInfo?.accessToken) {
@@ -121,15 +163,16 @@ export async function GET(req: NextRequest) {
       return clearCookiesOnResponse(errRes);
     }
 
-    // 3. Gọi backend lấy thông tin user
+    // 3. Gọi backend lấy thông tin user (Bỏ Content-Type thừa trên GET)
     let response: Response;
     try {
       response = await fetch(`${APP_URL}/auth/me`, {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          Accept: "application/json",
           Authorization: `Bearer ${token}`,
         },
+        cache: "no-store",
       });
     } catch (fetchErr) {
       console.warn(
@@ -144,6 +187,7 @@ export async function GET(req: NextRequest) {
 
     // 4. Nếu backend trả về 401 (token vừa hết hạn tại backend) và chưa từng refresh trong request này
     if (response.status === 401 && !refreshedInfo && refreshToken) {
+      meResponseCache.delete(token);
       refreshedInfo = await attemptRefreshToken(refreshToken);
       if (refreshedInfo?.accessToken) {
         token = refreshedInfo.accessToken;
@@ -151,9 +195,10 @@ export async function GET(req: NextRequest) {
           response = await fetch(`${APP_URL}/auth/me`, {
             method: "GET",
             headers: {
-              "Content-Type": "application/json",
+              Accept: "application/json",
               Authorization: `Bearer ${token}`,
             },
+            cache: "no-store",
           });
         } catch {
           // Bỏ qua lỗi retry
@@ -172,6 +217,9 @@ export async function GET(req: NextRequest) {
       }
       return errRes;
     }
+
+    // Lưu kết quả thành công vào bộ nhớ đệm theo token (2 phút)
+    setCachedMe(token, data);
 
     const nextResponse = NextResponse.json(data);
 
