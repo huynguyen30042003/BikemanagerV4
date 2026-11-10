@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { Input } from "./input";
 
 type SelectValue = string | number;
@@ -91,14 +91,14 @@ function SearchSelect({
   const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
 
   const containerRef = useRef<HTMLDivElement>(null);
-
+  const deferredQuery = useDeferredValue(query);
   useClickOutside(containerRef, () => {
     setOpen(false);
     setQuery("");
   });
 
   const filteredOptions = options.filter((option) =>
-    matchesSearchQuery(option.label, query),
+    matchesSearchQuery(option.label, deferredQuery),
   );
 
   const selectedOption = options.find((option) => option.value === value);
