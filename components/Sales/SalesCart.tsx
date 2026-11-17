@@ -222,7 +222,7 @@ export const SalesCart: React.FC<SalesCartProps> = ({
                     key={itemKey}
                     className="p-2.5 rounded-xl border border-border/70 bg-background/90 flex flex-col gap-2 text-xs"
                   >
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex-1 pr-1 space-y-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <p className="font-semibold text-foreground truncate max-w-[180px] sm:max-w-[260px]">
